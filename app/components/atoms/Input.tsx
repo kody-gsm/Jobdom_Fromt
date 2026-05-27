@@ -14,7 +14,7 @@ export const Input = ({ className = "", style, skin = "filled", error, ...props 
   const borderClass = error
     ? "border border-red-500"
     : skin === "outlined"
-      ? "border border-[#CFD0D1]"
+      ? "border border-[#CFD0D1] focus:border-2 focus:border-[#02C551]"
       : "border-none";
 
   return (
