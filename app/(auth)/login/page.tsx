@@ -28,15 +28,15 @@ export default function LoginPage() {
           placeholder="비밀번호 입력"
           className="mt-[15px] py-[16px] px-[18px] w-[680px] h-[56px]"
         />
-      <text className="mt-[11px] text-right w-[680] text-[15px] font-[400] text-[#02C551]" onClick={() => router.push("/forgot-password")}>비밀번호 찾기</text>
+      <p className="mt-[11px] text-right w-[680] text-[15px] font-[400] text-[#02C551]" onClick={() => router.push("/forgot-password")}>비밀번호 찾기</p>
         <Button
           content="확인"
           className="mt-[53px] w-[680px] h-[56px] text-[23px]"
           type="submit"
         />
-      <div className="mt-[14px] w-[680px] text-[14px]">
-        <text className="text-[#95979D]">잡담 회원가입을 안 하셨나요?</text>
-        <text className="text-[#02C551] ml-[9px]" onClick={() => router.push("/signup")}>회원가입</text>
+      <div className="mt-[14px] w-[680px] text-[14px] flex">
+        <p className="text-[#95979D]">잡담 회원가입을 안 하셨나요?</p>
+        <p className="text-[#02C551] ml-[9px]" onClick={() => router.push("/signup")}>회원가입</p>
       </div>
     </main>
   );
