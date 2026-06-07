@@ -41,7 +41,7 @@ export default function SignupPage() {
       <span className="mt-[38px] text-left w-[680px] text-[18px] font-medium">비밀번호 확인</span>
         <Input
           type="password"
-          placeholder="비밀번호 입력"
+          placeholder="비밀번호 재입력"
           className="mt-[15px] py-[16px] px-[18px] w-[680px] h-[56px]"
         />
         <Button
