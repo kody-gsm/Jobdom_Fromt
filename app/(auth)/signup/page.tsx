@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState(false);
   const [codeError, setCodeError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
   const router = useRouter();
   const MOCK_CODE = "123456";
@@ -27,16 +28,26 @@ export default function SignupPage() {
     if (!email.endsWith("@gsm.hs.kr")) {
       setEmailError(true);
       setCodeError(false);
+      setPasswordError(false);
       setConfirmPasswordError(false);
       return;
     }
     setEmailError(false);
     if (authenticationCode !== MOCK_CODE) {
       setCodeError(true);
+      setPasswordError(false);
       setConfirmPasswordError(false);
       return;
     }
     setCodeError(false);
+    const passwordRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{10,}$/;
+    if (!passwordRegex.test(password)) {
+      setPasswordError(true);
+      setConfirmPasswordError(false);
+      return;
+    }
+    setPasswordError(false);
     if (password !== confirmPassword) {
       setConfirmPasswordError(true);
       return;
@@ -44,7 +55,6 @@ export default function SignupPage() {
     setConfirmPasswordError(false);
     router.push("/login");
   };
-
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
       <Image
@@ -100,6 +110,7 @@ export default function SignupPage() {
       >
         인증코드가 올바르지 않습니다.
       </p>
+
       <p className="mt-[-4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer">
         인증코드 발송
       </p>
@@ -109,12 +120,24 @@ export default function SignupPage() {
       <Input
         type="password"
         value={password}
+        error={passwordError}
         showPasswordToggle={true}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          setPasswordError(false);
+        }}
         placeholder="비밀번호 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
-      <span className="mt-[36px] text-left w-[600px] text-[18px] font-medium">
+      <p
+        className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
+          passwordError ? "visible" : "invisible"
+        }`}
+      >
+        영문, 숫자, 특수문자를 포함하여 10자 이상 입력해주세요.
+      </p>
+
+      <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
         비밀번호 확인
       </span>
       <Input
