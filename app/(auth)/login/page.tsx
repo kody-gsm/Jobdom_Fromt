@@ -10,13 +10,10 @@ import Image from "next/image";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [emailError, setEmailError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
-
+  const [passwordError, setPasswordError] = useState(false); 
   const router = useRouter();
 
-  // 목 데이터
   const mockUsers = [
     {
       email: "s25011@gsm.hs.kr",
@@ -36,25 +33,18 @@ export default function LoginPage() {
     const user = mockUsers.find(
       (user) => user.email === email
     );
-
-    // 이메일 없음
     if (!user) {
       setEmailError(true);
       setPasswordError(false);
       return;
     }
-
-    // 비밀번호 불일치
     if (user.password !== password) {
       setEmailError(false);
       setPasswordError(true);
       return;
     }
-
-    // 로그인 성공
     setEmailError(false);
     setPasswordError(false);
-
     router.push("/main");
   };
 
@@ -67,11 +57,9 @@ export default function LoginPage() {
         height={100}
         className="mt-[64px]"
       />
-
       <span className="mt-[88px] text-left w-[600px] text-[18px] font-medium">
         이메일
       </span>
-
       <Input
         type="email"
         value={email}
@@ -83,7 +71,6 @@ export default function LoginPage() {
         placeholder="이메일 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
-
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
           emailError ? "visible" : "invisible"
@@ -91,11 +78,9 @@ export default function LoginPage() {
       >
         잘못된 이메일입니다.
       </p>
-
       <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
         비밀번호
       </span>
-
       <Input
         type="password"
         value={password}
@@ -108,19 +93,15 @@ export default function LoginPage() {
         placeholder="비밀번호 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
-
-      <p
-        className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
+      <p className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
           passwordError ? "visible" : "invisible"
         }`}
       >
         비밀번호가 일치하지 않습니다.
       </p>
 
-      <p
-        className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer"
-        onClick={() => router.push("/forgot-password")}
-      >
+      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer"
+        onClick={() => router.push("/forgot-password")}>
         비밀번호 찾기
       </p>
 
@@ -137,10 +118,7 @@ export default function LoginPage() {
       />
 
       <div className="mt-[12px] w-[600px] text-[14px] flex">
-        <p className="text-[#95979D]">
-          잡담 회원가입을 안 하셨나요?
-        </p>
-
+        <p className="text-[#95979D]">잡담 회원가입을 안 하셨나요?</p>
         <p
           className="text-[#02C551] ml-[8px] cursor-pointer"
           onClick={() => router.push("/signup")}
