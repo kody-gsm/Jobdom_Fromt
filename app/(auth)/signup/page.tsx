@@ -9,7 +9,9 @@ import Image from "next/image";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
+  const [authenticationCode, setAuthenticationCode] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
   const [code, setCode] = useState("");
 

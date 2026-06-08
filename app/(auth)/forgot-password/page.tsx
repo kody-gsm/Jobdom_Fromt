@@ -11,6 +11,7 @@ import Image from "next/image";
 export default function ForgotPasswordPage(){
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
 
   return (
