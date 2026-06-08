@@ -39,7 +39,7 @@ export default function LoginPage() {
       />
 
       <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] invisible">
-        등록되지 않은 이메일입니다.
+        잘못된 이메일입니다.
       </p>
 
       <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
