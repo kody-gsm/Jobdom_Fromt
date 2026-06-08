@@ -37,7 +37,7 @@ export default function ForgotPasswordPage(){
               className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
             />
             <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E]">인증코드가 올바르지않습니다.</p>
-            <p className="mt-[-4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer">인증코드 재발송</p>
+            <p className="mt-[-4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer">인증코드 발송</p>
           <span className="text-left w-[600px] text-[18px] font-medium">새 비밀번호</span>
             <Input
               type="password"
