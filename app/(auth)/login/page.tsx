@@ -10,11 +10,53 @@ import Image from "next/image";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+
   const router = useRouter();
+
+  // 목 데이터
+  const mockUsers = [
+    {
+      email: "s25011@gsm.hs.kr",
+      password: "1234",
+    },
+    {
+      email: "s25012@gsm.hs.kr",
+      password: "5678",
+    },
+  ];
 
   const isValid =
     email.trim() !== "" &&
     password.trim() !== "";
+
+  const handleLogin = () => {
+    const user = mockUsers.find(
+      (user) => user.email === email
+    );
+
+    // 이메일 없음
+    if (!user) {
+      setEmailError(true);
+      setPasswordError(false);
+      return;
+    }
+
+    // 비밀번호 불일치
+    if (user.password !== password) {
+      setEmailError(false);
+      setPasswordError(true);
+      return;
+    }
+
+    // 로그인 성공
+    setEmailError(false);
+    setPasswordError(false);
+
+    router.push("/main");
+  };
 
   return (
     <main className="flex flex-col items-center justify-center">
@@ -33,12 +75,20 @@ export default function LoginPage() {
       <Input
         type="email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        error={emailError}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          setEmailError(false);
+        }}
         placeholder="이메일 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
 
-      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] invisible">
+      <p
+        className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
+          emailError ? "visible" : "invisible"
+        }`}
+      >
         잘못된 이메일입니다.
       </p>
 
@@ -49,13 +99,21 @@ export default function LoginPage() {
       <Input
         type="password"
         value={password}
+        error={passwordError}
         showPasswordToggle={true}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          setPasswordError(false);
+        }}
         placeholder="비밀번호 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
 
-      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] invisible">
+      <p
+        className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
+          passwordError ? "visible" : "invisible"
+        }`}
+      >
         비밀번호가 일치하지 않습니다.
       </p>
 
@@ -70,12 +128,12 @@ export default function LoginPage() {
         content="확인"
         type="submit"
         disabled={!isValid}
+        onClick={handleLogin}
         className={`mt-[52px] w-[600px] h-[56px] text-[23px] text-white ${
           isValid
             ? "bg-[#02C551] cursor-pointer"
             : "bg-[#CFD0D1] cursor-not-allowed"
         }`}
-        onClick={() => router.push("/main")}
       />
 
       <div className="mt-[12px] w-[600px] text-[14px] flex">
