@@ -24,7 +24,7 @@ export default function SignupPage() {
           placeholder="이메일 입력"
           className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
         />
-      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E]">등록되지 않은 이메일입니다.</p>
+      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E]">잘못된 이메일 형식입니다.</p>
       <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">인증코드</span>
         <Input
           type="text"
