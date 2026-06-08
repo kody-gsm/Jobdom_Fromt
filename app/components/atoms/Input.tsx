@@ -49,7 +49,7 @@ export const Input = ({
     >
       <input
         type={inputType}
-        className="w-full h-14 appearance-none bg-transparent text-[20px] font-normal not-italic leading-[100%] tracking-normal text-black placeholder:text-[#95979D] placeholder:opacity-100 focus:outline-none"
+        className="w-full p-4 h-14 appearance-none bg-transparent text-[20px] font-normal not-italic leading-[100%] tracking-normal text-black placeholder:text-[#95979D] placeholder:opacity-100 focus:outline-none"
         {...props}
       />
 

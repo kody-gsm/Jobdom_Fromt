@@ -75,6 +75,7 @@ export default function LoginPage() {
             ? "bg-[#02C551] cursor-pointer"
             : "bg-[#CFD0D1] cursor-not-allowed"
         }`}
+        onClick={() => router.push("/main")}
       />
 
       <div className="mt-[12px] w-[600px] text-[14px] flex">
