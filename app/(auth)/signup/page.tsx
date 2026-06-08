@@ -28,7 +28,7 @@ export default function SignupPage() {
         <Input
           type="text"
           inputMode="numeric"
-          maxLength={99}
+          maxLength={6}
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
           placeholder="인증코드 입력"
