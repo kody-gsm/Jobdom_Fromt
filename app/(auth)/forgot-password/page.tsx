@@ -80,6 +80,7 @@ export default function ForgotPasswordPage() {
       <Input
         type="password"
         value={password}
+        showPasswordToggle={true}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="새로운 비밀번호 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
@@ -92,6 +93,7 @@ export default function ForgotPasswordPage() {
       <Input
         type="password"
         value={confirmPassword}
+        showPasswordToggle={true}
         onChange={(e) => setConfirmPassword(e.target.value)}
         placeholder="비밀번호 재입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
