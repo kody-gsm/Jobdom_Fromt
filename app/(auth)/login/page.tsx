@@ -22,12 +22,14 @@ export default function LoginPage() {
           placeholder="이메일 입력"
           className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
         />
+      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E]">등록되지 않은 이메일입니다.</p>
       <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">비밀번호</span>
         <Input
           type="password"
           placeholder="비밀번호 입력"
           className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
         />
+      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E]">비밀번호가 일치하지 않습니다.</p>
       <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer" onClick={() => router.push("/forgot-password")}>비밀번호 찾기</p>
         <Button
           content="확인"
