@@ -127,6 +127,7 @@ export default function ForgotPasswordPage() {
           setPassword(e.target.value);
           setPasswordError(false);
         }}
+        onPaste={(e) => e.preventDefault()}
         placeholder="비밀번호 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
@@ -149,6 +150,7 @@ export default function ForgotPasswordPage() {
           setConfirmPassword(e.target.value);
           setConfirmPasswordError(false);
         }}
+        onPaste={(e) => e.preventDefault()}
         placeholder="비밀번호 재입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
