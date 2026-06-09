@@ -1,7 +1,7 @@
 /* 비밀번호 재설정 페이지 */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
@@ -56,7 +56,23 @@ export default function ForgotPasswordPage() {
 
     router.push("/login");
   };
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const handleSendCode = () => {
+  setIsCodeSent(true);
+  setTimeLeft(180);
+  };
+  useEffect(() => {
+    if (timeLeft <= 0) return;
 
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+  const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const seconds = String(timeLeft % 60).padStart(2, "0");
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
       <Image
@@ -112,9 +128,20 @@ export default function ForgotPasswordPage() {
       >
         인증코드가 올바르지 않습니다.
       </p>
-      <p className="mt-[-4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer">
-        인증코드 발송
-      </p>
+      <div className="mt-[-4px] flex justify-end items-center w-[600px] gap-2">
+        {isCodeSent && (
+          <span className="text-[15px] font-[400] text-[#95979D]">
+            {minutes}:{seconds}
+          </span>
+        )}
+
+        <p
+          className="text-[15px] font-[400] text-[#02C551] cursor-pointer"
+          onClick={handleSendCode}
+        >
+          {isCodeSent ? "인증코드 재발송" : "인증코드 발송"}
+        </p>
+      </div>
       <span className="text-left w-[600px] text-[18px] font-medium">
         새 비밀번호
       </span>
