@@ -51,14 +51,14 @@ export const Input = ({
     >
       <input
         type={inputType}
-        className={`jobdam-input w-full h-14 appearance-none bg-transparent text-[20px] font-normal not-italic leading-[100%] tracking-normal text-black placeholder:text-[#95979D] placeholder:opacity-100 focus:outline-none ${
-          showPasswordToggle || rightElement ? "pr-20" : ""
+        className={`absolute inset-0 w-full h-full appearance-none rounded-lg bg-transparent pl-4 text-[20px] font-normal not-italic leading-[100%] tracking-normal text-black placeholder:text-[#95979D] placeholder:opacity-100 focus:outline-none ${
+          showPasswordToggle || rightElement ? "pr-20" : "pr-4"
         }`}
         {...props}
       />
 
       {rightElement && (
-        <div className="absolute right-4 flex items-center justify-center">
+        <div className="absolute right-4 z-10 flex items-center justify-center">
           {rightElement}
         </div>
       )}
@@ -68,7 +68,7 @@ export const Input = ({
           type="button"
           onClick={() => setIsVisible(!isVisible)}
           aria-label={isVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
-          className="absolute right-4 flex items-center justify-center"
+          className="absolute right-4 z-10 flex items-center justify-center"
         >
           <Image
             src={isVisible ? "/openeye.svg" : "/closeeye.svg"}
