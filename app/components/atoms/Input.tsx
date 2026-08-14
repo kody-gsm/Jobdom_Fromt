@@ -57,6 +57,7 @@ export const Input = ({
         <button
           type="button"
           onClick={() => setIsVisible(!isVisible)}
+          aria-label={isVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
           className="absolute right-4 flex items-center justify-center"
         >
           <Image
