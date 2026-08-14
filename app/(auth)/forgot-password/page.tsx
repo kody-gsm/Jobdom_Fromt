@@ -7,9 +7,7 @@ import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  getGsmEmailErrorMessage,
   getRequiredMessage,
-  isGsmEmail,
   isValidPassword,
 } from "@/app/utils/authValidation";
 import {
@@ -40,8 +38,8 @@ export default function ForgotPasswordPage() {
 
     if (!isValid) return;
 
-    if (!isGsmEmail(email)) {
-      setEmailErrorMessage(getGsmEmailErrorMessage(email));
+    if (email.trim() === "") {
+      setEmailErrorMessage(getRequiredMessage("이메일을"));
       setCodeError(false);
       setPasswordError(false);
       setConfirmPasswordError(false);
@@ -77,10 +75,8 @@ export default function ForgotPasswordPage() {
   const handleSendCode = async () => {
     if (isSendingCode) return;
 
-    const emailMessage = getGsmEmailErrorMessage(email);
-
-    if (emailMessage) {
-      setEmailErrorMessage(emailMessage);
+    if (email.trim() === "") {
+      setEmailErrorMessage(getRequiredMessage("이메일을"));
       return;
     }
 
@@ -92,9 +88,9 @@ export default function ForgotPasswordPage() {
       setIsCodeSent(true);
       setTimeLeft(180);
     } catch {
-      setEmailErrorMessage("");
-      setIsCodeSent(true);
-      setTimeLeft(180);
+      setEmailErrorMessage("가입되지 않은 이메일입니다.");
+      setIsCodeSent(false);
+      setTimeLeft(0);
     } finally {
       setIsSendingCode(false);
     }
