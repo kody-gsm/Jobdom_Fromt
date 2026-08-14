@@ -7,11 +7,12 @@ import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { login } from "@/app/utils/authApi";
+import { getRequiredMessage } from "@/app/utils/authValidation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState("");
   const [passwordError, setPasswordError] = useState(false); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -24,16 +25,24 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!isValid) return;
+    if (email.trim() === "") {
+      setEmailErrorMessage(getRequiredMessage("이메일을"));
+      return;
+    }
+
+    if (password.trim() === "") {
+      setPasswordError(true);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       await login(email, password);
-      setEmailError(false);
+      setEmailErrorMessage("");
       setPasswordError(false);
       router.push("/main");
     } catch {
-      setEmailError(true);
+      setEmailErrorMessage("잘못된 이메일입니다.");
       setPasswordError(true);
     } finally {
       setIsSubmitting(false);
@@ -56,20 +65,20 @@ export default function LoginPage() {
       <Input
         type="email"
         value={email}
-        error={emailError}
+        error={emailErrorMessage !== ""}
         onChange={(e) => {
           setEmail(e.target.value);
-          setEmailError(false);
+          setEmailErrorMessage("");
         }}
         placeholder="이메일 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
-          emailError ? "visible" : "invisible"
+          emailErrorMessage ? "visible" : "invisible"
         }`}
       >
-        잘못된 이메일입니다.
+        {emailErrorMessage || getRequiredMessage("이메일을")}
       </p>
       <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
         비밀번호

@@ -6,7 +6,12 @@ import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { isGsmEmail, isValidPassword } from "@/app/utils/authValidation";
+import {
+  getGsmEmailErrorMessage,
+  getRequiredMessage,
+  isGsmEmail,
+  isValidPassword,
+} from "@/app/utils/authValidation";
 import {
   resetPassword,
   sendPasswordResetCode,
@@ -17,7 +22,7 @@ export default function ForgotPasswordPage() {
   const [authenticationCode, setAuthenticationCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState("");
   const [codeError, setCodeError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
@@ -36,13 +41,13 @@ export default function ForgotPasswordPage() {
     if (!isValid) return;
 
     if (!isGsmEmail(email)) {
-      setEmailError(true);
+      setEmailErrorMessage(getGsmEmailErrorMessage(email));
       setCodeError(false);
       setPasswordError(false);
       setConfirmPasswordError(false);
       return;
     }
-    setEmailError(false);
+    setEmailErrorMessage("");
     if (!isValidPassword(password)) {
       setPasswordError(true);
       setConfirmPasswordError(false);
@@ -72,20 +77,22 @@ export default function ForgotPasswordPage() {
   const handleSendCode = async () => {
     if (isSendingCode) return;
 
-    if (!isGsmEmail(email)) {
-      setEmailError(true);
+    const emailMessage = getGsmEmailErrorMessage(email);
+
+    if (emailMessage) {
+      setEmailErrorMessage(emailMessage);
       return;
     }
 
     try {
       setIsSendingCode(true);
       await sendPasswordResetCode(email);
-      setEmailError(false);
+      setEmailErrorMessage("");
       setCodeError(false);
       setIsCodeSent(true);
       setTimeLeft(180);
     } catch {
-      setEmailError(false);
+      setEmailErrorMessage("");
       setIsCodeSent(true);
       setTimeLeft(180);
     } finally {
@@ -119,20 +126,20 @@ export default function ForgotPasswordPage() {
       <Input
         type="email"
         value={email}
-        error={emailError}
+        error={emailErrorMessage !== ""}
         onChange={(e) => {
           setEmail(e.target.value);
-          setEmailError(false);
+          setEmailErrorMessage("");
         }}
         placeholder="이메일 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
-          emailError ? "visible" : "invisible"
+          emailErrorMessage ? "visible" : "invisible"
         }`}
       >
-        @gsm.hs.kr 이메일만 사용 가능합니다.
+        {emailErrorMessage || getRequiredMessage("이메일을")}
       </p>
       <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
         인증코드
