@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
 import Image from "next/image";
 
 export type InputSkin = "outlined" | "filled";
@@ -10,6 +10,7 @@ type InputProps = {
   skin?: InputSkin;
   error?: boolean;
   showPasswordToggle?: boolean;
+  rightElement?: ReactNode;
 } & InputHTMLAttributes<HTMLInputElement>;
 
 export const Input = ({
@@ -18,6 +19,7 @@ export const Input = ({
   skin = "filled",
   error,
   showPasswordToggle = false,
+  rightElement,
   type,
   ...props
 }: InputProps) => {
@@ -49,9 +51,17 @@ export const Input = ({
     >
       <input
         type={inputType}
-        className="w-full h-14 appearance-none bg-transparent text-[20px] font-normal not-italic leading-[100%] tracking-normal text-black placeholder:text-[#95979D] placeholder:opacity-100 focus:outline-none"
+        className={`w-full h-14 appearance-none bg-transparent text-[20px] font-normal not-italic leading-[100%] tracking-normal text-black placeholder:text-[#95979D] placeholder:opacity-100 focus:outline-none ${
+          showPasswordToggle || rightElement ? "pr-20" : ""
+        }`}
         {...props}
       />
+
+      {rightElement && (
+        <div className="absolute right-4 flex items-center justify-center">
+          {rightElement}
+        </div>
+      )}
 
       {showPasswordToggle && (
         <button

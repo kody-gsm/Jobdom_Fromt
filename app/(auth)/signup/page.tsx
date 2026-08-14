@@ -147,6 +147,13 @@ export default function SignupPage() {
           );
           setCodeError(false);
         }}
+        rightElement={
+          isCodeSent ? (
+            <span className="text-[15px] font-[400] text-[#95979D]">
+              {minutes}:{seconds}
+            </span>
+          ) : null
+        }
         placeholder="인증코드 입력"
         className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
@@ -158,13 +165,7 @@ export default function SignupPage() {
         인증코드가 올바르지 않습니다.
       </p>
 
-      <div className="mt-[-4px] flex justify-end items-center w-[600px] gap-2">
-        {isCodeSent && (
-          <span className="text-[15px] font-[400] text-[#95979D]">
-            {minutes}:{seconds}
-          </span>
-        )}
-
+      <div className="mt-[-4px] flex justify-end items-center w-[600px]">
         <button
           type="button"
           disabled={isSendingCode}
