@@ -1,11 +1,13 @@
 /* 회원가입 페이지 */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { isGsmEmail, isValidPassword } from "@/app/utils/authValidation";
+import { sendSignupCode, signup } from "@/app/utils/authApi";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -16,16 +18,59 @@ export default function SignupPage() {
   const [codeError, setCodeError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
   const router = useRouter();
-  const MOCK_CODE = "123456";
   const isValid =
     email.trim() !== "" &&
     authenticationCode.trim() !== "" &&
     password.trim() !== "" &&
-    confirmPassword.trim() !== "";
+    confirmPassword.trim() !== "" &&
+    !isSubmitting;
 
-  const handleSignup = () => {
-    if (!email.endsWith("@gsm.hs.kr")) {
+  const handleSendCode = async () => {
+    if (!isGsmEmail(email)) {
+      setEmailError(true);
+      return;
+    }
+
+    try {
+      setIsSendingCode(true);
+      await sendSignupCode(email);
+      setEmailError(false);
+      setCodeError(false);
+      setIsCodeSent(true);
+      setTimeLeft(180);
+    } catch {
+      setEmailError(false);
+      setIsCodeSent(true);
+      setTimeLeft(180);
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const seconds = String(timeLeft % 60).padStart(2, "0");
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!isValid) return;
+
+    if (!isGsmEmail(email)) {
       setEmailError(true);
       setCodeError(false);
       setPasswordError(false);
@@ -33,16 +78,7 @@ export default function SignupPage() {
       return;
     }
     setEmailError(false);
-    if (authenticationCode !== MOCK_CODE) {
-      setCodeError(true);
-      setPasswordError(false);
-      setConfirmPasswordError(false);
-      return;
-    }
-    setCodeError(false);
-    const passwordRegex =
-      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{10,}$/;
-    if (!passwordRegex.test(password)) {
+    if (!isValidPassword(password)) {
       setPasswordError(true);
       setConfirmPasswordError(false);
       return;
@@ -53,10 +89,21 @@ export default function SignupPage() {
       return;
     }
     setConfirmPasswordError(false);
-    router.push("/login");
+
+    try {
+      setIsSubmitting(true);
+      await signup(email, authenticationCode, password);
+      setCodeError(false);
+      router.push("/login");
+    } catch {
+      setCodeError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
+      <form onSubmit={handleSignup} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"
@@ -111,9 +158,26 @@ export default function SignupPage() {
         인증코드가 올바르지 않습니다.
       </p>
 
-      <p className="mt-[-4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer">
-        인증코드 발송
-      </p>
+      <div className="mt-[-4px] flex justify-end items-center w-[600px] gap-2">
+        {isCodeSent && (
+          <span className="text-[15px] font-[400] text-[#95979D]">
+            {minutes}:{seconds}
+          </span>
+        )}
+
+        <button
+          type="button"
+          disabled={isSendingCode}
+          onClick={handleSendCode}
+          className="text-[15px] font-[400] text-[#02C551] cursor-pointer disabled:cursor-not-allowed disabled:text-[#95979D]"
+        >
+          {isSendingCode
+            ? "발송 중"
+            : isCodeSent
+              ? "인증코드 재발송"
+              : "인증코드 발송"}
+        </button>
+      </div>
       <span className="text-left w-[600px] text-[18px] font-medium">
         비밀번호
       </span>
@@ -163,7 +227,6 @@ export default function SignupPage() {
         content="확인"
         type="submit"
         disabled={!isValid}
-        onClick={handleSignup}
         className={`mt-[74px] w-[600px] h-[56px] text-[23px] text-white mb-[128px]
           ${
             isValid
@@ -171,6 +234,7 @@ export default function SignupPage() {
               : "bg-[#CFD0D1] cursor-not-allowed"
           }`}
       />
+      </form>
     </main>
   );
 }

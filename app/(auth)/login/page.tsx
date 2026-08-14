@@ -6,50 +6,43 @@ import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { login } from "@/app/utils/authApi";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-
-  const mockUsers = [
-    {
-      email: "s25011@gsm.hs.kr",
-      password: "1234",
-    },
-    {
-      email: "s25012@gsm.hs.kr",
-      password: "5678",
-    },
-  ];
 
   const isValid =
     email.trim() !== "" &&
-    password.trim() !== "";
+    password.trim() !== "" &&
+    !isSubmitting;
 
-  const handleLogin = () => {
-    const user = mockUsers.find(
-      (user) => user.email === email
-    );
-    if (!user) {
-      setEmailError(true);
-      setPasswordError(false);
-      return;
-    }
-    if (user.password !== password) {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!isValid) return;
+
+    try {
+      setIsSubmitting(true);
+      await login(email, password);
       setEmailError(false);
+      setPasswordError(false);
+      router.push("/main");
+    } catch {
+      setEmailError(true);
       setPasswordError(true);
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-    setEmailError(false);
-    setPasswordError(false);
-    router.push("/main");
   };
 
   return (
     <main className="flex flex-col items-center justify-center">
+      <form onSubmit={handleLogin} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"
@@ -109,7 +102,6 @@ export default function LoginPage() {
         content="확인"
         type="submit"
         disabled={!isValid}
-        onClick={handleLogin}
         className={`mt-[52px] w-[600px] h-[56px] text-[23px] text-white ${
           isValid
             ? "bg-[#02C551] cursor-pointer"
@@ -126,6 +118,7 @@ export default function LoginPage() {
           회원가입
         </p>
       </div>
+      </form>
     </main>
   );
 }

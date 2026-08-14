@@ -6,6 +6,11 @@ import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { isGsmEmail, isValidPassword } from "@/app/utils/authValidation";
+import {
+  resetPassword,
+  sendPasswordResetCode,
+} from "@/app/utils/authApi";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -16,15 +21,21 @@ export default function ForgotPasswordPage() {
   const [codeError, setCodeError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
   const router = useRouter();
-  const MOCK_CODE = "123456";
   const isValid =
     email.trim() !== "" &&
     authenticationCode.trim() !== "" &&
     password.trim() !== "" &&
-    confirmPassword.trim() !== "";
-  const handleReset = () => {
-    if (!email.endsWith("@gsm.hs.kr")) {
+    confirmPassword.trim() !== "" &&
+    !isSubmitting;
+  const handleReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!isValid) return;
+
+    if (!isGsmEmail(email)) {
       setEmailError(true);
       setCodeError(false);
       setPasswordError(false);
@@ -32,16 +43,7 @@ export default function ForgotPasswordPage() {
       return;
     }
     setEmailError(false);
-    if (authenticationCode !== MOCK_CODE) {
-      setCodeError(true);
-      setPasswordError(false);
-      setConfirmPasswordError(false);
-      return;
-    }
-    setCodeError(false);
-    const passwordRegex =
-      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{10,}$/;
-    if (!passwordRegex.test(password)) {
+    if (!isValidPassword(password)) {
       setPasswordError(true);
       setConfirmPasswordError(false);
       return;
@@ -54,13 +56,41 @@ export default function ForgotPasswordPage() {
 
     setConfirmPasswordError(false);
 
-    router.push("/login");
+    try {
+      setIsSubmitting(true);
+      await resetPassword(email, authenticationCode, password);
+      setCodeError(false);
+      router.push("/login");
+    } catch {
+      setCodeError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
-  const handleSendCode = () => {
-  setIsCodeSent(true);
-  setTimeLeft(180);
+  const handleSendCode = async () => {
+    if (isSendingCode) return;
+
+    if (!isGsmEmail(email)) {
+      setEmailError(true);
+      return;
+    }
+
+    try {
+      setIsSendingCode(true);
+      await sendPasswordResetCode(email);
+      setEmailError(false);
+      setCodeError(false);
+      setIsCodeSent(true);
+      setTimeLeft(180);
+    } catch {
+      setEmailError(false);
+      setIsCodeSent(true);
+      setTimeLeft(180);
+    } finally {
+      setIsSendingCode(false);
+    }
   };
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -75,6 +105,7 @@ export default function ForgotPasswordPage() {
   const seconds = String(timeLeft % 60).padStart(2, "0");
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
+      <form onSubmit={handleReset} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"
@@ -135,12 +166,22 @@ export default function ForgotPasswordPage() {
           </span>
         )}
 
-        <p
-          className="text-[15px] font-[400] text-[#02C551] cursor-pointer"
+        <button
+          type="button"
+          disabled={isSendingCode}
+          className={`text-[15px] font-[400] ${
+            isSendingCode
+              ? "text-[#95979D] cursor-not-allowed"
+              : "text-[#02C551] cursor-pointer"
+          }`}
           onClick={handleSendCode}
         >
-          {isCodeSent ? "인증코드 재발송" : "인증코드 발송"}
-        </p>
+          {isSendingCode
+            ? "발송 중"
+            : isCodeSent
+              ? "인증코드 재발송"
+              : "인증코드 발송"}
+        </button>
       </div>
       <span className="text-left w-[600px] text-[18px] font-medium">
         새 비밀번호
@@ -190,7 +231,6 @@ export default function ForgotPasswordPage() {
         content="확인"
         type="submit"
         disabled={!isValid}
-        onClick={handleReset}
         className={`mt-[74px] w-[600px] h-[56px] text-[23px] text-white mb-[128px]
           ${
             isValid
@@ -198,6 +238,7 @@ export default function ForgotPasswordPage() {
               : "bg-[#CFD0D1] cursor-not-allowed"
           }`}
       />
+      </form>
     </main>
   );
 }
