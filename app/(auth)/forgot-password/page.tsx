@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
   const seconds = String(timeLeft % 60).padStart(2, "0");
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
-      <form onSubmit={handleReset} className="flex flex-col items-center">
+      <form noValidate onSubmit={handleReset} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"

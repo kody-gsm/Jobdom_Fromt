@@ -51,7 +51,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-col items-center justify-center">
-      <form onSubmit={handleLogin} className="flex flex-col items-center">
+      <form noValidate onSubmit={handleLogin} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"

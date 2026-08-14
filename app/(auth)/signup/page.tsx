@@ -110,7 +110,7 @@ export default function SignupPage() {
   };
   return (
     <main className="flex flex-col items-center justify-center min-h-screen">
-      <form onSubmit={handleSignup} className="flex flex-col items-center">
+      <form noValidate onSubmit={handleSignup} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"
