@@ -93,7 +93,7 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                className="mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:ring-1 hover:ring-green-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
+                className="service-action-button mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
               >
                 상담 신청하러 가기
               </button>
@@ -115,7 +115,7 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                className="mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:ring-1 hover:ring-green-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
+                className="service-action-button mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
               >
                 상담 신청하러 가기
               </button>
@@ -137,7 +137,7 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                className="mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:ring-1 hover:ring-green-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
+                className="service-action-button mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
               >
                 예약 신청하러 가기
               </button>
