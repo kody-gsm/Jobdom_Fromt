@@ -30,3 +30,26 @@ html, body {
 ::placeholder {
   color: #C5C5C5;
 }
+}
+
+.service-action-button {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.service-action-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 10%),
+    0 4px 6px -4px rgb(0 0 0 / 10%),
+    0 0 0 1px #00A544;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-action-button {
+    transition: none;
+  }
+
+  .service-action-button:hover {
+    transform: none;
+  }
+}
