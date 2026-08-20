@@ -84,8 +84,8 @@ export default function Profile() {
         <div className="w-full bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
           <div className="h-28 bg-[#08D35A]"></div>
           <div className="relative flex flex-col items-center pb-8">
-            <div className="w-28 h-28 bg-white rounded-full border-4 border-white flex items-center justify-center -mt-14 shadow-md overflow-hidden font-bold text-gray-300">
-              <Image src="/profileIcon.svg" alt="profile" width={120} height={120} />
+            <div className="w-28 h-28 bg-[#E8FFF2] rounded-full border-4 border-white flex items-center justify-center -mt-14 shadow-md overflow-hidden font-bold text-gray-300">
+              <Image src="/profileIcon.svg" alt="profile" width={45} height={45} />
             </div>
             <div className="text-center mt-4">
               <h1 className="text-2xl font-bold text-gray-800">{userData?.name}</h1>
