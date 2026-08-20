@@ -15,6 +15,7 @@ export interface UserProfileData {
   history: Consultation[];
 }
 
+// Mockdata
 export const fetchUserProfile = async (): Promise<UserProfileData> => {
   return new Promise((resolve) => {
     setTimeout(() => {
