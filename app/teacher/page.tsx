@@ -592,3 +592,7 @@ export default function Teacher() {
         </div>
     );
 }
+
+export default function TeacherPage() {
+  return <main />;
+}
