@@ -37,10 +37,10 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true);
-      await login(email, password);
+      const session = await login(email, password);
       setEmailErrorMessage("");
       setPasswordError(false);
-      router.push("/main");
+      router.push(session.role === "TEACHER" ? "/teacher" : "/");
     } catch {
       setEmailErrorMessage("잘못된 이메일입니다.");
       setPasswordError(true);

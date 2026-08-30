@@ -1,9 +1,13 @@
 'use client'
 
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { logout } from "@/app/utils/api";
 
 export const Header = () => {
+    const router = useRouter();
     const [isVisible, setIsVisible] = useState(true);
     const lastScrollY = useRef(0);
     const scrollEndTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,16 +54,18 @@ export const Header = () => {
                     isVisible ? "translate-y-0" : "-translate-y-full"
                 }`}
             >
-                <Image
-                    src="/JobdamIcon.svg"
-                    alt="잡담"
-                    width={64}
-                    height={33}
-                    className="h-auto w-14 sm:w-16"
-                />
+                <Link href="/">
+                    <Image
+                        src="/JobdamIcon.svg"
+                        alt="잡담"
+                        width={64}
+                        height={33}
+                        className="h-auto w-14 sm:w-16"
+                    />
+                </Link>
                 <div className="flex items-center gap-4 whitespace-nowrap text-sm font-medium text-[#02C551] sm:gap-8 sm:text-base lg:gap-15 lg:text-xl">
-                    <p>나가기</p>
-                    <p>프로필</p>
+                    <button className="cursor-pointer" type="button" onClick={() => { void logout(); router.push("/login"); }}>로그아웃</button>
+                    <Link href="/profile">프로필</Link>
                 </div>
             </header>
         </>
