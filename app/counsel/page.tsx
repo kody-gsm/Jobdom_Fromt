@@ -2,6 +2,20 @@
 
 import { useEffect, useState, CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { ApiError, createConsultation, getUpcomingConsultations } from "@/app/utils/api";
+
+const getDates = () => {
+  const result: { day: string; date: number; value: string }[] = [];
+  const cursor = new Date();
+  while (result.length < 5) {
+    if (cursor.getDay() !== 0 && cursor.getDay() !== 6) {
+      const value = new Date(cursor.getTime() - cursor.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      result.push({ day: ["일", "월", "화", "수", "목", "금", "토"][cursor.getDay()], date: cursor.getDate(), value });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return result;
+};
 
 export default function CounselPage() {
   const [mounted, setMounted] = useState(false);
@@ -14,14 +28,16 @@ export default function CounselPage() {
   const [content, setContent] = useState("");
 
   const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const [hoverTeacher, setHoverTeacher] = useState<string | null>(null);
-  const [hoverDate, setHoverDate] = useState<number | null>(null);
+  const [hoverDate, setHoverDate] = useState<string | null>(null);
   const [hoverTime, setHoverTime] = useState<string | null>(null);
 
   const [focused, setFocused] = useState("");
+  const [hasCareerReservation, setHasCareerReservation] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [toast, setToast] = useState<{
     msg: string;
@@ -30,6 +46,8 @@ export default function CounselPage() {
 
   useEffect(() => {
     setMounted(true);
+    if (new URLSearchParams(window.location.search).get("type") === "general") setCounselType("general");
+    getUpcomingConsultations("course").then((items) => setHasCareerReservation(items.length > 0)).catch(() => undefined);
   }, []);
 
   const teachers = [
@@ -38,24 +56,13 @@ export default function CounselPage() {
     "정윤기 선생님",
   ];
 
-  const dates = [
-    { day: "월", date: 11 },
-    { day: "화", date: 12 },
-    { day: "수", date: 13 },
-    { day: "목", date: 14 },
-    { day: "금", date: 15 },
-  ];
+  const dates = getDates();
 
-  const times = [
-    "1교시",
-    "2교시",
-    "3교시",
-    "4교시",
-    "점심시간",
-    "5교시",
-    "6교시",
-    "7교시",
-  ];
+  const times = counselType === "career"
+    ? selectedTeacher === "임경원 선생님"
+      ? Array.from({ length: 9 }, (_, index) => `${index + 1}교시`)
+      : selectedTeacher ? ["점심시간", "저녁시간"] : []
+    : ["1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시"];
 
   const showToast = (
     msg: string,
@@ -68,7 +75,7 @@ export default function CounselPage() {
     }, 2500);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!title.trim())
       return showToast("제목을 입력해주세요");
 
@@ -84,7 +91,24 @@ export default function CounselPage() {
     if (!selectedTime)
       return showToast("교시를 선택해주세요");
 
-    showToast("상담 신청이 완료되었습니다", "success");
+    if (counselType === "career" && hasCareerReservation)
+      return showToast("진로 상담은 중복 신청할 수 없습니다");
+
+    try {
+      setSubmitting(true);
+      await createConsultation(counselType === "career" ? "course" : "common", {
+        title: counselType === "career" ? `[${selectedTeacher}] ${title.trim()}` : title.trim(),
+        content: content.trim(),
+        date: selectedDate,
+        period: selectedTime,
+      });
+      if (counselType === "career") setHasCareerReservation(true);
+      showToast("상담 신청이 완료되었습니다", "success");
+    } catch (error) {
+      showToast(error instanceof ApiError ? error.message : "상담 신청에 실패했습니다");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -100,6 +124,7 @@ export default function CounselPage() {
   const handleTabChange = (type: "career" | "general") => {
     setCounselType(type);
     setSelectedTeacher(null);
+    setSelectedTime(null);
   };
 
   const inputStyle = (name: string): CSSProperties => ({
@@ -360,29 +385,29 @@ export default function CounselPage() {
           </h2>
 
           <p style={styles.week}>
-            {"< 5월 3주차 >"}
+            {`< ${new Date(dates[0].value).getMonth() + 1}월 >`}
           </p>
 
           <div style={styles.dateRow}>
             {dates.map((item) => {
               const selected =
-                selectedDate === item.date;
+                selectedDate === item.value;
 
               const hover =
-                hoverDate === item.date;
+                hoverDate === item.value;
 
               return (
                 <button
-                  key={item.date}
+                  key={item.value}
                   onMouseEnter={() =>
-                    setHoverDate(item.date)
+                    setHoverDate(item.value)
                   }
                   onMouseLeave={() =>
                     setHoverDate(null)
                   }
                   onClick={() =>
                     setSelectedDate(
-                      selected ? null : item.date
+                      selected ? null : item.value
                     )
                   }
                   style={{
@@ -460,6 +485,12 @@ export default function CounselPage() {
             })}
           </div>
 
+          {counselType === "career" && selectedTeacher === "임경원 선생님" && selectedTime?.endsWith("교시") && (
+            <p style={{ color: "#DC2626", margin: "-32px 0 32px", fontSize: "14px" }}>
+              수업 담당 선생님의 허가를 먼저 받아주세요.
+            </p>
+          )}
+
           <div style={styles.bottom}>
             <button
               style={styles.cancelBtn}
@@ -471,6 +502,7 @@ export default function CounselPage() {
             <button
               style={styles.okBtn}
               onClick={handleConfirm}
+              disabled={submitting}
             >
               확인
             </button>
