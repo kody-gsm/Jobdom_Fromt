@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tailwindcss" source(".");
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css");
 
 @theme inline {
@@ -30,7 +29,6 @@ html, body {
 
 ::placeholder {
   color: #C5C5C5;
-}
 }
 
 .service-action-button {

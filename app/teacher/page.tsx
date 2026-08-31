@@ -1,8 +1,10 @@
 /* 선생님 페이지 */
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FiChevronLeft as ChevronLeft, FiChevronRight as ChevronRight } from "react-icons/fi";
+import Link from "next/link";
+import { approveConsultation, getSession, getTeacherConsultations } from "@/app/utils/api";
 
 // ── 타입 ─────────────────────────────────────────────
 interface RequestData {
@@ -123,6 +125,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export default function Teacher() {
 
+    const [teacherName, setTeacherName] = useState("선생님");
+
     // 오늘 날짜
     const today = new Date();
 
@@ -177,7 +181,12 @@ export default function Teacher() {
         };
     });
 
-    // 상담 메모 ("+ create memo" 버튼용 독립 모달 - 슬롯 무관)
+    // 교시
+    const periods = ["김권예소", "정윤기"].some((name) => teacherName.includes(name))
+        ? ["점심시간", "저녁시간"]
+        : Array.from({ length: 9 }, (_, index) => `${index + 1}교시`);
+
+    // 상담 메모 (왼쪽 "+ create memo" 버튼용 독립 모달 - 슬롯 무관 / 상담 기록 작성)
     const [counselMemo, setCounselMemo] = useState(false);
     const [standaloneStudentName, setStandaloneStudentName] = useState("");
     const [standaloneContent, setStandaloneContent] = useState("");
@@ -193,15 +202,14 @@ export default function Teacher() {
             return;
         }
         try {
-            const response = await fetch(`${API_URL}/course/record/write`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    studentName: standaloneStudentName,
-                    content: standaloneContent,
-                }),
-            });
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            if (!standaloneStudentName.trim()) {
+                alert("학생 이름을 입력해주세요.");
+                return;
+            }
+            if (!standaloneContent.trim()) {
+                alert("상담 내용을 입력해주세요.");
+                return;
+            }
             alert("상담 메모 저장 완료");
             setStandaloneStudentName("");
             setStandaloneContent("");
@@ -234,30 +242,35 @@ export default function Teacher() {
             const data: ReservationApiItem[] = await response.json();
             const fetched = data.map(toRequestData);
 
-            const pendingFromServer = fetched.filter((item) => !item.approved);
-            const approvedFromServer = fetched.filter((item) => item.approved);
-
-            setRequestData(pendingFromServer);
-
-            const approvedMap: Record<string, RequestData> = {};
-            approvedFromServer.forEach((item) => {
-                approvedMap[item.slotKey] = item;
-            });
-            setApprovedBySlot(approvedMap);
-        } catch (error) {
-            console.error(error);
-            setLoadRequestsError("상담 신청 데이터를 불러오지 못했습니다.");
-        } finally {
-            setIsLoadingRequests(false);
-        }
-    }, []);
+    // 요청 목록 (각 항목에 slotKey 포함)
+    const [requestData, setRequestData] = useState<RequestData[]>([]);
 
     // 마운트 시 1회 상담 신청 데이터 로드 (수업 시간표는 하드코딩된 WEEKLY_CLASS_SCHEDULE 사용)
     useEffect(() => {
         fetchRequestData();
     }, [fetchRequestData]);
 
-    // 대기 목록 모달이 열린 슬롯 (null이면 닫힘)
+    const loadReservations = async () => {
+        const approved = await getTeacherConsultations("course");
+        setRequestData([]);
+        setApprovedBySlot(Object.fromEntries(approved.map((item) => [
+            `${item.date}_${item.period}`,
+            { ...item, student_number: "", content: "", approved: true, slotKey: `${item.date}_${item.period}` },
+        ])));
+    };
+
+    useEffect(() => {
+        getTeacherConsultations("course").then((approved) => {
+            setTeacherName(getSession()?.name || "선생님");
+            setRequestData([]);
+            setApprovedBySlot(Object.fromEntries(approved.map((item) => [
+                `${item.date}_${item.period}`,
+                { ...item, student_number: "", content: "", approved: true, slotKey: `${item.date}_${item.period}` },
+            ])));
+        }).catch(() => undefined);
+    }, []);
+
+    // ✅ 핵심 변경: 어떤 슬롯에서 모달을 열었는지 저장 (null이면 모달 닫힘)
     const [openRequestModalSlot, setOpenRequestModalSlot] = useState<string | null>(null);
 
     // 예약 확정 정보 모달이 열린 슬롯 (null이면 닫힘)
@@ -266,32 +279,13 @@ export default function Teacher() {
     const handleOpenRequest = (slotKey: string) => setOpenRequestModalSlot(slotKey);
     const handleOpenConfirm = (slotKey: string) => setOpenConfirmSlot(slotKey);
 
-    // 거절: 대기 목록에서 제거 (+ 서버 반영)
-    const handleReject = async (reservationId: number) => {
-        try {
-            await fetch(`${API_URL}/course/reservation/${reservationId}/reject`, {
-                method: "POST",
-            });
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setRequestData((prev) =>
-                prev.filter((item) => item.reservation_id !== reservationId)
-            );
-        }
-    };
-
-    // 승인: 해당 슬롯에만 저장, 다른 슬롯에는 영향 없음 (+ 서버 반영)
+    // ✅ 핵심 변경: 승인 시 해당 슬롯에만 저장, 다른 슬롯에는 영향 없음
     const handleApprove = async (reservationId: number) => {
-        const approvedItem = requestData.find(
-            (item) => item.reservation_id === reservationId
-        );
-        if (!approvedItem) return;
-
         try {
-            await fetch(`${API_URL}/course/reservation/${reservationId}/approve`, {
-                method: "POST",
-            });
+            if (!openRequestModalSlot) return;
+            await approveConsultation("course", reservationId);
+            await loadReservations();
+            setOpenRequestModalSlot(null);
         } catch (error) {
             console.error(error);
         }
@@ -306,11 +300,9 @@ export default function Teacher() {
         setOpenRequestModalSlot(null);
     };
 
-    // 현재 열린 슬롯에 대한 대기자만 필터링 (slotKey로 매칭)
+    // 현재 열린 요청 모달의 대기자 목록 (해당 슬롯에 요청한 사람들)
     const pendingForSlot = openRequestModalSlot
-        ? requestData.filter(
-              (item) => !item.approved && item.slotKey === openRequestModalSlot
-          )
+        ? requestData.filter((item) => !item.approved && item.slotKey === openRequestModalSlot)
         : [];
 
     return (
@@ -326,12 +318,9 @@ export default function Teacher() {
 
                 {/* 버튼 */}
                 <div className="ml-7">
-                    <button
-                        onClick={() => setCounselMemo(true)}
-                        className="bg-[#6EC76F] text-white w-70 h-12 rounded-xl text-xl"
-                    >
-                        + create memo
-                    </button>
+                    <Link href="/teacher/recruit" className="flex bg-[#6EC76F] text-white w-70 h-12 rounded-xl text-xl items-center justify-center">
+                        취업 공고 관리
+                    </Link>
                 </div>
 
                 {/* 달력 */}
@@ -589,14 +578,8 @@ export default function Teacher() {
                                     <div className="text-[14px] text-gray-600 mb-3">{item.content}</div>
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => handleReject(item.reservation_id)}
-                                            className="flex-1 border rounded-lg py-2 text-sm"
-                                        >
-                                            거절
-                                        </button>
-                                        <button
                                             onClick={() => handleApprove(item.reservation_id)}
-                                            className="flex-1 bg-[#69C56D] text-white rounded-lg py-2 text-sm"
+                                            className="w-full bg-[#69C56D] text-white rounded-lg py-2 text-sm"
                                         >
                                             승인
                                         </button>
@@ -655,8 +638,4 @@ export default function Teacher() {
 
         </div>
     );
-}
-
-export default function TeacherPage() {
-  return <main />;
 }
