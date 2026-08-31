@@ -6,6 +6,123 @@ import { FiChevronLeft as ChevronLeft, FiChevronRight as ChevronRight } from "re
 import Link from "next/link";
 import { approveConsultation, getSession, getTeacherConsultations } from "@/app/utils/api";
 
+// ── 타입 ─────────────────────────────────────────────
+interface RequestData {
+    reservation_id: number;
+    name: string;
+    student_number: string;
+    content: string;
+    approved: boolean;
+    // 어느 날짜+교시 슬롯에 요청했는지 (예: "2025-06-02_4교시")
+    slotKey: string;
+}
+
+// 백엔드에서 내려주는 원본 예약 데이터 형태
+// (실제 서버 응답 필드명에 맞게 자유롭게 조정하세요)
+interface ReservationApiItem {
+    reservation_id: number;
+    name: string;
+    student_number: string;
+    content: string;
+    approved: boolean;
+    // 서버가 슬롯 정보를 date + period로 따로 줄 수도 있고,
+    // slotKey를 그대로 줄 수도 있어서 둘 다 대응합니다.
+    date?: string; // "YYYY-MM-DD"
+    period?: string; // "4교시"
+    slotKey?: string;
+}
+
+// 수업 시간표 한 칸(교시)에 표시할 정보
+interface ClassScheduleEntry {
+    label: string; // 예: "2-4" (학년-반), "창체", "취동" 등
+    subtitle?: string; // 학년-반 수업일 때만 "수업"으로 표시, 창체/취동 등은 생략
+}
+
+// ── 순수 헬퍼 함수 (렌더링마다 재생성될 필요 없으므로 컴포넌트 밖으로 분리) ──
+const days = ["S", "M", "T", "W", "T", "F", "S"];
+
+const periods = [
+    "1교시",
+    "2교시",
+    "3교시",
+    "4교시",
+    "점심시간",
+    "5교시",
+    "6교시",
+    "7교시",
+];
+
+// 주간 요일 라벨 (weekDays 배열의 i=0(월) ~ i=4(금) 순서와 대응)
+const weekdayLabels = ["월", "화", "수", "목", "금"];
+
+// 임경원 선생님 시간표 (하드코딩) — 요일별 · 교시별 수업 정보
+// 사진 속 시간표를 그대로 반영: 학년-반 수업은 subtitle "수업", 창체/취동은 label만 표시
+const WEEKLY_CLASS_SCHEDULE: Record<string, Record<string, ClassScheduleEntry>> = {
+    "월": {
+        "4교시": { label: "3-1", subtitle: "수업" },
+    },
+    "화": {
+        "5교시": { label: "2-2", subtitle: "수업" },
+    },
+    "수": {
+        "1교시": { label: "3-3", subtitle: "수업" },
+        "3교시": { label: "3-4", subtitle: "수업" },
+        "5교시": { label: "창체" },
+        "6교시": { label: "창체" },
+        "7교시": { label: "취동" },
+    },
+    "목": {
+        "1교시": { label: "3-4", subtitle: "수업" },
+        "5교시": { label: "2-4", subtitle: "수업" },
+    },
+    "금": {
+        "1교시": { label: "2-1", subtitle: "수업" },
+        "4교시": { label: "3-2", subtitle: "수업" },
+        "7교시": { label: "2-3", subtitle: "수업" },
+    },
+};
+
+// 슬롯 키 생성: "YYYY-MM-DD_교시명"
+function makeSlotKey(date: Date, period: string) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}_${period}`;
+}
+
+// 기준 날짜가 속한 주의 월요일
+function getMonday(base: Date) {
+    const date = new Date(base);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff);
+    return date;
+}
+
+// date 문자열("YYYY-MM-DD") + period → slotKey 계산
+function resolveSlotKey(date?: string, period?: string, slotKey?: string) {
+    if (slotKey) return slotKey;
+    if (date && period) {
+        const [y, m, d] = date.split("-").map(Number);
+        return makeSlotKey(new Date(y, m - 1, d), period);
+    }
+    return "";
+}
+
+// 서버 응답(ReservationApiItem) → 화면에서 쓰는 RequestData로 변환
+function toRequestData(item: ReservationApiItem): RequestData {
+    return {
+        reservation_id: item.reservation_id,
+        name: item.name,
+        student_number: item.student_number,
+        content: item.content,
+        approved: item.approved,
+        slotKey: resolveSlotKey(item.date, item.period, item.slotKey),
+    };
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 export default function Teacher() {
 
     const [teacherName, setTeacherName] = useState("선생님");
@@ -17,22 +134,7 @@ export default function Teacher() {
     const [currentDate, setCurrentDate] = useState(new Date());
 
     // 선택 날짜
-    const [selectedDate, setSelectedDate] = useState<number>(
-        today.getDate()
-    );
-
-    // 현재 시간 동기화
-    const [now, setNow] = useState(new Date());
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setNow(new Date());
-        }, 60000);
-        return () => clearInterval(timer);
-    }, []);
-
-    // 요일
-    const days = ["S", "M", "T", "W", "T", "F", "S"];
+    const [selectedDate, setSelectedDate] = useState<number>(today.getDate());
 
     // 현재 연도 / 월
     const year = currentDate.getFullYear();
@@ -47,9 +149,7 @@ export default function Teacher() {
     // 날짜 배열
     const dates = [
         ...Array(firstDay).fill(null),
-        ...Array.from({ length: lastDate }, (_, i) => ({
-            day: i + 1,
-        })),
+        ...Array.from({ length: lastDate }, (_, i) => ({ day: i + 1 })),
     ];
 
     // 월 변경
@@ -64,22 +164,18 @@ export default function Teacher() {
         setSelectedDate((prev) => Math.min(prev, newLastDate));
     };
 
-    // 선택 날짜 기준
+    // 선택 날짜 기준 → 해당 주의 월요일
     const baseDate = new Date(year, month, selectedDate);
+    const monday = getMonday(baseDate);
 
-    // 현재 주의 월요일 계산
-    const day = baseDate.getDay();
-    const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(baseDate);
-    monday.setDate(diff);
-
-    // 주간 날짜
+    // 주간 날짜 (월~금)
     const weekDays = Array.from({ length: 5 }, (_, i) => {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
         return {
             fullDate: date,
             day: date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
+            koreanDay: weekdayLabels[i],
             date: date.getDate(),
             isToday: date.toDateString() === today.toDateString(),
         };
@@ -95,46 +191,16 @@ export default function Teacher() {
     const [standaloneStudentName, setStandaloneStudentName] = useState("");
     const [standaloneContent, setStandaloneContent] = useState("");
 
-    // 상담 버튼 클릭 시 열리는 모달의 입력값 (기존 로직 유지, 현재 화면에는 미사용)
-    const [studentName, setStudentName] = useState("");
-    const [content, setContent] = useState("");
-
-    // 상담 버튼 클릭 → 예약 확정 정보 모달 열기
-    const handleOpenConfirm = (slotKey: string) => {
-        setOpenConfirmSlot(slotKey);
-    };
-
-    // 상담 기록 저장 (슬롯별) - 기존 로직 유지
-    const handleWrite = async () => {
-        try {
-            if (!studentName.trim()) {
-                alert("학생 이름을 입력해주세요.");
-                return;
-            }
-            if (!content.trim()) {
-                alert("상담 내용을 입력해주세요.");
-                return;
-            }
-            // 슬롯에 메모 저장
-            if (openConfirmSlot) {
-                setMemoBySlot((prev) => ({
-                    ...prev,
-                    [openConfirmSlot]: { studentName, content },
-                }));
-            }
-
-            alert("상담 메모 저장 완료");
-            setStudentName("");
-            setContent("");
-            setOpenConfirmSlot(null);
-        } catch (error) {
-            console.error(error);
-            alert("상담 메모 저장 중 오류가 발생했습니다.");
-        }
-    };
-
     // + create memo 버튼 전용 저장 (슬롯 무관)
     const handleWriteStandalone = async () => {
+        if (!standaloneStudentName.trim()) {
+            alert("학생 이름을 입력해주세요.");
+            return;
+        }
+        if (!standaloneContent.trim()) {
+            alert("상담 내용을 입력해주세요.");
+            return;
+        }
         try {
             if (!standaloneStudentName.trim()) {
                 alert("학생 이름을 입력해주세요.");
@@ -154,29 +220,35 @@ export default function Teacher() {
         }
     };
 
-    interface RequestData {
-        reservation_id: number;
-        name: string;
-        student_number: string;
-        content: string;
-        approved: boolean;
-        // 어느 날짜+교시 슬롯에 요청했는지 (예: "2025-06-02_4교시")
-        slotKey: string;
-    }
+    // 예약 요청 목록 (서버 데이터로만 채워짐)
+    const [requestData, setRequestData] = useState<RequestData[]>([]);
 
-    // 슬롯 키 생성 함수: "YYYY-MM-DD_교시명"
-    const makeSlotKey = (date: Date, period: string) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        return `${y}-${m}-${d}_${period}`;
-    };
+    // 슬롯별로 승인된 예약 (key: slotKey)
+    const [approvedBySlot, setApprovedBySlot] = useState<Record<string, RequestData>>({});
+
+    // 상담 신청 데이터 로딩 상태
+    const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+    const [loadRequestsError, setLoadRequestsError] = useState<string | null>(null);
+
+    // 백엔드에서 상담 신청(예약) 데이터 가져오기
+    const fetchRequestData = useCallback(async () => {
+        setIsLoadingRequests(true);
+        setLoadRequestsError(null);
+        try {
+            // 엔드포인트 경로는 실제 백엔드 API 명세에 맞게 수정하세요.
+            const response = await fetch(`${API_URL}/course/reservation/list`);
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+            const data: ReservationApiItem[] = await response.json();
+            const fetched = data.map(toRequestData);
 
     // 요청 목록 (각 항목에 slotKey 포함)
     const [requestData, setRequestData] = useState<RequestData[]>([]);
 
-    // ✅ 핵심 변경: 슬롯별로 승인된 예약을 따로 관리 (key: slotKey, value: RequestData)
-    const [approvedBySlot, setApprovedBySlot] = useState<Record<string, RequestData>>({});
+    // 마운트 시 1회 상담 신청 데이터 로드 (수업 시간표는 하드코딩된 WEEKLY_CLASS_SCHEDULE 사용)
+    useEffect(() => {
+        fetchRequestData();
+    }, [fetchRequestData]);
 
     const loadReservations = async () => {
         const approved = await getTeacherConsultations("course");
@@ -201,16 +273,11 @@ export default function Teacher() {
     // ✅ 핵심 변경: 어떤 슬롯에서 모달을 열었는지 저장 (null이면 모달 닫힘)
     const [openRequestModalSlot, setOpenRequestModalSlot] = useState<string | null>(null);
 
-    // 상담(예약 확정 정보) 모달에 사용할 슬롯 키 (null이면 닫힘)
+    // 예약 확정 정보 모달이 열린 슬롯 (null이면 닫힘)
     const [openConfirmSlot, setOpenConfirmSlot] = useState<string | null>(null);
 
-    // 슬롯별 저장된 상담 기록 (key: slotKey)
-    const [memoBySlot, setMemoBySlot] = useState<Record<string, { studentName: string; content: string }>>({});
-
-    // 슬롯 클릭 → 해당 슬롯의 대기 목록 모달 열기
-    const handleOpenRequest = (slotKey: string) => {
-        setOpenRequestModalSlot(slotKey);
-    };
+    const handleOpenRequest = (slotKey: string) => setOpenRequestModalSlot(slotKey);
+    const handleOpenConfirm = (slotKey: string) => setOpenConfirmSlot(slotKey);
 
     // ✅ 핵심 변경: 승인 시 해당 슬롯에만 저장, 다른 슬롯에는 영향 없음
     const handleApprove = async (reservationId: number) => {
@@ -221,8 +288,16 @@ export default function Teacher() {
             setOpenRequestModalSlot(null);
         } catch (error) {
             console.error(error);
-            alert("상담 승인 실패");
         }
+
+        setApprovedBySlot((prev) => ({
+            ...prev,
+            [approvedItem.slotKey]: { ...approvedItem, approved: true },
+        }));
+        setRequestData((prev) =>
+            prev.filter((item) => item.reservation_id !== reservationId)
+        );
+        setOpenRequestModalSlot(null);
     };
 
     // 현재 열린 요청 모달의 대기자 목록 (해당 슬롯에 요청한 사람들)
@@ -309,6 +384,12 @@ export default function Teacher() {
                             <span className="text-sm text-gray-700">상담 대기</span>
                         </div>
                     </div>
+
+                    {loadRequestsError && (
+                        <div className="mt-4 text-xs text-red-500">
+                            {loadRequestsError}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -319,7 +400,10 @@ export default function Teacher() {
                     <h1 className="text-[28px] font-bold text-[#111827]">
                         {currentDate.toLocaleString("en-US", { month: "long", year: "numeric" }).toUpperCase()}
                     </h1>
-                    <span className="text-[16px] font-semibold text-gray-500">진로 상담</span>
+                    <span className="text-[16px] font-semibold text-gray-500">
+                        진로 상담
+                        {isLoadingRequests ? " · 불러오는 중..." : ""}
+                    </span>
                 </div>
 
                 {/* 시간표 */}
@@ -339,7 +423,7 @@ export default function Teacher() {
                             ))}
                         </div>
 
-                        {/* ✅ 날짜 칼럼: 각 날짜×교시 조합마다 독립적인 슬롯 키 사용 */}
+                        {/* 날짜 칼럼: 각 날짜×교시 조합마다 독립적인 슬롯 키 사용 */}
                         {weekDays.map((item) => (
                             <div
                                 key={item.fullDate.toISOString()}
@@ -352,21 +436,44 @@ export default function Teacher() {
                                 </div>
 
                                 {/* 세로 기둥 */}
-                                <div className="relative" style={{ height: `${periods.length * 72}px` }}>
+                                <div className="relative h-[576px]">
 
-                                    {/* ✅ 핵심: 교시마다 각자의 slotKey로 독립적으로 상태 확인 */}
+                                    {/* 교시마다 각자의 slotKey로 독립 상태 확인 (모든 요일/교시에 대해 데이터 기반으로 렌더링) */}
                                     {periods.map((period, pIdx) => {
                                         const slotKey = makeSlotKey(item.fullDate, period);
-                                        const approved = approvedBySlot[slotKey];
-                                        const waiting = requestData.some((request) => request.slotKey === slotKey);
-
-                                        // 교시별 top 위치 계산 (1교시=10px, 이후 +72px씩)
-                                        // 단, 노란 버튼(수업)이 1교시 자리를 쓰고 있으므로
-                                        // 상담 대기 버튼은 원본처럼 top-[210px] 고정 위치에 하나만 표시
-                                        // 실제 서비스에서는 교시별로 top 계산 필요
+                                        const classItem = WEEKLY_CLASS_SCHEDULE[item.koreanDay]?.[period];
                                         const topPx = 10 + pIdx * 72;
 
-                                        if (!approved && !waiting) return null;
+                                        // 수업이 있는 슬롯: 하드코딩된 시간표 정보로 렌더링
+                                        if (classItem) {
+                                            return (
+                                                <div
+                                                    key={slotKey}
+                                                    style={{ top: `${topPx}px` }}
+                                                    className="absolute left-[20px] w-[120px] h-[60px] rounded-xl bg-[#F8EDAD] flex flex-col items-center justify-center"
+                                                >
+                                                    <span className="text-[18px] font-bold text-[#C68F7B]">
+                                                        {classItem.label}
+                                                    </span>
+                                                    {classItem.subtitle && (
+                                                        <span className="text-[10px] text-[#C68F7B]">
+                                                            {classItem.subtitle}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        }
+
+                                        // 점심시간은 상담 슬롯에서 제외
+                                        if (period === "점심시간") return null;
+
+                                        const approved = approvedBySlot[slotKey];
+                                        const hasPending = requestData.some(
+                                            (r) => !r.approved && r.slotKey === slotKey
+                                        );
+
+                                        // 승인/대기 요청이 없는 슬롯은 표시하지 않음
+                                        if (!approved && !hasPending) return null;
 
                                         return approved ? (
                                             <button
@@ -397,7 +504,7 @@ export default function Teacher() {
                 </div>
             </div>
 
-            {/* ✅ "+ create memo" 버튼 전용 모달: 상담 기록 작성 (슬롯 무관) */}
+            {/* "+ create memo" 버튼 전용 모달: 상담 기록 작성 (슬롯 무관) */}
             {counselMemo && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
                     <div className="w-[450px] bg-white rounded-[15px] p-8">
@@ -452,7 +559,7 @@ export default function Teacher() {
                 </div>
             )}
 
-            {/* ✅ 예약 요청 목록 모달: 열린 슬롯의 대기자만 표시 */}
+            {/* 예약 요청 목록 모달: 열린 슬롯의 대기자만 표시 */}
             {openRequestModalSlot && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
                     <div className="w-[450px] bg-white rounded-[30px] p-8">
@@ -497,7 +604,7 @@ export default function Teacher() {
                 </div>
             )}
 
-            {/* ✅ 상담 버튼 클릭 시 모달: 예약 확정 정보만 표시 */}
+            {/* 상담 버튼 클릭 시 모달: 예약 확정 정보만 표시 */}
             {openConfirmSlot && approvedBySlot[openConfirmSlot] && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
                     <div className="w-[450px] bg-white rounded-[15px] p-8">
