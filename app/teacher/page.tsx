@@ -230,44 +230,29 @@ export default function Teacher() {
     const [isLoadingRequests, setIsLoadingRequests] = useState(false);
     const [loadRequestsError, setLoadRequestsError] = useState<string | null>(null);
 
-    // 백엔드에서 상담 신청(예약) 데이터 가져오기
-    const fetchRequestData = useCallback(async () => {
+    const loadReservations = async () => {
         setIsLoadingRequests(true);
         setLoadRequestsError(null);
+
         try {
-            // 엔드포인트 경로는 실제 백엔드 API 명세에 맞게 수정하세요.
-            const response = await fetch(`${API_URL}/course/reservation/list`);
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-            const data: ReservationApiItem[] = await response.json();
-            const fetched = data.map(toRequestData);
-
-    // 요청 목록 (각 항목에 slotKey 포함)
-    const [requestData, setRequestData] = useState<RequestData[]>([]);
-
-    // 마운트 시 1회 상담 신청 데이터 로드 (수업 시간표는 하드코딩된 WEEKLY_CLASS_SCHEDULE 사용)
-    useEffect(() => {
-        fetchRequestData();
-    }, [fetchRequestData]);
-
-    const loadReservations = async () => {
-        const approved = await getTeacherConsultations("course");
-        setRequestData([]);
-        setApprovedBySlot(Object.fromEntries(approved.map((item) => [
-            `${item.date}_${item.period}`,
-            { ...item, student_number: "", content: "", approved: true, slotKey: `${item.date}_${item.period}` },
-        ])));
-    };
-
-    useEffect(() => {
-        getTeacherConsultations("course").then((approved) => {
-            setTeacherName(getSession()?.name || "선생님");
+            const approved = await getTeacherConsultations("course");
             setRequestData([]);
             setApprovedBySlot(Object.fromEntries(approved.map((item) => [
                 `${item.date}_${item.period}`,
                 { ...item, student_number: "", content: "", approved: true, slotKey: `${item.date}_${item.period}` },
             ])));
-        }).catch(() => undefined);
+        } catch (error) {
+            console.error(error);
+            setLoadRequestsError("상담 신청 데이터를 불러오지 못했습니다.");
+            throw error;
+        } finally {
+            setIsLoadingRequests(false);
+        }
+    };
+
+    useEffect(() => {
+        setTeacherName(getSession()?.name || "선생님");
+        void loadReservations().catch(() => undefined);
     }, []);
 
     // ✅ 핵심 변경: 어떤 슬롯에서 모달을 열었는지 저장 (null이면 모달 닫힘)
@@ -289,15 +274,6 @@ export default function Teacher() {
         } catch (error) {
             console.error(error);
         }
-
-        setApprovedBySlot((prev) => ({
-            ...prev,
-            [approvedItem.slotKey]: { ...approvedItem, approved: true },
-        }));
-        setRequestData((prev) =>
-            prev.filter((item) => item.reservation_id !== reservationId)
-        );
-        setOpenRequestModalSlot(null);
     };
 
     // 현재 열린 요청 모달의 대기자 목록 (해당 슬롯에 요청한 사람들)
