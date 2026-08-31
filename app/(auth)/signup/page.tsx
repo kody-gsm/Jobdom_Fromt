@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/atoms/Button";
@@ -13,6 +13,8 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
   const router = useRouter();
 
   const update = (name: keyof typeof form, value: string) => setForm((current) => ({ ...current, [name]: value }));
@@ -41,12 +43,27 @@ export default function SignupPage() {
       setSendingCode(true);
       setError("");
       await sendSignupVerificationCode(form.email.trim());
+      setIsCodeSent(true);
+      setTimeLeft(180);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : "인증코드를 발송하지 못했습니다.");
     } finally {
       setSendingCode(false);
     }
   };
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((current) => current - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const seconds = String(timeLeft % 60).padStart(2, "0");
 
   const valid = Object.values(form).every(Boolean) && !submitting;
 
@@ -55,8 +72,8 @@ export default function SignupPage() {
       <form noValidate onSubmit={submit} className="flex flex-col items-center">
         <Image src="/JobdamIcon.svg" alt="로고" width={210} height={100} className="mt-[64px]" />
         <Field label="이메일" value={form.email} onChange={(value) => update("email", value)} type="email" placeholder="이메일 입력" />
-        <button type="button" disabled={sendingCode} onClick={sendCode} className="mt-3 w-[600px] text-right text-[15px] text-[#02C551] disabled:text-[#95979D]">{sendingCode ? "발송 중" : "인증코드 발송"}</button>
-        <Field label="인증코드" value={form.verificationCode} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증코드 입력" />
+        <button type="button" disabled={sendingCode} onClick={sendCode} className="mt-3 w-[600px] text-right text-[15px] text-[#02C551] disabled:text-[#95979D]">{sendingCode ? "발송 중" : isCodeSent ? "인증코드 재발송" : "인증코드 발송"}</button>
+        <Field label="인증코드" value={form.verificationCode} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증코드 입력" rightElement={isCodeSent ? <span className="text-[15px] text-[#95979D]">{minutes}:{seconds}</span> : undefined} />
         <Field label="비밀번호" value={form.password} onChange={(value) => update("password", value)} type="password" password placeholder="비밀번호 입력" />
         <Field label="비밀번호 확인" value={form.confirm} onChange={(value) => update("confirm", value)} type="password" password placeholder="비밀번호 재입력" />
         <p className={`mt-2 w-[600px] text-right text-[15px] text-[#D61E1E] ${error ? "visible" : "invisible"}`}>{error || "오류"}</p>
@@ -66,16 +83,17 @@ export default function SignupPage() {
   );
 }
 
-function Field({ label, value, onChange, password, ...props }: {
+function Field({ label, value, onChange, password, rightElement, ...props }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   password?: boolean;
+  rightElement?: React.ReactNode;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <>
       <span className="mt-[20px] w-[600px] text-left text-[18px] font-medium">{label}</span>
-      <Input {...props} value={value} onChange={(event) => onChange(event.target.value)} showPasswordToggle={password} className="mt-[16px] h-[56px] w-[600px] px-[16px] py-[16px]" />
+      <Input {...props} value={value} onChange={(event) => onChange(event.target.value)} showPasswordToggle={password} rightElement={rightElement} className="mt-[16px] h-[56px] w-[600px] px-[16px] py-[16px]" />
     </>
   );
 }
