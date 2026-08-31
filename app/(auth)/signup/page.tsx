@@ -54,11 +54,11 @@ export default function SignupPage() {
     <main className="flex min-h-screen flex-col items-center justify-center">
       <form noValidate onSubmit={submit} className="flex flex-col items-center">
         <Image src="/JobdamIcon.svg" alt="로고" width={210} height={100} className="mt-[64px]" />
-        <Field label="이메일" value={form.email} onChange={(value) => update("email", value)} type="email" />
+        <Field label="이메일" value={form.email} onChange={(value) => update("email", value)} type="email" placeholder="이메일 입력" />
         <button type="button" disabled={sendingCode} onClick={sendCode} className="mt-3 w-[600px] text-right text-[15px] text-[#02C551] disabled:text-[#95979D]">{sendingCode ? "발송 중" : "인증코드 발송"}</button>
-        <Field label="인증코드" value={form.verificationCode} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} />
-        <Field label="비밀번호" value={form.password} onChange={(value) => update("password", value)} type="password" password />
-        <Field label="비밀번호 확인" value={form.confirm} onChange={(value) => update("confirm", value)} type="password" password />
+        <Field label="인증코드" value={form.verificationCode} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증코드 입력" />
+        <Field label="비밀번호" value={form.password} onChange={(value) => update("password", value)} type="password" password placeholder="비밀번호 입력" />
+        <Field label="비밀번호 확인" value={form.confirm} onChange={(value) => update("confirm", value)} type="password" password placeholder="비밀번호 재입력" />
         <p className={`mt-2 w-[600px] text-right text-[15px] text-[#D61E1E] ${error ? "visible" : "invisible"}`}>{error || "오류"}</p>
         <Button content="확인" type="submit" disabled={!valid} className={`mb-[128px] mt-[52px] h-[56px] w-[600px] text-[23px] text-white ${valid ? "cursor-pointer bg-[#02C551]" : "cursor-not-allowed bg-[#CFD0D1]"}`} />
       </form>
