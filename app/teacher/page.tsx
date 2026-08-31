@@ -2,9 +2,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { FiChevronLeft as ChevronLeft, FiChevronRight as ChevronRight } from "react-icons/fi";
+import Link from "next/link";
+import { approveConsultation, getSession, getTeacherConsultations } from "@/app/utils/api";
 
 export default function Teacher() {
+
+    const [teacherName, setTeacherName] = useState("선생님");
 
     // 오늘 날짜
     const today = new Date();
@@ -82,16 +86,9 @@ export default function Teacher() {
     });
 
     // 교시
-    const periods = [
-        "1교시",
-        "2교시",
-        "3교시",
-        "4교시",
-        "점심시간",
-        "5교시",
-        "6교시",
-        "7교시",
-    ];
+    const periods = ["김권예소", "정윤기"].some((name) => teacherName.includes(name))
+        ? ["점심시간", "저녁시간"]
+        : Array.from({ length: 9 }, (_, index) => `${index + 1}교시`);
 
     // 상담 메모 (왼쪽 "+ create memo" 버튼용 독립 모달 - 슬롯 무관 / 상담 기록 작성)
     const [counselMemo, setCounselMemo] = useState(false);
@@ -101,9 +98,6 @@ export default function Teacher() {
     // 상담 버튼 클릭 시 열리는 모달의 입력값 (기존 로직 유지, 현재 화면에는 미사용)
     const [studentName, setStudentName] = useState("");
     const [content, setContent] = useState("");
-
-    // API 주소
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
     // 상담 버튼 클릭 → 예약 확정 정보 모달 열기
     const handleOpenConfirm = (slotKey: string) => {
@@ -121,15 +115,6 @@ export default function Teacher() {
                 alert("상담 내용을 입력해주세요.");
                 return;
             }
-            const response = await fetch(`${API_URL}/course/record/write`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentName, content }),
-            });
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-            const data = await response.json();
-            console.log(data);
-
             // 슬롯에 메모 저장
             if (openConfirmSlot) {
                 setMemoBySlot((prev) => ({
@@ -159,12 +144,6 @@ export default function Teacher() {
                 alert("상담 내용을 입력해주세요.");
                 return;
             }
-            const response = await fetch(`${API_URL}/course/record/write`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentName: standaloneStudentName, content: standaloneContent }),
-            });
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             alert("상담 메모 저장 완료");
             setStandaloneStudentName("");
             setStandaloneContent("");
@@ -194,19 +173,30 @@ export default function Teacher() {
     };
 
     // 요청 목록 (각 항목에 slotKey 포함)
-    const [requestData, setRequestData] = useState<RequestData[]>([
-        {
-            reservation_id: 1,
-            name: "홍길동",
-            student_number: "2301",
-            content: "취업 관련 상담을 받고 싶습니다.",
-            approved: false,
-            slotKey: "", // 실제 연동 시 서버에서 받아올 값
-        }
-    ]);
+    const [requestData, setRequestData] = useState<RequestData[]>([]);
 
     // ✅ 핵심 변경: 슬롯별로 승인된 예약을 따로 관리 (key: slotKey, value: RequestData)
     const [approvedBySlot, setApprovedBySlot] = useState<Record<string, RequestData>>({});
+
+    const loadReservations = async () => {
+        const approved = await getTeacherConsultations("course");
+        setRequestData([]);
+        setApprovedBySlot(Object.fromEntries(approved.map((item) => [
+            `${item.date}_${item.period}`,
+            { ...item, student_number: "", content: "", approved: true, slotKey: `${item.date}_${item.period}` },
+        ])));
+    };
+
+    useEffect(() => {
+        getTeacherConsultations("course").then((approved) => {
+            setTeacherName(getSession()?.name || "선생님");
+            setRequestData([]);
+            setApprovedBySlot(Object.fromEntries(approved.map((item) => [
+                `${item.date}_${item.period}`,
+                { ...item, student_number: "", content: "", approved: true, slotKey: `${item.date}_${item.period}` },
+            ])));
+        }).catch(() => undefined);
+    }, []);
 
     // ✅ 핵심 변경: 어떤 슬롯에서 모달을 열었는지 저장 (null이면 모달 닫힘)
     const [openRequestModalSlot, setOpenRequestModalSlot] = useState<string | null>(null);
@@ -222,39 +212,12 @@ export default function Teacher() {
         setOpenRequestModalSlot(slotKey);
     };
 
-    const handleReject = async (reservationId: number) => {
-        try {
-            setRequestData((prev) =>
-                prev.filter((item) => item.reservation_id !== reservationId)
-            );
-        } catch (error) {
-            console.error(error);
-            alert("상담 거절 실패");
-        }
-    };
-
     // ✅ 핵심 변경: 승인 시 해당 슬롯에만 저장, 다른 슬롯에는 영향 없음
     const handleApprove = async (reservationId: number) => {
         try {
             if (!openRequestModalSlot) return;
-
-            const approvedItem = requestData.find(
-                (item) => item.reservation_id === reservationId
-            );
-
-            if (approvedItem) {
-                setApprovedBySlot((prev) => ({
-                    ...prev,
-                    [openRequestModalSlot]: { ...approvedItem, approved: true },
-                }));
-            }
-
-            // 승인된 항목을 대기 목록에서 제거
-            setRequestData((prev) =>
-                prev.filter((item) => item.reservation_id !== reservationId)
-            );
-
-            // 모달 닫기
+            await approveConsultation("course", reservationId);
+            await loadReservations();
             setOpenRequestModalSlot(null);
         } catch (error) {
             console.error(error);
@@ -263,9 +226,8 @@ export default function Teacher() {
     };
 
     // 현재 열린 요청 모달의 대기자 목록 (해당 슬롯에 요청한 사람들)
-    // slotKey가 없는 더미 데이터는 현재 열린 슬롯에 임시로 배정
     const pendingForSlot = openRequestModalSlot
-        ? requestData.filter((item) => !item.approved)
+        ? requestData.filter((item) => !item.approved && item.slotKey === openRequestModalSlot)
         : [];
 
     return (
@@ -281,12 +243,9 @@ export default function Teacher() {
 
                 {/* 버튼 */}
                 <div className="ml-7">
-                    <button
-                        onClick={() => setCounselMemo(true)}
-                        className="bg-[#6EC76F] text-white w-70 h-12 rounded-xl text-xl"
-                    >
-                        + create memo
-                    </button>
+                    <Link href="/teacher/recruit" className="flex bg-[#6EC76F] text-white w-70 h-12 rounded-xl text-xl items-center justify-center">
+                        취업 공고 관리
+                    </Link>
                 </div>
 
                 {/* 달력 */}
@@ -393,21 +352,13 @@ export default function Teacher() {
                                 </div>
 
                                 {/* 세로 기둥 */}
-                                <div className="relative h-[576px]">
-
-                                    {/* 노란 버튼 (수업) */}
-                                    {/* 노란 버튼 (수업) - 월요일 1교시에만 표시 */}
-                                    {item.day === "MON" && (
-                                        <button className="absolute top-[10px] left-[20px] w-[120px] h-[60px] rounded-xl bg-[#F8EDAD] flex flex-col items-center justify-center">
-                                            <span className="text-[18px] font-bold text-[#C68F7B]">2-4</span>
-                                            <span className="text-[10px] text-[#C68F7B]">수업</span>
-                                        </button>
-                                    )}
+                                <div className="relative" style={{ height: `${periods.length * 72}px` }}>
 
                                     {/* ✅ 핵심: 교시마다 각자의 slotKey로 독립적으로 상태 확인 */}
                                     {periods.map((period, pIdx) => {
                                         const slotKey = makeSlotKey(item.fullDate, period);
                                         const approved = approvedBySlot[slotKey];
+                                        const waiting = requestData.some((request) => request.slotKey === slotKey);
 
                                         // 교시별 top 위치 계산 (1교시=10px, 이후 +72px씩)
                                         // 단, 노란 버튼(수업)이 1교시 자리를 쓰고 있으므로
@@ -415,12 +366,7 @@ export default function Teacher() {
                                         // 실제 서비스에서는 교시별로 top 계산 필요
                                         const topPx = 10 + pIdx * 72;
 
-                                        // 수업 버튼과 겹치는 1교시(pIdx=0)는 건너뜀
-                                        if (pIdx === 0) return null;
-
-                                        // 예시로 4교시(pIdx=3)에만 상담 슬롯 표시 (원본 동작 유지)
-                                        // 실제 서비스에서는 서버 데이터로 어느 교시에 상담이 있는지 결정
-                                        if (pIdx !== 3 || item.day !== "MON") return null;
+                                        if (!approved && !waiting) return null;
 
                                         return approved ? (
                                             <button
@@ -525,14 +471,8 @@ export default function Teacher() {
                                     <div className="text-[14px] text-gray-600 mb-3">{item.content}</div>
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => handleReject(item.reservation_id)}
-                                            className="flex-1 border rounded-lg py-2 text-sm"
-                                        >
-                                            거절
-                                        </button>
-                                        <button
                                             onClick={() => handleApprove(item.reservation_id)}
-                                            className="flex-1 bg-[#69C56D] text-white rounded-lg py-2 text-sm"
+                                            className="w-full bg-[#69C56D] text-white rounded-lg py-2 text-sm"
                                         >
                                             승인
                                         </button>
@@ -591,8 +531,4 @@ export default function Teacher() {
 
         </div>
     );
-}
-
-export default function TeacherPage() {
-  return <main />;
 }

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { IoMdChatbubbles } from "react-icons/io";
 import { PiTextAlignLeftFill } from "react-icons/pi";
-import { FaCalendar } from "react-icons/fa";
+import { FaBriefcase } from "react-icons/fa";
+import Link from "next/link";
 import { Header } from "./components/organisms";
 
 export default function Home() {
@@ -91,12 +92,12 @@ export default function Home() {
                   맞는 방향을 설정할 수 있습니다.
                 </p>
               </div>
-              <button
-                type="button"
+              <Link
+                href="/counsel?type=career"
                 className="service-action-button mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
               >
                 상담 신청하러 가기
-              </button>
+              </Link>
             </article>
 
             <article className="flex min-h-[320px] w-full flex-col items-center rounded-3xl bg-green-200/70 px-6 py-8 text-center sm:min-h-[340px] sm:p-8 lg:min-h-[360px] lg:px-6 xl:p-10">
@@ -113,34 +114,30 @@ export default function Home() {
                   있습니다.
                 </p>
               </div>
-              <button
-                type="button"
+              <Link
+                href="/counsel?type=general"
                 className="service-action-button mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
               >
                 상담 신청하러 가기
-              </button>
+              </Link>
             </article>
 
             <article className="flex min-h-[320px] w-full flex-col items-center rounded-3xl bg-green-200/70 px-6 py-8 text-center sm:min-h-[340px] sm:p-8 md:col-span-2 md:w-[calc(50%-0.75rem)] md:justify-self-center lg:col-span-1 lg:min-h-[360px] lg:w-full lg:px-6 xl:p-10">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white sm:h-20 sm:w-20 sm:rounded-3xl">
-                <FaCalendar
+                <FaBriefcase
                   aria-hidden="true"
                   className="h-8 w-8 text-green-600 sm:h-10 sm:w-10"
                 />
               </div>
               <div className="mt-6 flex flex-1 flex-col items-center sm:mt-8">
-                <h3 className="text-xl font-bold sm:text-2xl">면접실 예약</h3>
-                <p className="mt-3 max-w-sm break-keep text-sm font-light leading-6 text-gray-600">
-                  면접 준비 및 연습을 위한 공간을 사전 예약하여 쾌적한 환경에서
-                  효율적으로 이용할 수 있습니다.
-                </p>
+                <h3 className="text-xl font-bold sm:text-2xl">GSM 취업</h3>
               </div>
-              <button
-                type="button"
+              <Link
+                href="/recruit"
                 className="service-action-button mt-6 flex min-h-11 w-full max-w-60 cursor-pointer items-center justify-center rounded-3xl bg-white px-5 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:mt-8"
               >
-                예약 신청하러 가기
-              </button>
+                취업 공고 보러 가기
+              </Link>
             </article>
           </div>
         </section>
