@@ -6,6 +6,7 @@ import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ApiError } from "@/app/utils/api";
 import { login } from "@/app/utils/authApi";
 import { getRequiredMessage } from "@/app/utils/authValidation";
 
@@ -43,9 +44,14 @@ export default function LoginPage() {
       setEmailErrorMessage("");
       setPasswordError(false);
       router.push(session.role === "TEACHER" ? "/teacher" : "/");
-    } catch {
-      setEmailErrorMessage("이메일 또는 비밀번호가 올바르지 않습니다.");
-      setPasswordError(false);
+    } catch (caught) {
+      const message = caught instanceof ApiError ? caught.message.toLowerCase() : "";
+      const isEmailError = ["email", "이메일", "user", "사용자", "존재하지"].some((keyword) => message.includes(keyword));
+      if (isEmailError) {
+        setEmailErrorMessage("잘못된 이메일입니다.");
+      } else {
+        setPasswordError(true);
+      }
     } finally {
       setIsSubmitting(false);
     }
