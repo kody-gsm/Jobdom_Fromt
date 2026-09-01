@@ -53,6 +53,7 @@ export default function SignupPage() {
       await sendSignupVerificationCode(form.email.trim());
       setIsCodeSent(true);
       setTimeLeft(180);
+      setErrors((current) => ({ ...current, email: "", verificationCode: "" }));
       setResendCooldown(2);
     } catch (caught) {
       setErrors((current) => ({ ...current, email: caught instanceof ApiError ? caught.message : "인증코드를 발송하지 못했습니다." }));
@@ -75,7 +76,9 @@ export default function SignupPage() {
 
   const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const seconds = String(timeLeft % 60).padStart(2, "0");
-  const valid = Object.values(form).every(Boolean) && !submitting;
+  const codeExpired = isCodeSent && timeLeft <= 0;
+  const verificationCodeError = codeExpired ? "인증코드가 만료되었습니다. 재발송해주세요." : errors.verificationCode;
+  const valid = Object.values(form).every(Boolean) && !submitting && !codeExpired;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center">
@@ -83,7 +86,7 @@ export default function SignupPage() {
         <Image src="/JobdamIcon.svg" alt="로고" width={210} height={100} className="mt-[64px]" />
         <Field label="이메일" value={form.email} error={errors.email} onChange={(value) => update("email", value)} type="email" placeholder="이메일 입력" />
         <button type="button" disabled={sendingCode || resendCooldown > 0} onClick={sendCode} className="mt-0 w-[600px] text-right text-[15px] text-[#02C551] disabled:text-[#95979D]">{sendingCode ? "발송 중" : resendCooldown > 0 ? "인증코드 발송 완료" : isCodeSent ? "인증코드 재발송" : "인증코드 발송"}</button>
-        <Field label="인증코드" value={form.verificationCode} error={errors.verificationCode} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증코드 입력" rightElement={isCodeSent ? <span className="text-[15px] text-[#95979D]">{minutes}:{seconds}</span> : undefined} />
+        <Field label="인증코드" value={form.verificationCode} error={verificationCodeError} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증코드 입력" disabled={codeExpired} rightElement={isCodeSent ? <span className="text-[15px] text-[#95979D]">{minutes}:{seconds}</span> : undefined} />
         <Field label="비밀번호" value={form.password} error={errors.password} onChange={(value) => update("password", value)} type="password" password placeholder="비밀번호 입력" />
         <Field label="비밀번호 확인" value={form.confirm} error={errors.confirm} onChange={(value) => update("confirm", value)} type="password" password placeholder="비밀번호 재입력" />
         <Button content="확인" type="submit" disabled={!valid} className={`mb-[128px] mt-[52px] h-[56px] w-[600px] text-[23px] text-white ${valid ? "cursor-pointer bg-[#02C551]" : "cursor-not-allowed bg-[#CFD0D1]"}`} />
