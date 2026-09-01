@@ -24,6 +24,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setEmailErrorMessage("");
+    setPasswordError(false);
 
     if (email.trim() === "") {
       setEmailErrorMessage(getRequiredMessage("이메일을"));
@@ -42,8 +44,8 @@ export default function LoginPage() {
       setPasswordError(false);
       router.push(session.role === "TEACHER" ? "/teacher" : "/");
     } catch {
-      setEmailErrorMessage("잘못된 이메일입니다.");
-      setPasswordError(true);
+      setEmailErrorMessage("이메일 또는 비밀번호가 올바르지 않습니다.");
+      setPasswordError(false);
     } finally {
       setIsSubmitting(false);
     }
