@@ -39,7 +39,7 @@ export default function SignupPage() {
       await signup({ email: form.email.trim(), password: form.password, verificationCode: form.verificationCode });
       router.push("/login");
     } catch (caught) {
-      setErrors((current) => ({ ...current, verificationCode: caught instanceof ApiError ? caught.message : "회원가입에 실패했습니다." }));
+      setErrors((current) => ({ ...current, verificationCode: caught instanceof ApiError ? "인증코드가 올바르지 않습니다." : "회원가입에 실패했습니다." }));
     } finally {
       setSubmitting(false);
     }
