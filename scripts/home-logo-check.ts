@@ -15,6 +15,7 @@ for (const path of [
   "app/components/organisms/Header.tsx",
   "app/components/organisms/HeaderTwo.tsx",
   "app/teacher/page.tsx",
+  "app/counsel/page.tsx",
 ]) {
   const source = read(path);
   assert.match(source, /HomeLogoButton/, `${path}는 공통 홈 로고를 사용해야 합니다.`);
