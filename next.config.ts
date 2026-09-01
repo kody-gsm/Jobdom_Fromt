@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+const BACKEND_API_URL =
+  process.env.BACKEND_API_URL || "https://jobdam.https.gsmsv.site";
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
@@ -8,7 +11,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/backend/:path*",
-        destination: `${process.env.BACKEND_API_URL}/:path*`,
+        destination: `${BACKEND_API_URL}/:path*`,
       },
     ];
   },
