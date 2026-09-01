@@ -53,7 +53,7 @@ export default function SignupPage() {
       await sendSignupVerificationCode(form.email.trim());
       setIsCodeSent(true);
       setTimeLeft(180);
-      setResendCooldown(10);
+      setResendCooldown(2);
     } catch (caught) {
       setErrors((current) => ({ ...current, email: caught instanceof ApiError ? caught.message : "인증코드를 발송하지 못했습니다." }));
     } finally {
