@@ -56,6 +56,9 @@ export default function SignupPage() {
       setErrors((current) => ({ ...current, email: "", verificationCode: "" }));
       setResendCooldown(2);
     } catch (caught) {
+      setIsCodeSent(false);
+      setTimeLeft(0);
+      setResendCooldown(0);
       setErrors((current) => ({ ...current, email: caught instanceof ApiError ? caught.message : "인증코드를 발송하지 못했습니다." }));
     } finally {
       setSendingCode(false);
