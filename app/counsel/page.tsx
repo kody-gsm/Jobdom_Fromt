@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { ApiError, createConsultation, getUpcomingConsultations } from "@/app/utils/api";
-import { HomeLogoButton } from "@/app/components/atoms/HomeLogoButton";
 
 const getDates = () => {
   const result: { day: string; date: number; value: string }[] = [];
@@ -11,7 +11,7 @@ const getDates = () => {
   while (result.length < 5) {
     if (cursor.getDay() !== 0 && cursor.getDay() !== 6) {
       const value = new Date(cursor.getTime() - cursor.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-      result.push({ day: ["??, "??, "??, "??, "紐?, "湲?, "??][cursor.getDay()], date: cursor.getDate(), value });
+      result.push({ day: ["일", "월", "화", "수", "목", "금", "토"][cursor.getDay()], date: cursor.getDate(), value });
     }
     cursor.setDate(cursor.getDate() + 1);
   }
@@ -20,6 +20,7 @@ const getDates = () => {
 
 export default function CounselPage() {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   const [counselType, setCounselType] = useState<"career" | "general">(
     "career"
@@ -52,18 +53,18 @@ export default function CounselPage() {
   }, []);
 
   const teachers = [
-    "?꾧꼍???좎깮??,
-    "源沅뚯삁???좎깮??,
-    "?뺤쑄湲??좎깮??,
+    "임경원 선생님",
+    "김권예소 선생님",
+    "정윤기 선생님",
   ];
 
   const dates = getDates();
 
   const times = counselType === "career"
-    ? selectedTeacher === "?꾧꼍???좎깮??
-      ? Array.from({ length: 9 }, (_, index) => `${index + 1}援먯떆`)
-      : selectedTeacher ? ["?먯떖?쒓컙", "??곸떆媛?] : []
-    : ["1援먯떆", "2援먯떆", "3援먯떆", "4援먯떆", "?먯떖?쒓컙", "5援먯떆", "6援먯떆", "7援먯떆"];
+    ? selectedTeacher === "임경원 선생님"
+      ? Array.from({ length: 9 }, (_, index) => `${index + 1}교시`)
+      : selectedTeacher ? ["점심시간", "저녁시간"] : []
+    : ["1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시"];
 
   const showToast = (
     msg: string,
@@ -78,22 +79,22 @@ export default function CounselPage() {
 
   const handleConfirm = async () => {
     if (!title.trim())
-      return showToast("?쒕ぉ???낅젰?댁＜?몄슂");
+      return showToast("제목을 입력해주세요");
 
     if (!content.trim())
-      return showToast("?댁슜???낅젰?댁＜?몄슂");
+      return showToast("내용을 입력해주세요");
 
     if (counselType === "career" && !selectedTeacher)
-      return showToast("?좎깮?섏쓣 ?좏깮?댁＜?몄슂");
+      return showToast("선생님을 선택해주세요");
 
     if (!selectedDate)
-      return showToast("?좎쭨瑜??좏깮?댁＜?몄슂");
+      return showToast("날짜를 선택해주세요");
 
     if (!selectedTime)
-      return showToast("援먯떆瑜??좏깮?댁＜?몄슂");
+      return showToast("교시를 선택해주세요");
 
     if (counselType === "career" && hasCareerReservation)
-      return showToast("吏꾨줈 ?곷떞? 以묐났 ?좎껌?????놁뒿?덈떎");
+      return showToast("진로 상담은 중복 신청할 수 없습니다");
 
     try {
       setSubmitting(true);
@@ -104,9 +105,9 @@ export default function CounselPage() {
         period: selectedTime,
       });
       if (counselType === "career") setHasCareerReservation(true);
-      showToast("?곷떞 ?좎껌???꾨즺?섏뿀?듬땲??, "success");
+      showToast("상담 신청이 완료되었습니다", "success");
     } catch (error) {
-      showToast(error instanceof ApiError ? error.message : "?곷떞 ?좎껌???ㅽ뙣?덉뒿?덈떎");
+      showToast(error instanceof ApiError ? error.message : "상담 신청에 실패했습니다");
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +120,7 @@ export default function CounselPage() {
     setSelectedDate(null);
     setSelectedTime(null);
 
-    showToast("珥덇린?붾릺?덉뒿?덈떎.", "success");
+    showToast("초기화되었습니다.", "success");
   };
 
   const handleTabChange = (type: "career" | "general") => {
@@ -177,7 +178,47 @@ export default function CounselPage() {
 
       <div style={styles.page}>
         <nav style={styles.nav}>
-          <HomeLogoButton />
+          <div style={styles.logo} onClick={() => router.push("/")}>
+            <svg
+              width="64"
+              height="33"
+              viewBox="0 0 63 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect width="63" height="31.8172" fill="white" />
+              <path
+                d="M59.5106 5.39275H60.494C62.429 5.39275 63 6.88369 63 8.15257C63 9.45317 62.3973 10.9124 60.494 10.9124H59.5106V16.4637H53.1662V3.14048C53.1662 1.07855 54.6571 0 56.3384 0C58.0197 0 59.5106 1.07855 59.5106 3.14048V5.39275ZM48.8203 15.6707H36.0363C33.3399 15.6707 32.4834 14.6239 32.4834 12.1813V4.40937C32.4834 1.96677 33.3399 0.951661 36.0363 0.951661H47.4562C49.2961 0.951661 49.8354 2.22054 49.8354 3.39426C49.8354 4.56798 49.2644 5.86858 47.4562 5.86858H39.1768C38.7326 5.86858 38.5423 6.05891 38.5423 6.4713V10.2145C38.5423 10.6269 38.7326 10.8172 39.1768 10.8172H48.8203C50.6601 10.8172 51.136 12.1178 51.136 13.2598C51.136 14.4653 50.6284 15.6707 48.8203 15.6707ZM38.1616 17.574H55.2598C59.003 17.574 59.7009 18.716 59.7009 22.2372V29.787H38.1616C34.3233 29.787 33.6254 28.645 33.6254 25.0287V22.3323C33.6254 18.716 34.3233 17.574 38.1616 17.574ZM40.6042 25.3776H53.4517V22.713C53.4517 22.0786 53.2931 21.9199 52.7221 21.9199H40.6042C40.0332 21.9199 39.8746 22.0786 39.8746 22.713V24.5846C39.8746 25.2825 40.0332 25.3776 40.6042 25.3776Z"
+                fill="#02C551"
+              />
+              <path
+                d="M33.4033 19.1285C33.4033 18.2525 34.1134 17.5424 34.9894 17.5424H58.4637C59.3397 17.5424 60.0499 18.2525 60.0499 19.1285V29.4352C60.0499 29.7343 59.9004 30.0136 59.6515 30.1795C59.6 30.2139 59.545 30.2428 59.4875 30.2658L58.781 30.5484L56.719 31.3415L56.216 31.4786C55.7614 31.6026 55.3854 31.1126 55.6228 30.7056C55.8275 30.3547 55.5744 29.914 55.1681 29.914H34.9894C34.1134 29.914 33.4033 29.2038 33.4033 28.3279V19.1285Z"
+                fill="#02C551"
+              />
+              <path
+                d="M40.0654 20.8732H53.3887"
+                stroke="white"
+                strokeWidth="1.26888"
+                strokeLinecap="round"
+              />
+              <path
+                d="M40.0654 23.7281H53.3887"
+                stroke="white"
+                strokeWidth="1.26888"
+                strokeLinecap="round"
+              />
+              <path
+                d="M40.0654 26.5831H49.2648"
+                stroke="white"
+                strokeWidth="1.26888"
+                strokeLinecap="round"
+              />
+              <path
+                d="M27.7885 5.39275H28.7719C30.707 5.39275 31.278 6.88369 31.278 8.15257C31.278 9.45317 30.6752 10.9124 28.7719 10.9124H27.7885V16.3051H21.4441V3.14048C21.4441 1.07855 22.9351 0 24.6163 0C26.2976 0 27.7885 1.07855 27.7885 3.14048V5.39275ZM10.7538 12.3082C8.9139 14.8459 5.96375 16.3686 2.91843 16.3686C1.36405 16.3686 0 15.4486 0 13.8308C0 12.5619 0.729607 11.7054 1.99849 11.5151C4.98036 11.1027 6.53474 9.16768 6.53474 6.62991V5.99547H2.53776C1.04683 5.99547 0.222055 4.66314 0.222055 3.52115C0.222055 2.37915 0.91994 1.01511 2.53776 1.01511H17.0665C18.6843 1.01511 19.3822 2.37915 19.3822 3.52115C19.3822 4.66314 18.5574 5.99547 17.0665 5.99547H12.5302V6.62991C12.5302 7.10574 12.4985 7.54985 12.435 7.99396C17.2568 8.0574 19.6994 10.7221 19.5725 16.1465H13.6405C13.8625 13.9577 12.6888 12.2447 10.7538 12.3082ZM24.8384 17.2251C26.6783 17.2251 27.9789 18.145 27.9789 20.207V29.787H6.37613C2.88671 29.787 1.93505 28.5499 1.93505 25.3459V20.207C1.93505 18.1133 3.29909 17.2251 5.13897 17.2251C6.85197 17.2251 8.08912 18.0181 8.24774 19.7628H21.6662C21.8248 17.9864 23.1254 17.2251 24.8384 17.2251ZM9.07251 25.6631H21.6344V23.6964H8.27946V24.9335C8.27946 25.568 8.43807 25.6631 9.07251 25.6631Z"
+                fill="#02C551"
+              />
+            </svg>
+          </div>
 
           <div style={styles.profile}>
             <svg
@@ -199,7 +240,7 @@ export default function CounselPage() {
 
         <main style={styles.main}>
           <h1 style={styles.title}>
-            ?곷떞???좏깮 諛?二쇱젣 ?낅젰???댁＜?몄슂
+            상담을 선택 및 주제 입력을 해주세요
           </h1>
 
           <div style={styles.tabRow}>
@@ -223,7 +264,7 @@ export default function CounselPage() {
               }}
               onClick={() => handleTabChange("career")}
             >
-              吏꾨줈 ?곷떞
+              진로 상담
             </button>
 
             <button
@@ -246,18 +287,18 @@ export default function CounselPage() {
               }}
               onClick={() => handleTabChange("general")}
             >
-              ?쇰컲?곷떞
+              일반상담
             </button>
           </div>
 
           <div style={styles.field}>
             <p style={styles.label}>
-              ?먰븯???곷떞 ?쒕ぉ???낅젰?댁＜?몄슂.
+              원하는 상담 제목을 입력해주세요.
             </p>
 
             <input
               style={inputStyle("title")}
-              placeholder="?쒕ぉ???낅젰?댁＜?몄슂."
+              placeholder="제목을 입력해주세요."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onFocus={() => setFocused("title")}
@@ -267,7 +308,7 @@ export default function CounselPage() {
 
           <div style={styles.field}>
             <p style={styles.label}>
-              ?먰븯???댁슜???낅젰?댁＜?몄슂.
+              원하는 내용을 입력해주세요.
             </p>
 
             <textarea
@@ -275,7 +316,7 @@ export default function CounselPage() {
                 ...inputStyle("content"),
                 ...styles.textarea,
               }}
-              placeholder="?곷떞 ?댁슜???낅젰?댁＜?몄슂."
+              placeholder="상담 내용을 입력해주세요."
               value={content}
               maxLength={500}
               onChange={(e) => setContent(e.target.value)}
@@ -341,12 +382,12 @@ export default function CounselPage() {
 
           <h2 style={styles.reserveTitle}>
             {counselType === "career"
-              ? "吏꾨줈 ?곷떞 ?쇱젙 ?덉빟???꾩??쒕┫寃뚯슂."
-              : "?쇰컲 ?곷떞 ?쇱젙 ?덉빟???꾩??쒕┫寃뚯슂."}
+              ? "진로 상담 일정 예약을 도와드릴게요."
+              : "일반 상담 일정 예약을 도와드릴게요."}
           </h2>
 
           <p style={styles.week}>
-            {`< ${new Date(dates[0].value).getMonth() + 1}??>`}
+            {`< ${new Date(dates[0].value).getMonth() + 1}월 >`}
           </p>
 
           <div style={styles.dateRow}>
@@ -446,9 +487,9 @@ export default function CounselPage() {
             })}
           </div>
 
-          {counselType === "career" && selectedTeacher === "?꾧꼍???좎깮?? && selectedTime?.endsWith("援먯떆") && (
+          {counselType === "career" && selectedTeacher === "임경원 선생님" && selectedTime?.endsWith("교시") && (
             <p style={{ color: "#DC2626", margin: "-32px 0 32px", fontSize: "14px" }}>
-              ?섏뾽 ?대떦 ?좎깮?섏쓽 ?덇?瑜?癒쇱? 諛쏆븘二쇱꽭??
+              수업 담당 선생님의 허가를 먼저 받아주세요.
             </p>
           )}
 
@@ -457,7 +498,7 @@ export default function CounselPage() {
               style={styles.cancelBtn}
               onClick={handleCancel}
             >
-              痍⑥냼
+              취소
             </button>
 
             <button
@@ -465,7 +506,7 @@ export default function CounselPage() {
               onClick={handleConfirm}
               disabled={submitting}
             >
-              ?뺤씤
+              확인
             </button>
           </div>
         </main>
@@ -487,7 +528,14 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     justifyContent: "space-between",
     padding: "0 40px",
-  },`r`n
+  },
+
+  logo: {
+    display: "flex",
+    alignItems: "center",
+    cursor: "pointer",
+  },
+
   profile: {
     cursor: "pointer",
     display: "flex",
