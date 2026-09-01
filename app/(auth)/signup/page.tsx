@@ -29,6 +29,7 @@ export default function SignupPage() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    setErrors(emptyErrors);
     if (!/^s.*@gsm\.hs\.kr$/.test(form.email)) return setErrors((current) => ({ ...current, email: "s로 시작하는 @gsm.hs.kr 이메일을 입력해주세요." }));
     if (form.verificationCode.length !== 6) return setErrors((current) => ({ ...current, verificationCode: "인증코드 6자리를 입력해주세요." }));
     if (!isValidPassword(form.password)) return setErrors((current) => ({ ...current, password: "영문, 숫자, 특수문자를 포함해 10자 이상 입력해주세요." }));
