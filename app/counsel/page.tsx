@@ -3,7 +3,7 @@
 import { useEffect, useState, CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { ApiError, createConsultation, getUpcomingConsultations } from "@/app/utils/api";
+import { ApiError, createConsultation, getSession, getUpcomingConsultations } from "@/app/utils/api";
 
 const getDates = () => {
   const result: { day: string; date: number; value: string }[] = [];
@@ -178,7 +178,12 @@ export default function CounselPage() {
 
       <div style={styles.page}>
         <nav style={styles.nav}>
-          <div style={styles.logo} onClick={() => router.push("/")}>
+          <div
+            style={styles.logo}
+            onClick={() => {
+              if (getSession()?.role === "STUDENT") router.push("/");
+            }}
+          >
             <svg
               width="64"
               height="33"

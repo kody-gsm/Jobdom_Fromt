@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { getSession } from "@/app/utils/api";
 
 type HomeLogoButtonProps = {
   className?: string;
@@ -9,12 +10,15 @@ type HomeLogoButtonProps = {
 
 export const HomeLogoButton = ({ className = "" }: HomeLogoButtonProps) => {
   const router = useRouter();
+  const handleClick = () => {
+    if (getSession()?.role === "STUDENT") router.push("/");
+  };
 
   return (
     <button
       type="button"
       aria-label="메인 페이지로 이동"
-      onClick={() => router.push("/")}
+      onClick={handleClick}
       className={`cursor-pointer ${className}`}
     >
       <Image
