@@ -1,4 +1,5 @@
 import "./globals.css";
+import { AuthGate } from "@/app/components/AuthGate";
 
 export default function RootLayout({
   children,
@@ -10,7 +11,7 @@ export default function RootLayout({
       lang="ko"
       className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><AuthGate>{children}</AuthGate></body>
     </html>
   );
 }

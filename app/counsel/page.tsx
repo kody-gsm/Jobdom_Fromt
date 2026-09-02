@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { ApiError, createConsultation, getUpcomingConsultations } from "@/app/utils/api";
+import { ApiError, createConsultation, getSession, getUpcomingConsultations } from "@/app/utils/api";
 
 const getDates = () => {
   const result: { day: string; date: number; value: string }[] = [];
@@ -19,6 +20,7 @@ const getDates = () => {
 
 export default function CounselPage() {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   const [counselType, setCounselType] = useState<"career" | "general">(
     "career"
@@ -118,7 +120,7 @@ export default function CounselPage() {
     setSelectedDate(null);
     setSelectedTime(null);
 
-    showToast("초기화되었습니다.", "success");
+    router.push("/");
   };
 
   const handleTabChange = (type: "career" | "general") => {
@@ -176,10 +178,15 @@ export default function CounselPage() {
 
       <div style={styles.page}>
         <nav style={styles.nav}>
-          <div style={styles.logo}>
+          <div
+            style={styles.logo}
+            onClick={() => {
+              if (getSession()?.role === "STUDENT") router.push("/");
+            }}
+          >
             <svg
-              width="95"
-              height="48"
+              width="64"
+              height="33"
               viewBox="0 0 63 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -521,11 +528,11 @@ const styles: Record<string, CSSProperties> = {
   },
 
   nav: {
-    height: "72px",
+    height: "100px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "0 48px",
+    padding: "0 40px",
   },
 
   logo: {
