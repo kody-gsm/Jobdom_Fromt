@@ -40,7 +40,7 @@ export default function LoginPage() {
       const session = await login(email, password);
       setEmailErrorMessage("");
       setPasswordError(false);
-      router.push(session.role === "TEACHER" ? "/teacher" : "/");
+      router.push(session.role === "ADMIN" ? "/admin" : session.role === "TEACHER" ? "/teacher" : "/");
     } catch {
       setEmailErrorMessage("잘못된 이메일입니다.");
       setPasswordError(true);
