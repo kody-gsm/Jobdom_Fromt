@@ -116,12 +116,12 @@ export default function LoginPage() {
       </p>
 
       <div className="mt-[4px] flex w-[600px] items-center justify-between text-[15px]">
-        <label className="flex cursor-pointer items-center gap-2 text-[#5F6368]">
+        <label className="flex items-center gap-2 text-[#02C551]">
           <input
             type="checkbox"
             checked={isRememberLogin}
             onChange={(event) => setIsRememberLogin(event.target.checked)}
-            className="h-[18px] w-[18px] cursor-pointer accent-[#02C551]"
+            className="h-[18px] w-[18px] accent-[#02C551]"
           />
           <span>자동 로그인</span>
         </label>
