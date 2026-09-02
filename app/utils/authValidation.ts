@@ -1,4 +1,4 @@
-export const isGsmEmail = (email: string) => email.endsWith("@gsm.hs.kr");
+export const isGsmEmail = (email: string) => /^s.*@gsm\.hs\.kr$/.test(email.trim());
 
 export const getRequiredMessage = (label: string) =>
   `${label} 입력해주세요.`;
@@ -9,7 +9,7 @@ export const getGsmEmailErrorMessage = (email: string) => {
   }
 
   if (!isGsmEmail(email)) {
-    return "@gsm.hs.kr 이메일만 사용 가능합니다.";
+    return "s로 시작하는 @gsm.hs.kr 이메일을 입력해주세요.";
   }
 
   return "";
