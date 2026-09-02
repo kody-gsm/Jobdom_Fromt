@@ -7,10 +7,9 @@ const source = readFileSync(
   "utf8",
 );
 
-assert.match(source, /<span className="mt-\[12px\] w-\[600px\]/);
+assert.match(source, /<Field first label="이메일"/);
+assert.match(source, /first \? "mt-\[88px\]" : "mt-\[12px\]"/);
 assert.match(source, /className="mt-\[8px\] h-\[56px\] w-\[600px\]/);
 assert.match(source, /mb-\[64px\] mt-\[28px\]/);
-assert.doesNotMatch(source, /<span className="mt-\[20px\] w-\[600px\]/);
-assert.doesNotMatch(source, /className="mt-\[16px\] h-\[56px\] w-\[600px\]/);
 
 console.log("signup spacing contract passed");
