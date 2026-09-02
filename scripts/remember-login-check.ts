@@ -14,14 +14,16 @@ assert.match(api, /\/auth\/reissue/);
 assert.match(api, /restoreRememberedSession/);
 assert.match(api, /response\.status === 401[\s\S]*reissueCurrentSession/);
 assert.match(storage, /jobdam_remember_login/);
-
 assert.match(login, /isRememberLogin/);
 assert.match(login, /type="checkbox"/);
 assert.match(login, /checked=\{isRememberLogin\}/);
-assert.match(login, /자동 로그인/);
 assert.match(login, /login\(email, password, isRememberLogin\)/);
 assert.match(login, /restoreRememberedSession/);
-assert.match(login, /<label className="flex items-center gap-2 text-\[#02C551\]">/);
-assert.match(login, /className="h-\[18px\] w-\[18px\] accent-\[#02C551\]"/);
+assert.match(login, /className="sr-only"/);
+assert.match(login, /text-\[#5F6368\]/);
+assert.match(login, /border-\[#02C551\] bg-\[#02C551\]/);
+assert.match(login, /border-\[#B8BBC0\] bg-white/);
+const rememberBlock = login.match(/<label[\s\S]*?자동 로그인[\s\S]*?<\/label>/)?.[0] || "";
+assert.doesNotMatch(rememberBlock, /hover:|cursor-pointer|accent-/);
 
 console.log("remember login contract passed");
