@@ -116,13 +116,23 @@ export default function LoginPage() {
       </p>
 
       <div className="mt-[4px] flex w-[600px] items-center justify-between text-[15px]">
-        <label className="flex items-center gap-2 text-[#02C551]">
+        <label className="flex items-center gap-2 text-[#5F6368]">
           <input
             type="checkbox"
             checked={isRememberLogin}
             onChange={(event) => setIsRememberLogin(event.target.checked)}
-            className="h-[18px] w-[18px] accent-[#02C551]"
+            className="sr-only"
           />
+          <span
+            aria-hidden="true"
+            className={`flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border ${
+              isRememberLogin
+                ? "border-[#02C551] bg-[#02C551]"
+                : "border-[#B8BBC0] bg-white"
+            }`}
+          >
+            {isRememberLogin ? <span className="text-[13px] leading-none text-white">✓</span> : null}
+          </span>
           <span>자동 로그인</span>
         </label>
         <button
