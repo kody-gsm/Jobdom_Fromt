@@ -44,9 +44,24 @@ assert.equal(authSession.readRememberedSession()?.refreshToken, "refresh");
 assert.equal(authSession.isRememberedSession(), true);
 assert.equal(local.getItem("jobdam_remember_login"), "true");
 assert.equal(session.getItem("jobdam_access_token"), null);
+assert.deepEqual(authSession.readRememberLoginPreference(), {
+  enabled: true,
+  email: "s1@gsm.hs.kr",
+});
 
 authSession.clearStoredSession();
 assert.equal(authSession.readSession(), null);
-assert.equal(local.getItem("jobdam_remember_login"), null);
+assert.equal(local.getItem("jobdam_remember_login"), "true");
+assert.equal(local.getItem("jobdam_remembered_email"), "s1@gsm.hs.kr");
+assert.deepEqual(authSession.readRememberLoginPreference(), {
+  enabled: true,
+  email: "s1@gsm.hs.kr",
+});
+
+authSession.clearRememberLoginPreference();
+assert.deepEqual(authSession.readRememberLoginPreference(), {
+  enabled: false,
+  email: "",
+});
 
 console.log("auth session storage behavior passed");
