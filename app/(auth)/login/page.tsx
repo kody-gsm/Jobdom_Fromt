@@ -13,6 +13,7 @@ import {
   restoreRememberedSession,
 } from "@/app/utils/authApi";
 import { getRequiredMessage } from "@/app/utils/authValidation";
+import { getAuthErrorMessage } from "@/app/utils/authErrorMessages";
 
 export default function LoginPage() {
   const [email, setEmail] = useState(() => readRememberLoginPreference().email);
@@ -59,8 +60,10 @@ export default function LoginPage() {
       setEmailErrorMessage("");
       setPasswordError(false);
       router.push(session.role === "TEACHER" ? "/teacher" : "/");
-    } catch {
-      setEmailErrorMessage("이메일 또는 비밀번호가 올바르지 않습니다.");
+    } catch (caught) {
+      setEmailErrorMessage(
+        getAuthErrorMessage(caught, "이메일 또는 비밀번호가 올바르지 않습니다."),
+      );
       setPasswordError(false);
     } finally {
       setIsSubmitting(false);
@@ -121,7 +124,7 @@ export default function LoginPage() {
           passwordError ? "visible" : "invisible"
         }`}
       >
-        비밀번호가 일치하지 않습니다.
+        비밀번호를 입력해주세요.
       </p>
 
       <div className="mt-[4px] flex w-[600px] items-center justify-between text-[15px]">
