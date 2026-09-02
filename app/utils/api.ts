@@ -1,4 +1,5 @@
 import {
+  backfillRememberLoginEmail,
   clearStoredSession,
   isRememberedSession,
   persistSession,
@@ -183,6 +184,8 @@ export const saveSession = (response: Omit<AuthSession, "role">, rememberLogin =
 export const getSession = (): AuthSession | null => readSession();
 
 export const clearSession = () => {
+  const session = getSession();
+  if (session) backfillRememberLoginEmail(session.email);
   clearStoredSession();
   if (typeof window !== "undefined") window.dispatchEvent(new Event("jobdam-session"));
 };

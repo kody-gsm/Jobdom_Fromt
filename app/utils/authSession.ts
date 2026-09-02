@@ -36,6 +36,11 @@ export const readRememberLoginPreference = () => {
   };
 };
 
+export const backfillRememberLoginEmail = (email: string) => {
+  if (typeof window === "undefined" || !hasRememberFlag() || !email) return;
+  localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+};
+
 export const persistSession = (session: AuthSession, rememberLogin: boolean) => {
   const target = rememberLogin ? localStorage : sessionStorage;
   const other = rememberLogin ? sessionStorage : localStorage;
