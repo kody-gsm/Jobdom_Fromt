@@ -7,7 +7,7 @@ export interface AuthSession {
   userId: number;
   email: string;
   name: string;
-  role: "STUDENT" | "TEACHER";
+  role: "STUDENT" | "TEACHER" | "ADMIN";
 }
 
 export interface UserResponse {
@@ -16,6 +16,10 @@ export interface UserResponse {
   name: string;
   student_number: string;
   emailVerified: boolean;
+}
+
+export interface StudentSyncResult {
+  syncedCount: number;
 }
 
 export interface ReservationInput {
@@ -139,6 +143,12 @@ export interface FormSubmission extends FormSubmissionSummary {
   answers: FormAnswer[];
 }
 
+export interface RecruitDashboardRow {
+  recruit: Recruit;
+  form: FormSummary | null;
+  applicants: FormSubmissionSummary[];
+}
+
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
 const TOKEN_KEY = "jobdam_access_token";
 const SESSION_KEY = "jobdam_session";
@@ -160,6 +170,7 @@ const decodeRole = (token: string): AuthSession["role"] => {
     const raw = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     const payload = raw.padEnd(Math.ceil(raw.length / 4) * 4, "=");
     const role = JSON.parse(atob(payload)).role;
+    if (role === "ADMIN") return "ADMIN";
     return role === "TEACHER" ? "TEACHER" : "STUDENT";
   } catch {
     return "STUDENT";
@@ -296,6 +307,9 @@ export const lockConsultation = (
 
 export const getTeacherIds = () => request<number[]>("/teacher");
 
+export const syncStudents = () =>
+  request<StudentSyncResult>("/admin/students/sync", { method: "POST" });
+
 export const analyzeRecruit = (image: File) => {
   const body = new FormData();
   body.append("image", image);
@@ -346,3 +360,29 @@ export const getFormSubmissions = (id: number) =>
 
 export const getFormSubmission = (formId: number, submissionId: number) =>
   request<FormSubmission>(`/teacher/form/${formId}/submission/${submissionId}`);
+
+const normalizeName = (value: string) =>
+  value.toLowerCase().replace(/주식회사|㈜|\(주\)/g, "").replace(/[\s()[\]{}.,·ㆍ_-]/g, "");
+
+export const findRecruitForm = (recruit: Recruit, forms: FormSummary[]) => {
+  const company = normalizeName(recruit.companyName || "");
+  if (!company) return null;
+
+  // ponytail: 백엔드에 recruitId 연결이 생기면 제목 기반 임시 매칭을 그 ID 비교로 교체한다.
+  return forms.find((form) => normalizeName(form.title).includes(company)) || null;
+};
+
+export const getRecruitDashboard = async (): Promise<RecruitDashboardRow[]> => {
+  const [recruits, forms] = await Promise.all([getTeacherRecruits(), getTeacherForms()]);
+  const matches = recruits.map((recruit) => ({ recruit, form: findRecruitForm(recruit, forms) }));
+  const formIds = [...new Set(matches.flatMap(({ form }) => form ? [form.id] : []))];
+  const submissions = new Map(await Promise.all(
+    formIds.map(async (formId) => [formId, await getFormSubmissions(formId)] as const),
+  ));
+
+  return matches.map(({ recruit, form }) => ({
+    recruit,
+    form,
+    applicants: form ? submissions.get(form.id) || [] : [],
+  }));
+};
