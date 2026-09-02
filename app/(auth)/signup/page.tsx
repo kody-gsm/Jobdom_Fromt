@@ -110,7 +110,7 @@ function Field({ first, label, value, error, onChange, password, rightElement, .
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <>
-      <span className={`${first ? "mt-[88px]" : "mt-[12px]"} w-[600px] text-left text-[18px] font-medium`}>{label}</span>
+      <span style={{ marginTop: first ? 88 : 12 }} className="w-[600px] text-left text-[18px] font-medium">{label}</span>
       <Input {...props} value={value} error={Boolean(error)} onChange={(event) => onChange(event.target.value)} showPasswordToggle={password} rightElement={rightElement} className="mt-[8px] h-[56px] w-[600px] px-[16px] py-[16px]" />
       <p className={`mt-1 w-[600px] text-right text-[15px] text-[#D61E1E] ${error ? "visible" : "invisible"}`}>{error || "오류"}</p>
     </>

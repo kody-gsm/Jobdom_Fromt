@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
         height={100}
         className="mt-[64px]"
       />
-      <span className="mt-[88px] text-left w-[600px] text-[18px] font-medium">
+      <span style={{ marginTop: 88 }} className="text-left w-[600px] text-[18px] font-medium">
         이메일
       </span>
       <Input
