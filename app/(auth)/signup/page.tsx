@@ -93,7 +93,7 @@ export default function SignupPage() {
         <Field label="인증코드" value={form.verificationCode} error={verificationCodeError} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증코드 입력" disabled={codeExpired} rightElement={isCodeSent ? <span className="text-[15px] text-[#95979D]">{minutes}:{seconds}</span> : undefined} />
         <Field label="비밀번호" value={form.password} error={errors.password} onChange={(value) => update("password", value)} type="password" password placeholder="비밀번호 입력" />
         <Field label="비밀번호 확인" value={form.confirm} error={errors.confirm} onChange={(value) => update("confirm", value)} type="password" password placeholder="비밀번호 재입력" />
-        <Button content="확인" type="submit" disabled={!valid} className={`mb-[128px] mt-[52px] h-[56px] w-[600px] text-[23px] text-white ${valid ? "cursor-pointer bg-[#02C551]" : "cursor-not-allowed bg-[#CFD0D1]"}`} />
+        <Button content="확인" type="submit" disabled={!valid} className={`mb-[64px] mt-[28px] h-[56px] w-[600px] text-[23px] text-white ${valid ? "cursor-pointer bg-[#02C551]" : "cursor-not-allowed bg-[#CFD0D1]"}`} />
       </form>
     </main>
   );
@@ -109,8 +109,8 @@ function Field({ label, value, error, onChange, password, rightElement, ...props
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <>
-      <span className="mt-[20px] w-[600px] text-left text-[18px] font-medium">{label}</span>
-      <Input {...props} value={value} error={Boolean(error)} onChange={(event) => onChange(event.target.value)} showPasswordToggle={password} rightElement={rightElement} className="mt-[16px] h-[56px] w-[600px] px-[16px] py-[16px]" />
+      <span className="mt-[12px] w-[600px] text-left text-[18px] font-medium">{label}</span>
+      <Input {...props} value={value} error={Boolean(error)} onChange={(event) => onChange(event.target.value)} showPasswordToggle={password} rightElement={rightElement} className="mt-[8px] h-[56px] w-[600px] px-[16px] py-[16px]" />
       <p className={`mt-1 w-[600px] text-right text-[15px] text-[#D61E1E] ${error ? "visible" : "invisible"}`}>{error || "오류"}</p>
     </>
   );
