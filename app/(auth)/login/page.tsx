@@ -146,7 +146,7 @@ export default function LoginPage() {
           >
             {isRememberLogin ? <span className="text-[13px] leading-none text-white">✓</span> : null}
           </span>
-          <span>자동 로그인</span>
+          <span>아이디 저장</span>
         </label>
         <button
           type="button"
