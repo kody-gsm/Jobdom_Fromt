@@ -88,7 +88,7 @@ export default function SignupPage() {
     <main className="flex min-h-screen flex-col items-center justify-center">
       <form noValidate onSubmit={submit} className="flex flex-col items-center">
         <Image src="/JobdamIcon.svg" alt="로고" width={210} height={100} className="mt-[64px]" />
-        <Field label="이메일" value={form.email} error={errors.email} onChange={(value) => update("email", value)} type="email" placeholder="이메일 입력" />
+        <Field first label="이메일" value={form.email} error={errors.email} onChange={(value) => update("email", value)} type="email" placeholder="이메일 입력" />
         <button type="button" disabled={sendingCode || resendCooldown > 0} onClick={sendCode} className="mt-0 w-[600px] text-right text-[15px] text-[#02C551] disabled:text-[#95979D]">{sendingCode ? "발송 중" : resendCooldown > 0 ? "인증코드 발송 완료" : isCodeSent ? "인증코드 재발송" : "인증코드 발송"}</button>
         <Field label="인증코드" value={form.verificationCode} error={verificationCodeError} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증코드 입력" disabled={codeExpired} rightElement={isCodeSent ? <span className="text-[15px] text-[#95979D]">{minutes}:{seconds}</span> : undefined} />
         <Field label="비밀번호" value={form.password} error={errors.password} onChange={(value) => update("password", value)} type="password" password placeholder="비밀번호 입력" />
@@ -99,7 +99,8 @@ export default function SignupPage() {
   );
 }
 
-function Field({ label, value, error, onChange, password, rightElement, ...props }: {
+function Field({ first, label, value, error, onChange, password, rightElement, ...props }: {
+  first?: boolean;
   label: string;
   value: string;
   error?: string;
@@ -109,7 +110,7 @@ function Field({ label, value, error, onChange, password, rightElement, ...props
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <>
-      <span className="mt-[12px] w-[600px] text-left text-[18px] font-medium">{label}</span>
+      <span className={`${first ? "mt-[88px]" : "mt-[12px]"} w-[600px] text-left text-[18px] font-medium`}>{label}</span>
       <Input {...props} value={value} error={Boolean(error)} onChange={(event) => onChange(event.target.value)} showPasswordToggle={password} rightElement={rightElement} className="mt-[8px] h-[56px] w-[600px] px-[16px] py-[16px]" />
       <p className={`mt-1 w-[600px] text-right text-[15px] text-[#D61E1E] ${error ? "visible" : "invisible"}`}>{error || "오류"}</p>
     </>

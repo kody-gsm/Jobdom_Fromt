@@ -128,7 +128,7 @@ export default function ForgotPasswordPage() {
           setEmailErrorMessage("");
         }}
         placeholder="이메일 입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
@@ -137,7 +137,7 @@ export default function ForgotPasswordPage() {
       >
         {emailErrorMessage || getRequiredMessage("이메일을")}
       </p>
-      <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
+      <span className="mt-[12px] text-left w-[600px] text-[18px] font-medium">
         인증코드
       </span>
       <Input
@@ -160,7 +160,7 @@ export default function ForgotPasswordPage() {
           ) : null
         }
         placeholder="인증코드 입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
@@ -187,7 +187,7 @@ export default function ForgotPasswordPage() {
               : "인증코드 발송"}
         </button>
       </div>
-      <span className="text-left w-[600px] text-[18px] font-medium">
+      <span className="mt-[12px] text-left w-[600px] text-[18px] font-medium">
         새 비밀번호
       </span>
       <Input
@@ -200,7 +200,7 @@ export default function ForgotPasswordPage() {
           setPasswordError(false);
         }}
         placeholder="비밀번호 입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
@@ -209,7 +209,7 @@ export default function ForgotPasswordPage() {
       >
         영문, 숫자, 특수문자를 포함하여 10자 이상 입력해주세요.
       </p>
-      <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
+      <span className="mt-[12px] text-left w-[600px] text-[18px] font-medium">
         비밀번호 확인
       </span>
       <Input
@@ -222,7 +222,7 @@ export default function ForgotPasswordPage() {
           setConfirmPasswordError(false);
         }}
         placeholder="비밀번호 재입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
@@ -235,7 +235,7 @@ export default function ForgotPasswordPage() {
         content="확인"
         type="submit"
         disabled={!isValid}
-        className={`mt-[74px] w-[600px] h-[56px] text-[23px] text-white mb-[128px]
+        className={`mt-[28px] w-[600px] h-[56px] text-[23px] text-white mb-[64px]
           ${
             isValid
               ? "bg-[#02C551] cursor-pointer"
