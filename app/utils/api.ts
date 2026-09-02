@@ -1,5 +1,4 @@
 import {
-  clearRememberedSession,
   clearStoredSession,
   isRememberedSession,
   persistSession,
@@ -220,12 +219,7 @@ const reissueSession = async (refreshToken: string, rememberLogin: boolean) => {
 export const restoreRememberedSession = async () => {
   const remembered = readRememberedSession();
   if (!remembered?.refreshToken) return null;
-  try {
-    return await reissueSession(remembered.refreshToken, true);
-  } catch (error) {
-    if (error instanceof ApiError && error.status !== 0 && error.status < 500) clearRememberedSession();
-    return null;
-  }
+  return remembered;
 };
 
 let reissuePromise: Promise<AuthSession | null> | null = null;
