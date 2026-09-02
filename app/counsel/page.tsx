@@ -120,7 +120,7 @@ export default function CounselPage() {
     setSelectedDate(null);
     setSelectedTime(null);
 
-    showToast("초기화되었습니다.", "success");
+    router.push("/");
   };
 
   const handleTabChange = (type: "career" | "general") => {
