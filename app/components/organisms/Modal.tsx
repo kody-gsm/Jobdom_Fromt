@@ -14,7 +14,7 @@ export const Modal = ({ isOpen, onClose, children }: ModalProps) => {
       <div className="h-full max-h-[500px] relative bg-white w-full max-w-[500px] rounded-2xl shadow-xl z-10 overflow-hidden flex flex-col">
         {children}
       </div>
-      <div className="absolute inset-0 bg-black/25" onClick={onClose} />
+      <div className="absolute inset-0 cursor-pointer bg-black/25" onClick={onClose} />
     </div>
   );
 };
