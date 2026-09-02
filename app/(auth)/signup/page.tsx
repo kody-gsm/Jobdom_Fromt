@@ -11,11 +11,15 @@ import { isValidPassword } from "@/app/utils/authValidation";
 export default function SignupPage() {
   const [form, setForm] = useState({ email: "", verificationCode: "", password: "", confirm: "" });
   const [error, setError] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const router = useRouter();
 
-  const update = (name: keyof typeof form, value: string) => setForm((current) => ({ ...current, [name]: value }));
+  const update = (name: keyof typeof form, value: string) => {
+    setForm((current) => ({ ...current, [name]: value }));
+    if (name === "email") setCodeSent(false);
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -36,11 +40,16 @@ export default function SignupPage() {
   };
 
   const sendCode = async () => {
-    if (!/^s.*@gsm\.hs\.kr$/.test(form.email)) return setError("s로 시작하는 @gsm.hs.kr 이메일을 입력해주세요.");
+    if (!/^s.*@gsm\.hs\.kr$/.test(form.email)) {
+      setCodeSent(false);
+      return setError("s로 시작하는 @gsm.hs.kr 이메일을 입력해주세요.");
+    }
     try {
       setSendingCode(true);
       setError("");
+      setCodeSent(false);
       await sendSignupVerificationCode(form.email.trim());
+      setCodeSent(true);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : "인증코드를 발송하지 못했습니다.");
     } finally {
@@ -59,7 +68,7 @@ export default function SignupPage() {
         <Field label="인증코드" value={form.verificationCode} onChange={(value) => update("verificationCode", value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} />
         <Field label="비밀번호" value={form.password} onChange={(value) => update("password", value)} type="password" password />
         <Field label="비밀번호 확인" value={form.confirm} onChange={(value) => update("confirm", value)} type="password" password />
-        <p className={`mt-2 w-[600px] text-right text-[15px] text-[#D61E1E] ${error ? "visible" : "invisible"}`}>{error || "오류"}</p>
+        <p aria-live="polite" className={`mt-2 w-[600px] text-right text-[15px] ${error ? "text-[#D61E1E]" : "text-[#02A946]"} ${error || codeSent ? "visible" : "invisible"}`}>{error || "인증코드를 발송했습니다."}</p>
         <Button content="확인" type="submit" disabled={!valid} className={`mb-[128px] mt-[52px] h-[56px] w-[600px] text-[23px] text-white ${valid ? "cursor-pointer bg-[#02C551]" : "cursor-not-allowed bg-[#CFD0D1]"}`} />
       </form>
     </main>
