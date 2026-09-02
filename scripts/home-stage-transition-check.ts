@@ -6,7 +6,7 @@ const source = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8");
 
 assert.match(source, /type HomeStage = "hero" \| "hero-exit" \| "services"/);
 assert.match(source, /HERO_ANIMATION_MS\s*=\s*1200/);
-assert.match(source, /HERO_HOLD_MS\s*=\s*2000/);
+assert.match(source, /HERO_HOLD_MS\s*=\s*1000/);
 assert.match(source, /HERO_EXIT_MS\s*=\s*600/);
 assert.match(source, /setStage\("hero-exit"\)/);
 assert.match(source, /setStage\("services"\)/);
