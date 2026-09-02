@@ -49,6 +49,11 @@ assert.deepEqual(authSession.readRememberLoginPreference(), {
   email: "s1@gsm.hs.kr",
 });
 
+local.removeItem("jobdam_remembered_email");
+assert.equal(authSession.readRememberLoginPreference().email, "");
+authSession.backfillRememberLoginEmail(auth.email);
+assert.equal(local.getItem("jobdam_remembered_email"), "s1@gsm.hs.kr");
+
 authSession.clearStoredSession();
 assert.equal(authSession.readSession(), null);
 assert.equal(local.getItem("jobdam_remember_login"), "true");
