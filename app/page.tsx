@@ -10,7 +10,7 @@ import { Header } from "./components/organisms";
 type HomeStage = "hero" | "hero-exit" | "services";
 
 const HERO_ANIMATION_MS = 1200;
-const HERO_HOLD_MS = 2000;
+const HERO_HOLD_MS = 1000;
 const HERO_EXIT_MS = 600;
 
 export default function Home() {
