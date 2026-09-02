@@ -7,6 +7,7 @@ import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
+  getGsmEmailErrorMessage,
   getRequiredMessage,
   isValidPassword,
 } from "@/app/utils/authValidation";
@@ -14,6 +15,10 @@ import {
   resetPassword,
   sendPasswordResetCode,
 } from "@/app/utils/authApi";
+import {
+  getAuthErrorMessage,
+  getPasswordResetError,
+} from "@/app/utils/authErrorMessages";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -21,74 +26,79 @@ export default function ForgotPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailErrorMessage, setEmailErrorMessage] = useState("");
-  const [codeError, setCodeError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
-  const [confirmPasswordError, setConfirmPasswordError] = useState(false);
+  const [codeErrorMessage, setCodeErrorMessage] = useState("");
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+  const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] = useState("");
+  const [submitErrorMessage, setSubmitErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
   const router = useRouter();
+  const codeExpired = isCodeSent && timeLeft <= 0;
+  const displayedCodeError = codeExpired
+    ? "인증코드가 만료되었습니다. 재발송해주세요."
+    : codeErrorMessage;
   const isValid =
     email.trim() !== "" &&
     authenticationCode.trim() !== "" &&
     password.trim() !== "" &&
     confirmPassword.trim() !== "" &&
-    !isSubmitting;
+    !isSubmitting &&
+    !codeExpired;
   const handleReset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSubmitErrorMessage("");
 
-    if (!isValid) return;
-
-    if (email.trim() === "") {
-      setEmailErrorMessage(getRequiredMessage("이메일을"));
-      setCodeError(false);
-      setPasswordError(false);
-      setConfirmPasswordError(false);
-      return;
-    }
+    const emailError = getGsmEmailErrorMessage(email);
+    if (emailError) return setEmailErrorMessage(emailError);
     setEmailErrorMessage("");
-    if (!isValidPassword(password)) {
-      setPasswordError(true);
-      setConfirmPasswordError(false);
-      return;
-    }
-    setPasswordError(false);
-    if (password !== confirmPassword) {
-      setConfirmPasswordError(true);
-      return;
-    }
 
-    setConfirmPasswordError(false);
+    if (authenticationCode.trim() === "") return setCodeErrorMessage("인증코드를 입력해주세요.");
+    if (authenticationCode.length !== 6) return setCodeErrorMessage("인증코드 6자리를 입력해주세요.");
+    if (codeExpired) return setCodeErrorMessage("인증코드가 만료되었습니다. 재발송해주세요.");
+    setCodeErrorMessage("");
+
+    if (password.trim() === "") return setPasswordErrorMessage("비밀번호를 입력해주세요.");
+    if (!isValidPassword(password)) return setPasswordErrorMessage("영문, 숫자, 특수문자를 포함하여 10자 이상 입력해주세요.");
+    setPasswordErrorMessage("");
+
+    if (confirmPassword.trim() === "") return setConfirmPasswordErrorMessage("비밀번호를 다시 입력해주세요.");
+    if (password !== confirmPassword) return setConfirmPasswordErrorMessage("비밀번호가 일치하지 않습니다.");
+    setConfirmPasswordErrorMessage("");
 
     try {
       setIsSubmitting(true);
-      await resetPassword(email, authenticationCode, password);
-      setCodeError(false);
+      await resetPassword(email.trim(), authenticationCode, password);
       router.push("/login");
-    } catch {
-      setCodeError(true);
+    } catch (caught) {
+      const result = getPasswordResetError(caught);
+      if (result.field === "verificationCode") setCodeErrorMessage(result.message);
+      else if (result.field === "email") setEmailErrorMessage(result.message);
+      else setSubmitErrorMessage(result.message);
     } finally {
       setIsSubmitting(false);
     }
   };
-  const [isCodeSent, setIsCodeSent] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
+
   const handleSendCode = async () => {
     if (isSendingCode) return;
 
-    if (email.trim() === "") {
-      setEmailErrorMessage(getRequiredMessage("이메일을"));
-      return;
-    }
+    const emailError = getGsmEmailErrorMessage(email);
+    if (emailError) return setEmailErrorMessage(emailError);
 
     try {
       setIsSendingCode(true);
-      await sendPasswordResetCode(email);
+      setSubmitErrorMessage("");
+      await sendPasswordResetCode(email.trim());
       setEmailErrorMessage("");
-      setCodeError(false);
+      setCodeErrorMessage("");
       setIsCodeSent(true);
       setTimeLeft(180);
-    } catch {
-      setEmailErrorMessage("가입되지 않은 이메일입니다.");
+    } catch (caught) {
+      setEmailErrorMessage(
+        getAuthErrorMessage(caught, "인증코드를 발송하지 못했습니다. 잠시 후 다시 시도해주세요."),
+      );
       setIsCodeSent(false);
       setTimeLeft(0);
     } finally {
@@ -116,7 +126,7 @@ export default function ForgotPasswordPage() {
         height={100}
         className="mt-[64px]"
       />
-      <span className="mt-[88px] text-left w-[600px] text-[18px] font-medium">
+      <span style={{ marginTop: 88 }} className="text-left w-[600px] text-[18px] font-medium">
         이메일
       </span>
       <Input
@@ -128,7 +138,7 @@ export default function ForgotPasswordPage() {
           setEmailErrorMessage("");
         }}
         placeholder="이메일 입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
@@ -137,7 +147,7 @@ export default function ForgotPasswordPage() {
       >
         {emailErrorMessage || getRequiredMessage("이메일을")}
       </p>
-      <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
+      <span className="mt-[12px] text-left w-[600px] text-[18px] font-medium">
         인증코드
       </span>
       <Input
@@ -145,12 +155,13 @@ export default function ForgotPasswordPage() {
         inputMode="numeric"
         maxLength={6}
         value={authenticationCode}
-        error={codeError}
+        error={Boolean(displayedCodeError)}
         onChange={(e) => {
           setAuthenticationCode(
             e.target.value.replace(/[^0-9]/g, "")
           );
-          setCodeError(false);
+          setCodeErrorMessage("");
+          setSubmitErrorMessage("");
         }}
         rightElement={
           isCodeSent ? (
@@ -160,14 +171,14 @@ export default function ForgotPasswordPage() {
           ) : null
         }
         placeholder="인증코드 입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
-          codeError ? "visible" : "invisible"
+          displayedCodeError ? "visible" : "invisible"
         }`}
       >
-        인증코드가 올바르지 않습니다.
+        {displayedCodeError || "인증코드를 입력해주세요."}
       </p>
       <div className="mt-[-4px] flex justify-end items-center w-[600px]">
         <button
@@ -187,55 +198,62 @@ export default function ForgotPasswordPage() {
               : "인증코드 발송"}
         </button>
       </div>
-      <span className="text-left w-[600px] text-[18px] font-medium">
+      <span className="mt-[12px] text-left w-[600px] text-[18px] font-medium">
         새 비밀번호
       </span>
       <Input
         type="password"
         value={password}
-        error={passwordError}
+        error={Boolean(passwordErrorMessage)}
         showPasswordToggle={true}
         onChange={(e) => {
           setPassword(e.target.value);
-          setPasswordError(false);
+          setPasswordErrorMessage("");
+          setSubmitErrorMessage("");
         }}
         placeholder="비밀번호 입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
-          passwordError ? "visible" : "invisible"
+          passwordErrorMessage ? "visible" : "invisible"
         }`}
       >
-        영문, 숫자, 특수문자를 포함하여 10자 이상 입력해주세요.
+        {passwordErrorMessage || "비밀번호를 입력해주세요."}
       </p>
-      <span className="mt-[14px] text-left w-[600px] text-[18px] font-medium">
+      <span className="mt-[12px] text-left w-[600px] text-[18px] font-medium">
         비밀번호 확인
       </span>
       <Input
         type="password"
         value={confirmPassword}
-        error={confirmPasswordError}
+        error={Boolean(confirmPasswordErrorMessage)}
         showPasswordToggle={true}
         onChange={(e) => {
           setConfirmPassword(e.target.value);
-          setConfirmPasswordError(false);
+          setConfirmPasswordErrorMessage("");
+          setSubmitErrorMessage("");
         }}
         placeholder="비밀번호 재입력"
-        className="mt-[16px] py-[16px] px-[16px] w-[600px] h-[56px]"
+        className="mt-[8px] py-[16px] px-[16px] w-[600px] h-[56px]"
       />
       <p
         className={`mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#D61E1E] ${
-          confirmPasswordError ? "visible" : "invisible"
+          confirmPasswordErrorMessage ? "visible" : "invisible"
         }`}
       >
-        비밀번호가 일치하지 않습니다.
+        {confirmPasswordErrorMessage || "비밀번호를 다시 입력해주세요."}
       </p>
+      {submitErrorMessage ? (
+        <p role="alert" className="mt-[4px] w-[600px] text-right text-[15px] text-[#D61E1E]">
+          {submitErrorMessage}
+        </p>
+      ) : null}
       <Button
         content="확인"
         type="submit"
         disabled={!isValid}
-        className={`mt-[74px] w-[600px] h-[56px] text-[23px] text-white mb-[128px]
+        className={`mt-[28px] w-[600px] h-[56px] text-[23px] text-white mb-[64px]
           ${
             isValid
               ? "bg-[#02C551] cursor-pointer"

@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { FiChevronLeft as ChevronLeft, FiChevronRight as ChevronRight } from "react-icons/fi";
 import Link from "next/link";
+import { HomeLogoButton } from "@/app/components/atoms/HomeLogoButton";
 import { approveConsultation, getSession, getTeacherConsultations } from "@/app/utils/api";
 
 // ── 타입 ─────────────────────────────────────────────
@@ -282,14 +283,14 @@ export default function Teacher() {
         : [];
 
     return (
-        <div className="flex min-h-screen bg-white">
+        <div className="relative flex min-h-screen bg-white">
 
             {/* 왼쪽 영역 */}
             <div className="m-7">
 
                 {/* 로고 */}
-                <div className="w-16 h-16">
-                    <img src="/JobdamIcon.svg" alt="Jobdam Icon" />
+                <div className="h-16 w-16">
+                    <HomeLogoButton className="absolute left-4 top-[20px] sm:left-6 sm:top-[24px] lg:left-10 lg:top-[34px]" />
                 </div>
 
                 {/* 버튼 */}
