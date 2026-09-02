@@ -8,8 +8,9 @@ const source = readFileSync(
 );
 
 assert.match(source, /<Field first label="이메일"/);
-assert.match(source, /first \? "mt-\[88px\]" : "mt-\[12px\]"/);
+assert.match(source, /style=\{\{ marginTop: first \? 88 : 12 \}\}/);
 assert.match(source, /className="mt-\[8px\] h-\[56px\] w-\[600px\]/);
 assert.match(source, /mb-\[64px\] mt-\[28px\]/);
+assert.doesNotMatch(source, /first \? "mt-\[88px\]"/);
 
 console.log("signup spacing contract passed");
