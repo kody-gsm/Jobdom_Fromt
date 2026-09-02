@@ -1,12 +1,12 @@
 /* 로그인 페이지 */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { login } from "@/app/utils/authApi";
+import { login, restoreRememberedSession } from "@/app/utils/authApi";
 import { getRequiredMessage } from "@/app/utils/authValidation";
 
 export default function LoginPage() {
@@ -15,7 +15,18 @@ export default function LoginPage() {
   const [emailErrorMessage, setEmailErrorMessage] = useState("");
   const [passwordError, setPasswordError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRememberLogin, setIsRememberLogin] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    restoreRememberedSession().then((session) => {
+      if (active && session) router.replace(session.role === "TEACHER" ? "/teacher" : "/");
+    });
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   const isValid =
     email.trim() !== "" &&
@@ -39,7 +50,7 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true);
-      const session = await login(email, password);
+      const session = await login(email, password, isRememberLogin);
       setEmailErrorMessage("");
       setPasswordError(false);
       router.push(session.role === "TEACHER" ? "/teacher" : "/");
@@ -104,10 +115,24 @@ export default function LoginPage() {
         비밀번호가 일치하지 않습니다.
       </p>
 
-      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer"
-        onClick={() => router.push("/forgot-password")}>
-        비밀번호 찾기
-      </p>
+      <div className="mt-[4px] flex w-[600px] items-center justify-between text-[15px]">
+        <label className="flex cursor-pointer items-center gap-2 text-[#5F6368]">
+          <input
+            type="checkbox"
+            checked={isRememberLogin}
+            onChange={(event) => setIsRememberLogin(event.target.checked)}
+            className="h-[18px] w-[18px] cursor-pointer accent-[#02C551]"
+          />
+          <span>자동 로그인</span>
+        </label>
+        <button
+          type="button"
+          className="cursor-pointer font-[400] text-[#02C551]"
+          onClick={() => router.push("/forgot-password")}
+        >
+          비밀번호 찾기
+        </button>
+      </div>
 
       <Button
         content="확인"
