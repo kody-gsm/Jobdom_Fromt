@@ -1,1 +1,1 @@
-export { login, resetPassword, sendPasswordResetCode } from "./api";
+export { login, resetPassword, restoreRememberedSession, sendPasswordResetCode } from "./api";
