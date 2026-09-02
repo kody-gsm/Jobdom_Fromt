@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 
 process.env.NEXT_PUBLIC_API_BASE_URL = "/backend";
 const storage = new Map<string, string>();
+const sessionStorageData = new Map<string, string>();
 Object.defineProperty(globalThis, "window", { value: globalThis });
 Object.defineProperty(globalThis, "dispatchEvent", { value: () => true });
 Object.defineProperty(globalThis, "localStorage", {
@@ -9,6 +10,13 @@ Object.defineProperty(globalThis, "localStorage", {
     getItem: (key: string) => storage.get(key) ?? null,
     setItem: (key: string, value: string) => storage.set(key, value),
     removeItem: (key: string) => storage.delete(key),
+  },
+});
+Object.defineProperty(globalThis, "sessionStorage", {
+  value: {
+    getItem: (key: string) => sessionStorageData.get(key) ?? null,
+    setItem: (key: string, value: string) => sessionStorageData.set(key, value),
+    removeItem: (key: string) => sessionStorageData.delete(key),
   },
 });
 
@@ -26,9 +34,9 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
 
 const api = await import("../app/utils/api.ts");
 
-localStorage.setItem("jobdam_access_token", "test-access-token");
+sessionStorage.setItem("jobdam_access_token", "test-access-token");
 await api.getRecruits();
-localStorage.removeItem("jobdam_access_token");
+sessionStorage.removeItem("jobdam_access_token");
 await api.getForms();
 await api.getStudentConsultations("course");
 await api.getTeacherConsultations("common");

@@ -1,21 +1,38 @@
 /* 로그인 페이지 */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { login } from "@/app/utils/authApi";
+import {
+  clearRememberLoginPreference,
+  login,
+  readRememberLoginPreference,
+  restoreRememberedSession,
+} from "@/app/utils/authApi";
 import { getRequiredMessage } from "@/app/utils/authValidation";
+import { getAuthErrorMessage } from "@/app/utils/authErrorMessages";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => readRememberLoginPreference().email);
   const [password, setPassword] = useState("");
   const [emailErrorMessage, setEmailErrorMessage] = useState("");
   const [passwordError, setPasswordError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRememberLogin, setIsRememberLogin] = useState(() => readRememberLoginPreference().enabled);
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    restoreRememberedSession().then((session) => {
+      if (active && session) router.replace(session.role === "ADMIN" ? "/admin" : session.role === "TEACHER" ? "/teacher" : "/");
+    });
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   const isValid =
     email.trim() !== "" &&
@@ -24,6 +41,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setEmailErrorMessage("");
+    setPasswordError(false);
 
     if (email.trim() === "") {
       setEmailErrorMessage(getRequiredMessage("이메일을"));
@@ -37,13 +56,15 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true);
-      const session = await login(email, password);
+      const session = await login(email, password, isRememberLogin);
       setEmailErrorMessage("");
       setPasswordError(false);
       router.push(session.role === "ADMIN" ? "/admin" : session.role === "TEACHER" ? "/teacher" : "/");
-    } catch {
-      setEmailErrorMessage("잘못된 이메일입니다.");
-      setPasswordError(true);
+    } catch (caught) {
+      setEmailErrorMessage(
+        getAuthErrorMessage(caught, "이메일 또는 비밀번호가 올바르지 않습니다."),
+      );
+      setPasswordError(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -51,7 +72,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-col items-center justify-center">
-      <form noValidate onSubmit={handleLogin} className="flex flex-col items-center">
+      <form noValidate autoComplete="on" onSubmit={handleLogin} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"
@@ -64,6 +85,8 @@ export default function LoginPage() {
       </span>
       <Input
         type="email"
+        name="email"
+        autoComplete="email"
         value={email}
         error={emailErrorMessage !== ""}
         onChange={(e) => {
@@ -85,6 +108,8 @@ export default function LoginPage() {
       </span>
       <Input
         type="password"
+        name="password"
+        autoComplete="current-password"
         value={password}
         error={passwordError}
         showPasswordToggle={true}
@@ -99,13 +124,41 @@ export default function LoginPage() {
           passwordError ? "visible" : "invisible"
         }`}
       >
-        비밀번호가 일치하지 않습니다.
+        비밀번호를 입력해주세요.
       </p>
 
-      <p className="mt-[4px] text-right w-[600px] text-[15px] font-[400] text-[#02C551] cursor-pointer"
-        onClick={() => router.push("/forgot-password")}>
-        비밀번호 찾기
-      </p>
+      <div className="mt-[4px] flex w-[600px] items-center justify-between text-[15px]">
+        <label className="flex items-center gap-2 text-[#5F6368]">
+          <input
+            type="checkbox"
+            checked={isRememberLogin}
+            onChange={(event) => {
+              const checked = event.target.checked;
+              setIsRememberLogin(checked);
+              if (!checked) clearRememberLoginPreference();
+            }}
+            className="sr-only"
+          />
+          <span
+            aria-hidden="true"
+            className={`flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border ${
+              isRememberLogin
+                ? "border-[#02C551] bg-[#02C551]"
+                : "border-[#B8BBC0] bg-white"
+            }`}
+          >
+            {isRememberLogin ? <span className="text-[13px] leading-none text-white">✓</span> : null}
+          </span>
+          <span>아이디 저장</span>
+        </label>
+        <button
+          type="button"
+          className="cursor-pointer font-[400] text-[#02C551]"
+          onClick={() => router.push("/forgot-password")}
+        >
+          비밀번호 찾기
+        </button>
+      </div>
 
       <Button
         content="확인"

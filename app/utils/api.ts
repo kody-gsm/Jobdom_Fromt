@@ -1,3 +1,13 @@
+import {
+  backfillRememberLoginEmail,
+  clearStoredSession,
+  isRememberedSession,
+  persistSession,
+  readAccessToken,
+  readRememberedSession,
+  readSession,
+} from "./authSession.ts";
+
 export type ConsultationKind = "course" | "common";
 
 export interface AuthSession {
@@ -150,8 +160,6 @@ export interface RecruitDashboardRow {
 }
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
-const TOKEN_KEY = "jobdam_access_token";
-const SESSION_KEY = "jobdam_session";
 
 export class ApiError extends Error {
   public readonly status: number;
@@ -177,28 +185,20 @@ const decodeRole = (token: string): AuthSession["role"] => {
   }
 };
 
-export const saveSession = (response: Omit<AuthSession, "role">) => {
+export const saveSession = (response: Omit<AuthSession, "role">, rememberLogin = false) => {
   const session: AuthSession = { ...response, role: decodeRole(response.accessToken) };
-  localStorage.setItem(TOKEN_KEY, response.accessToken);
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  persistSession(session, rememberLogin);
   window.dispatchEvent(new Event("jobdam-session"));
   return session;
 };
 
-export const getSession = (): AuthSession | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    return JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  } catch {
-    return null;
-  }
-};
+export const getSession = (): AuthSession | null => readSession();
 
 export const clearSession = () => {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(SESSION_KEY);
-  window.dispatchEvent(new Event("jobdam-session"));
+  const session = getSession();
+  if (session) backfillRememberLoginEmail(session.email);
+  clearStoredSession();
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("jobdam-session"));
 };
 
 const parseError = async (response: Response) => {
@@ -214,8 +214,44 @@ const parseError = async (response: Response) => {
   }
 };
 
-const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
-  const token = typeof window === "undefined" ? null : localStorage.getItem(TOKEN_KEY);
+const reissueSession = async (refreshToken: string, rememberLogin: boolean) => {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/auth/reissue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+  } catch {
+    throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
+  }
+  if (!response.ok) throw new ApiError(await parseError(response), response.status);
+  const data = await response.json() as Omit<AuthSession, "role">;
+  return saveSession(data, rememberLogin);
+};
+
+export const restoreRememberedSession = async () => {
+  const remembered = readRememberedSession();
+  if (!remembered?.refreshToken) return null;
+  return remembered;
+};
+
+let reissuePromise: Promise<AuthSession | null> | null = null;
+
+const reissueCurrentSession = async () => {
+  if (reissuePromise) return reissuePromise;
+  const session = getSession();
+  if (!session?.refreshToken) return null;
+  reissuePromise = reissueSession(session.refreshToken, isRememberedSession());
+  try {
+    return await reissuePromise;
+  } finally {
+    reissuePromise = null;
+  }
+};
+
+const request = async <T>(path: string, init: RequestInit = {}, retryAuth = true): Promise<T> => {
+  const token = readAccessToken();
   const headers = new Headers(init.headers);
   const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
   if (!isFormData && init.body && !headers.has("Content-Type")) {
@@ -230,6 +266,14 @@ const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
     throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
   }
   if (!response.ok) {
+    if (response.status === 401 && retryAuth && getSession()?.refreshToken) {
+      try {
+        await reissueCurrentSession();
+        return request<T>(path, init, false);
+      } catch (error) {
+        if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) throw error;
+      }
+    }
     if (response.status === 401) clearSession();
     throw new ApiError(await parseError(response), response.status);
   }
@@ -243,12 +287,12 @@ const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   return text as T;
 };
 
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, password: string, rememberLogin = false) => {
   const response = await request<Omit<AuthSession, "role">>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
-  return saveSession(response);
+  return saveSession(response, rememberLogin);
 };
 
 export const signup = (input: { email: string; password: string; verificationCode: string }) =>

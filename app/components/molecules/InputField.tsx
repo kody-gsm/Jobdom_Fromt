@@ -23,7 +23,7 @@ export const InputField = ({ className = "", style, title, errormsg, p, onClick,
         />
         <div className="text-right font-normal text-sm mt-1">
             {errormsg && <p className="text-red-500">{errormsg}</p>}
-            <p className="text-[#02C551]" onClick={onClick}>
+            <p className={onClick ? "cursor-pointer text-[#02C551]" : "text-[#02C551]"} onClick={onClick}>
                 {p}
             </p>
         </div>

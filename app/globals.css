@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css");
+@import "tailwindcss";
 
 @theme inline {
   --color-background: var(--background);
@@ -29,6 +29,14 @@ html, body {
 
 ::placeholder {
   color: #C5C5C5;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 .service-action-button {
