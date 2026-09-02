@@ -6,16 +6,21 @@ import { Button } from "@/app/components/atoms/Button";
 import { Input } from "@/app/components/atoms/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { login, restoreRememberedSession } from "@/app/utils/authApi";
+import {
+  clearRememberLoginPreference,
+  login,
+  readRememberLoginPreference,
+  restoreRememberedSession,
+} from "@/app/utils/authApi";
 import { getRequiredMessage } from "@/app/utils/authValidation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => readRememberLoginPreference().email);
   const [password, setPassword] = useState("");
   const [emailErrorMessage, setEmailErrorMessage] = useState("");
   const [passwordError, setPasswordError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRememberLogin, setIsRememberLogin] = useState(false);
+  const [isRememberLogin, setIsRememberLogin] = useState(() => readRememberLoginPreference().enabled);
   const router = useRouter();
 
   useEffect(() => {
@@ -64,7 +69,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-col items-center justify-center">
-      <form noValidate onSubmit={handleLogin} className="flex flex-col items-center">
+      <form noValidate autoComplete="on" onSubmit={handleLogin} className="flex flex-col items-center">
       <Image
         src="/JobdamIcon.svg"
         alt="로고"
@@ -77,6 +82,8 @@ export default function LoginPage() {
       </span>
       <Input
         type="email"
+        name="email"
+        autoComplete="email"
         value={email}
         error={emailErrorMessage !== ""}
         onChange={(e) => {
@@ -98,6 +105,8 @@ export default function LoginPage() {
       </span>
       <Input
         type="password"
+        name="password"
+        autoComplete="current-password"
         value={password}
         error={passwordError}
         showPasswordToggle={true}
@@ -120,7 +129,11 @@ export default function LoginPage() {
           <input
             type="checkbox"
             checked={isRememberLogin}
-            onChange={(event) => setIsRememberLogin(event.target.checked)}
+            onChange={(event) => {
+              const checked = event.target.checked;
+              setIsRememberLogin(checked);
+              if (!checked) clearRememberLoginPreference();
+            }}
             className="sr-only"
           />
           <span
