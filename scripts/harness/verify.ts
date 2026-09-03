@@ -12,6 +12,8 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "preflight unit", kind: "node", target: "scripts/harness/preflight.test.ts" },
   { name: "scope unit", kind: "node", target: "scripts/harness/changed-files-check.test.ts" },
   { name: "changed lint unit", kind: "node", target: "scripts/harness/changed-lint.test.ts" },
+  { name: "fsd boundary unit", kind: "node", target: "scripts/harness/fsd-boundary-check.test.ts" },
+  { name: "convention unit", kind: "node", target: "scripts/harness/convention-check.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {
@@ -28,6 +30,8 @@ export const getVerificationSteps = (regressionFiles?: string[]): VerificationSt
   return [
     ...NODE_CHECKS,
     { name: "lint", kind: "npm", target: "harness:lint" },
+    { name: "fsd boundary check", kind: "npm", target: "harness:fsd" },
+    { name: "convention check", kind: "npm", target: "harness:convention" },
     { name: "api contract", kind: "npm", target: "check:api" },
     { name: "form contract", kind: "npm", target: "check:forms" },
     ...regressions,

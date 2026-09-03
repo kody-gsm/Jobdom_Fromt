@@ -103,9 +103,21 @@ const codeConventionPath = "docs/harness/CODE_CONVENTION.md";
 assert.ok(existsSync(codeConventionPath), "CODE_CONVENTION.md is required");
 const codeConvention = readFileSync(codeConventionPath, "utf8");
 assert.match(codeConvention, /@fsd\/\*/, "code convention must define the FSD import alias");
-assert.match(codeConvention, /api.*segment.*fetch/s, "code convention must protect direct fetch usage");
+assert.match(codeConvention, /api[\s\S]*segment[\s\S]*fetch/, "code convention must protect direct fetch usage");
 const architecture = readFileSync("docs/harness/ARCHITECTURE.md", "utf8");
 assert.match(architecture, /src\/fsd\//, "architecture must define the FSD root");
 assert.match(architecture, /app → pages → widgets → features → entities → shared/, "architecture must define FSD layer order");
 const agentsGuide = readFileSync("AGENTS.md", "utf8");
-assert.match(agentsGuide, /Teacher.*FSD migration/s, "AGENTS must define Teacher migration policy");
+assert.match(agentsGuide, /Teacher[\s\S]*FSD migration/, "AGENTS must define Teacher migration policy");
+assert.equal(
+  packageJson.scripts["harness:fsd"],
+  "node --no-warnings --experimental-strip-types scripts/harness/fsd-boundary-check.ts",
+  "harness:fsd script is required",
+);
+assert.equal(
+  packageJson.scripts["harness:convention"],
+  "node --no-warnings --experimental-strip-types scripts/harness/convention-check.ts",
+  "harness:convention script is required",
+);
+const tsconfig = JSON.parse(readFileSync("tsconfig.json", "utf8"));
+assert.deepEqual(tsconfig.compilerOptions?.paths?.["@fsd/*"], ["./src/fsd/*"], "@fsd/* alias is required");
