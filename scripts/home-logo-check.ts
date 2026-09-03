@@ -22,9 +22,9 @@ for (const path of [
   assert.match(read(path), /HomeLogoButton/);
 }
 
-const counsel = read("app/counsel/page.tsx");
-assert.match(counsel, /router\.push\(["']\/["']\)/);
-assert.match(counsel, /width="64"/);
-assert.match(counsel, /height="33"/);
+const counselRoute = read("app/counsel/page.tsx");
+const counselPage = read("src/fsd/pages/counsel/ui/CounselPage.tsx");
+assert.match(counselRoute, /@fsd\/pages\/counsel/);
+assert.match(counselPage, /@fsd\/widgets\/site-header/);
 
 console.log("home logo contract passed");
