@@ -36,3 +36,13 @@ assert.equal(
   "node --no-warnings --experimental-strip-types scripts/harness/changed-files-check.ts",
   "harness:scope script is required",
 );
+assert.equal(
+  packageJson.scripts["harness:verify"],
+  "node --no-warnings --experimental-strip-types scripts/harness/verify.ts",
+  "harness:verify script is required",
+);
+assert.equal(
+  packageJson.scripts["harness:lint"],
+  "node --no-warnings --experimental-strip-types scripts/harness/changed-lint.ts",
+  "harness:lint script is required",
+);
