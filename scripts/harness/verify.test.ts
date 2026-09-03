@@ -8,7 +8,7 @@ const steps = getVerificationSteps([
 ]);
 const names = steps.map((step) => step.name);
 
-assert.deepEqual(names.slice(0, 30), [
+assert.deepEqual(names.slice(0, 31), [
   "harness config",
   "preflight unit",
   "scope unit",
@@ -34,6 +34,7 @@ assert.deepEqual(names.slice(0, 30), [
   "admin fsd contract unit",
   "legacy route cleanup unit",
   "teacher characterization unit",
+  "teacher domain api unit",
   "lint",
   "fsd boundary check",
   "convention check",

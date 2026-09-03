@@ -33,6 +33,20 @@ export interface FormQuestion {
   required: boolean;
   options: FormQuestionOption[];
 }
+
+export interface FormQuestionInput {
+  type: QuestionType;
+  title: string;
+  description: string;
+  required: boolean;
+  options: string[];
+}
+
+export interface FormInput {
+  title: string;
+  description: string;
+  questions: FormQuestionInput[];
+}
 export interface DynamicForm extends Omit<FormSummary, "questionCount"> {
   questions: FormQuestion[];
   updatedAt: string;
