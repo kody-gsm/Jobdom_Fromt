@@ -47,6 +47,11 @@ assert.equal(
   "node --no-warnings --experimental-strip-types scripts/harness/changed-lint.ts",
   "harness:lint script is required",
 );
+assert.equal(
+  packageJson.scripts["harness:branches"],
+  "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts",
+  "harness:branches script is required",
+);
 const prTemplatePath = ".github/pull_request_template.md";
 const duplicateHarnessWorkflowPath = ".github/workflows/harness.yml";
 assert.ok(existsSync(prTemplatePath), "Korean PR template is required");

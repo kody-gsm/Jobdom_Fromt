@@ -45,3 +45,15 @@ Teacher에서 redesign이나 business rewrite가 필요해 보이면 현재 migr
 ## Pull request
 
 PR 제목은 `<type> : <한국어 작업 설명>`을 사용한다. 본문은 `.github/pull_request_template.md`의 한국어 섹션을 그대로 유지한다.
+
+## Merged branch cleanup
+
+작업이 끝나 `origin/develop`에 merge된 브랜치는 `npm run harness:branches`로 정리 후보를 확인한다.
+
+- 기본 실행은 dry-run이며 브랜치를 삭제하지 않는다.
+- `npm run harness:branches -- --apply`는 merge 완료된 로컬 브랜치만 삭제한다.
+- `npm run harness:branches -- --apply --remote`는 로컬 후보와 `origin/*` 원격 후보를 함께 삭제한다.
+- `main`, `develop`, 현재 checkout 브랜치, 열린 PR의 head 브랜치는 항상 보호한다.
+- `legacy-origin/*`은 cleanup 대상에 포함하지 않는다.
+- 열린 PR 조회에 실패하면 삭제를 진행하지 않는 fail-closed 방식을 사용한다.
+- merge 판정 기준은 `origin/develop`이며 강제 삭제(`git branch -D`)는 사용하지 않는다.
