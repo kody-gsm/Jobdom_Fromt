@@ -25,6 +25,8 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "authenticated request unit", kind: "node", target: "scripts/harness/authenticated-request.test.ts" },
   { name: "consultation contract unit", kind: "node", target: "scripts/harness/consultation-contract.test.ts" },
   { name: "recruit contract unit", kind: "node", target: "scripts/harness/recruit-contract.test.ts" },
+  { name: "form fsd contract unit", kind: "node", target: "scripts/harness/form-fsd-contract.test.ts" },
+  { name: "form fsd pages unit", kind: "node", target: "scripts/harness/form-fsd-pages.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {
