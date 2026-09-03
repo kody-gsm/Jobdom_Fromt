@@ -14,6 +14,7 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "changed lint unit", kind: "node", target: "scripts/harness/changed-lint.test.ts" },
   { name: "fsd boundary unit", kind: "node", target: "scripts/harness/fsd-boundary-check.test.ts" },
   { name: "convention unit", kind: "node", target: "scripts/harness/convention-check.test.ts" },
+  { name: "shared api unit", kind: "node", target: "scripts/harness/shared-api-client.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {

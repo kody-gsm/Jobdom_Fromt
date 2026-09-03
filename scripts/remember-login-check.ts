@@ -12,7 +12,7 @@ assert.match(auth, /sessionStorage/);
 assert.match(auth, /localStorage/);
 assert.match(api, /\/auth\/reissue/);
 assert.match(api, /restoreRememberedSession/);
-assert.match(api, /response\.status === 401[\s\S]*reissueCurrentSession/);
+assert.match(api, /status === 401[\s\S]*reissueCurrentSession/);
 assert.match(storage, /jobdam_remember_login/);
 assert.match(storage, /jobdam_remembered_email/);
 assert.match(storage, /readRememberLoginPreference/);

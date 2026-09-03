@@ -8,6 +8,10 @@ import {
   readSession,
 } from "./authSession.ts";
 
+// Legacy Node contract checks do not resolve tsconfig aliases; keep this facade relative until it is removed.
+import { ApiError, request as rawRequest } from "../../src/fsd/shared/api/index.ts";
+export { ApiError };
+
 export type ConsultationKind = "course" | "common";
 
 export interface AuthSession {
@@ -159,19 +163,6 @@ export interface RecruitDashboardRow {
   applicants: FormSubmissionSummary[];
 }
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
-
-export class ApiError extends Error {
-  public readonly status: number;
-
-  constructor(
-    message: string,
-    status: number,
-  ) {
-    super(message);
-    this.status = status;
-  }
-}
 
 const decodeRole = (token: string): AuthSession["role"] => {
   try {
@@ -201,32 +192,12 @@ export const clearSession = () => {
   if (typeof window !== "undefined") window.dispatchEvent(new Event("jobdam-session"));
 };
 
-const parseError = async (response: Response) => {
-  if ([502, 503, 504].includes(response.status)) return "백엔드 서버에 연결할 수 없습니다.";
-  const text = await response.text();
-  if (response.status === 500 && text.trim() === "Internal Server Error") return "백엔드 서버에 연결할 수 없습니다.";
-  if (!text) return `요청에 실패했습니다. (${response.status})`;
-  try {
-    const data = JSON.parse(text);
-    return data.message || data.error || text;
-  } catch {
-    return text;
-  }
-};
 
 const reissueSession = async (refreshToken: string, rememberLogin: boolean) => {
-  let response: Response;
-  try {
-    response = await fetch(`${API_BASE_URL}/auth/reissue`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-  } catch {
-    throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
-  }
-  if (!response.ok) throw new ApiError(await parseError(response), response.status);
-  const data = await response.json() as Omit<AuthSession, "role">;
+  const data = await rawRequest<Omit<AuthSession, "role">>("/auth/reissue", {
+    method: "POST",
+    body: JSON.stringify({ refreshToken }),
+  });
   return saveSession(data, rememberLogin);
 };
 
@@ -251,40 +222,22 @@ const reissueCurrentSession = async () => {
 };
 
 const request = async <T>(path: string, init: RequestInit = {}, retryAuth = true): Promise<T> => {
-  const token = readAccessToken();
-  const headers = new Headers(init.headers);
-  const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
-  if (!isFormData && init.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
-  } catch {
-    throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
-  }
-  if (!response.ok) {
-    if (response.status === 401 && retryAuth && getSession()?.refreshToken) {
+    return await rawRequest<T>(path, init, { accessToken: readAccessToken() });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401 && retryAuth && getSession()?.refreshToken) {
       try {
         await reissueCurrentSession();
         return request<T>(path, init, false);
-      } catch (error) {
-        if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) throw error;
+      } catch (reissueError) {
+        if (reissueError instanceof ApiError && (reissueError.status === 0 || reissueError.status >= 500)) {
+          throw reissueError;
+        }
       }
     }
-    if (response.status === 401) clearSession();
-    throw new ApiError(await parseError(response), response.status);
+    if (error instanceof ApiError && error.status === 401) clearSession();
+    throw error;
   }
-  if (response.status === 204) return undefined as T;
-
-  const text = await response.text();
-  if (!text) return undefined as T;
-  if (response.headers.get("content-type")?.includes("application/json")) {
-    return JSON.parse(text) as T;
-  }
-  return text as T;
 };
 
 export const login = async (email: string, password: string, rememberLogin = false) => {
