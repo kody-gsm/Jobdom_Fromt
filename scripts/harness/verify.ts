@@ -34,6 +34,7 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "legacy route cleanup unit", kind: "node", target: "scripts/harness/legacy-route-cleanup.test.ts" },
   { name: "teacher characterization unit", kind: "node", target: "scripts/harness/teacher-characterization.test.ts" },
   { name: "teacher domain api unit", kind: "node", target: "scripts/harness/teacher-domain-api.test.ts" },
+  { name: "teacher consultation page unit", kind: "node", target: "scripts/harness/teacher-consultation-page.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {
