@@ -18,7 +18,9 @@
 - push, PR 생성, merge는 사용자 요청 전 수행하지 않는다.
 - PR 템플릿은 사용자가 지정한 한국어 양식을 유지한다.
 
----### Task 1: Harness policy layer
+---
+
+### Task 1: Harness policy layer
 
 **Files:**
 - Create: `AGENTS.md`

@@ -71,3 +71,30 @@ for (const heading of requiredHeadings) {
 const workflow = readFileSync(workflowPath, "utf8");
 assert.match(workflow, /pull_request:/, "workflow must run for pull requests");
 assert.match(workflow, /npm run harness:verify/, "workflow must run harness:verify");
+const expectedPrTemplate = [
+  "# ✨ PR 내용",
+  "",
+  "## 📝 코드 변경 사항", "- ", "",
+  "## 💡 변경 이유", "- ", "",
+  "## 🛠️ 구현 방법", "- ", "",
+  "## 📌 영향 범위", "- ", "",
+  "## ✅ 테스트", "- [ ] ", "",
+  "**테스트 결과 / 참고 사항**", "- ", "",
+  "## 🌿 반영 브랜치", "- main", "",
+].join("\n");
+assert.equal(prTemplate, expectedPrTemplate, "PR template must match the approved Korean format exactly");
+
+const scopeSource = readFileSync("scripts/harness/changed-files-check.ts", "utf8");
+assert.match(scopeSource, /✓ changed files:/, "scope output must be readable UTF-8/ASCII");
+assert.match(scopeSource, /✓ protected Teacher paths unchanged/, "scope success output must be readable");
+const verifySource = readFileSync("scripts/harness/verify.ts", "utf8");
+assert.match(verifySource, /✓ harness verification passed/, "verify success output must be readable");
+assert.match(verifySource, /✗ verification failed:/, "verify failure output must be readable");
+
+assert.match(workflow, /actions\/checkout@v7/, "workflow must use current checkout action");
+assert.match(workflow, /actions\/setup-node@v7/, "workflow must use current setup-node action");
+const plan = readFileSync("docs/superpowers/plans/2026-09-03-jobdam-codex-harness.md", "utf8");
+assert.doesNotMatch(plan, /---###/, "plan task headings must start on a new line");
+
+const gitignore = readFileSync(".gitignore", "utf8");
+assert.ok(!gitignore.startsWith("\uFEFF"), ".gitignore must not contain a UTF-8 BOM");

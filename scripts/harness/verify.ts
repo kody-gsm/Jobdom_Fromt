@@ -1,4 +1,4 @@
-﻿import { readdirSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 interface VerificationStep {
@@ -29,7 +29,8 @@ export const getVerificationSteps = (regressionFiles?: string[]): VerificationSt
     ...NODE_CHECKS,
     { name: "lint", kind: "npm", target: "harness:lint" },
     { name: "api contract", kind: "npm", target: "check:api" },
-    { name: "form contract", kind: "npm", target: "check:forms" },    ...regressions,
+    { name: "form contract", kind: "npm", target: "check:forms" },
+    ...regressions,
     { name: "scope check", kind: "npm", target: "harness:scope" },
     { name: "build", kind: "npm", target: "build" },
   ];
@@ -56,13 +57,12 @@ const runCli = () => {
     console.log(`\n[${index + 1}/${steps.length}] ${step.name}`);
     const result = step.kind === "node" ? runNode(step.target) : runNpm(step.target);
     if (result.status !== 0) {
-      console.error(`\n??verification failed: ${step.name}`);
+      console.error(`\n✗ verification failed: ${step.name}`);
       process.exit(result.status ?? 1);
     }
   }
 
-  console.log("\n??harness verification passed");
+  console.log("\n✓ harness verification passed");
 };
 
 if (process.argv[1]?.endsWith("verify.ts")) runCli();
-

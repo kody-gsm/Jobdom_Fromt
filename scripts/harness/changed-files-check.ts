@@ -1,4 +1,4 @@
-﻿import { execFileSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 const PROTECTED_PREFIXES = ["app/teacher/"];
 
@@ -19,25 +19,26 @@ export const getChangedFiles = (baseRef: string) => {
   const untracked = gitLines("ls-files", "--others", "--exclude-standard");
   return [...new Set([...committed, ...working, ...staged, ...untracked])];
 };
+
 const runCli = () => {
   const baseRef = process.env.HARNESS_BASE_REF || "origin/develop";
   const changedFiles = getChangedFiles(baseRef);
   const protectedPaths = findProtectedPaths(changedFiles);
 
   console.log(`Jobdam Harness Scope Check (base: ${baseRef})`);
-  console.log(`??changed files: ${changedFiles.length}`);
+  console.log(`✓ changed files: ${changedFiles.length}`);
 
   if (protectedPaths.length === 0) {
-    console.log("??protected Teacher 寃쎈줈 蹂寃??놁쓬");
+    console.log("✓ protected Teacher paths unchanged");
     return;
   }
 
   if (process.env.HARNESS_ALLOW_TEACHER_CHANGE === "1") {
-    console.log(`??Teacher 蹂寃?override ?ъ슜:\n${protectedPaths.join("\n")}`);
+    console.log(`⚠ Teacher change override enabled:\n${protectedPaths.join("\n")}`);
     return;
   }
 
-  console.error(`??protected Teacher 寃쎈줈 蹂寃?媛먯?:\n${protectedPaths.join("\n")}`);
+  console.error(`✗ protected Teacher paths changed:\n${protectedPaths.join("\n")}`);
   process.exit(1);
 };
 
