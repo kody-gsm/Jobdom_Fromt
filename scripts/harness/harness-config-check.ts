@@ -47,9 +47,9 @@ assert.equal(
   "harness:lint script is required",
 );
 const prTemplatePath = ".github/pull_request_template.md";
-const workflowPath = ".github/workflows/harness.yml";
+const duplicateHarnessWorkflowPath = ".github/workflows/harness.yml";
 assert.ok(existsSync(prTemplatePath), "Korean PR template is required");
-assert.ok(existsSync(workflowPath), "harness GitHub Actions workflow is required");
+assert.equal(existsSync(duplicateHarnessWorkflowPath), false, "harness must not add a duplicate CI/CD workflow");
 
 const prTemplate = readFileSync(prTemplatePath, "utf8");
 const requiredHeadings = [
@@ -68,9 +68,6 @@ for (const heading of requiredHeadings) {
   previousIndex = index;
 }
 
-const workflow = readFileSync(workflowPath, "utf8");
-assert.match(workflow, /pull_request:/, "workflow must run for pull requests");
-assert.match(workflow, /npm run harness:verify/, "workflow must run harness:verify");
 const expectedPrTemplate = [
   "# ✨ PR 내용",
   "",
@@ -91,8 +88,6 @@ const verifySource = readFileSync("scripts/harness/verify.ts", "utf8");
 assert.match(verifySource, /✓ harness verification passed/, "verify success output must be readable");
 assert.match(verifySource, /✗ verification failed:/, "verify failure output must be readable");
 
-assert.match(workflow, /actions\/checkout@v7/, "workflow must use current checkout action");
-assert.match(workflow, /actions\/setup-node@v7/, "workflow must use current setup-node action");
 const plan = readFileSync("docs/superpowers/plans/2026-09-03-jobdam-codex-harness.md", "utf8");
 assert.doesNotMatch(plan, /---###/, "plan task headings must start on a new line");
 
@@ -121,8 +116,6 @@ assert.equal(
 );
 const tsconfig = JSON.parse(readFileSync("tsconfig.json", "utf8"));
 assert.deepEqual(tsconfig.compilerOptions?.paths?.["@fsd/*"], ["./src/fsd/*"], "@fsd/* alias is required");
-assert.match(workflow, /HARNESS_TEACHER_MIGRATION:/, "workflow must define Teacher migration mode");
-assert.match(workflow, /refactor\/teacher-fsd/, "workflow must restrict Teacher migration to the dedicated branch prefix");
 const scopePolicySource = readFileSync("scripts/harness/changed-files-check.ts", "utf8");
 assert.doesNotMatch(scopePolicySource, /HARNESS_ALLOW_TEACHER_CHANGE/, "generic Teacher override must not be used");
 assert.match(scopePolicySource, /HARNESS_TEACHER_MIGRATION/, "Teacher migration must use the dedicated gate");

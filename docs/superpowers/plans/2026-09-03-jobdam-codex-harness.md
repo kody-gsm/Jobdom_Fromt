@@ -4,9 +4,9 @@
 
 **Goal:** Codex가 Jobdam에서 정해진 아키텍처, 함수 규칙, API 계약, Git/PR 절차와 검증 게이트를 강제로 따르게 한다.
 
-**Architecture:** `AGENTS.md`를 진입점으로 하고 `docs/harness`에 상세 정책을 분리한다. `scripts/harness`의 Node/TypeScript 스크립트가 preflight, 보호 경로 검사, 전체 verify를 수행하며 GitHub Actions가 같은 verify를 재실행한다.
+**Architecture:** `AGENTS.md`를 진입점으로 하고 `docs/harness`에 상세 정책을 분리한다. `scripts/harness`의 Node/TypeScript 스크립트가 preflight, 보호 경로 검사, 전체 verify를 수행한다. 기존 CI/CD는 유지하고 하네스는 별도 workflow를 추가하지 않는다.
 
-**Tech Stack:** Next.js 16, TypeScript, Node.js built-ins, npm, GitHub Actions
+**Tech Stack:** Next.js 16, TypeScript, Node.js built-ins, npm
 
 **Spec:** `docs/superpowers/specs/2026-09-03-jobdam-codex-harness-design.md`
 
@@ -69,30 +69,29 @@
 - Modify: `package.json`
 
 **Interfaces:**
-- Produces: `harness:verify` command used locally and by CI.
+- Produces: `harness:verify` command usable locally and from existing CI/CD.
 
 - [ ] Make the config check require `harness:verify` and fail first.
 - [ ] Implement sequential execution of lint, API contract, form contract, existing regression checks, scope check, and build with fail-fast status reporting.
 - [ ] Add the npm script and confirm config check passes.
 - [ ] Run `harness:verify` and record any baseline environment failure separately from code failures.
 - [ ] Commit as `chore : add harness verification gate`.
-### Task 4: Pull request and CI layer
+### Task 4: Pull request integration
 
 **Files:**
 - Create: `.github/pull_request_template.md`
-- Create: `.github/workflows/harness.yml`
 - Modify: `scripts/harness/harness-config-check.ts`
 
 **Interfaces:**
 - Consumes: `npm run harness:verify` from Task 3.
-- Produces: fixed Korean PR template and PR CI gate.
+- Produces: fixed Korean PR template without duplicating existing CI/CD.
 
-- [ ] Extend config check to assert exact required PR headings and workflow presence; run and confirm failure.
+- [ ] Extend config check to assert exact required PR headings and prevent a duplicate harness workflow.
 - [ ] Add the Korean PR template exactly as approved by the user.
-- [ ] Add GitHub Actions workflow for pull requests targeting `develop` or `main`, running install and `harness:verify`.
+- [ ] Keep existing CI/CD untouched; expose `npm run harness:verify` as the integration command.
 - [ ] Re-run config check and full verification.
 - [ ] Review `git diff --check`, protected paths, and final diff.
-- [ ] Commit as `chore : add harness pr and ci workflow`.
+- [ ] Commit as `chore : add harness pr template`.
 
 ## Final verification
 

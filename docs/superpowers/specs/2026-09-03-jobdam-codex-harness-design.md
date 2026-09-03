@@ -10,7 +10,7 @@ Teacher 페이지와 기존 Backend API 계약을 보호하면서, Codex가 나�
 - 기존 기능과 API 계약을 변경 금지 경계로 둔다.
 - 함수 설계, 리팩터링, 코드리뷰, Git/PR 규칙을 문서화한다.
 - 작업 시작 전 preflight와 완료 전 verify를 자동화한다.
-- PR에서 같은 검증을 GitHub Actions로 다시 실행한다.
+- 기존 CI/CD 구성은 중복 생성하거나 대체하지 않는다.
 - Teacher 페이지는 보호 경로로 취급한다.
 
 ## Non-goals
@@ -22,7 +22,7 @@ Teacher 페이지와 기존 Backend API 계약을 보호하면서, Codex가 나�
 - 새로운 상태관리/폼/API 라이브러리 도입
 ## Architecture
 
-`AGENTS.md`는 짧은 진입점이며 상세 규칙은 `docs/harness/`에 둔다. 로컬 검증은 `scripts/harness/`에서 실행하고 GitHub Actions는 동일한 npm script를 호출한다. 기존 `scripts/*-check.ts` 회귀 검사는 유지하고 하네스에서 명시적으로 연결한다.
+`AGENTS.md`는 짧은 진입점이며 상세 규칙은 `docs/harness/`에 둔다. 검증은 `scripts/harness/`와 `npm run harness:verify`로 제공한다. 기존 CI/CD가 필요하면 이 명령을 호출할 수 있지만 하네스가 별도 workflow를 만들지는 않는다. 기존 `scripts/*-check.ts` 회귀 검사는 유지하고 하네스에서 명시적으로 연결한다.
 
 ## Required rules
 
@@ -40,4 +40,4 @@ PR 본문은 사용자가 지정한 한국어 템플릿을 그대로 사용한�
 
 ## Verification
 
-로컬 `harness:verify`와 CI는 최소한 lint, API contract, form contract, 기존 regression checks, Next.js build를 검증한다. 변경 범위 검사는 Teacher 보호 경로를 별도로 확인한다.
+`harness:verify`는 최소한 lint, API contract, form contract, 기존 regression checks, Next.js build를 검증한다. 기존 CI/CD에서 사용하려면 이 단일 명령을 연결하고, 별도 하네스 workflow는 추가하지 않는다. 변경 범위 검사는 Teacher 보호 경로를 별도로 확인한다.

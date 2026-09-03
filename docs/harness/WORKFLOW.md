@@ -23,6 +23,10 @@ Teacher migration은 `refactor/teacher-fsd*` branch 또는 명시적 migration m
 
 Teacher에서 redesign이나 business rewrite가 필요해 보이면 현재 migration PR에 섞지 않고 별도 승인 대상으로 분리한다.
 
+## CI/CD ownership
+
+기존 CI/CD 구성을 유지한다. 하네스는 별도 GitHub Actions workflow를 만들지 않고 `npm run harness:verify`라는 검증 진입점만 제공한다. 기존 CI/CD에 검증 연결이 필요하면 기존 pipeline 안에서 이 명령을 호출하도록 수정한다.
+
 ## Branch naming
 
 - `feat/*`: 새 사용자 기능/UI
@@ -30,7 +34,7 @@ Teacher에서 redesign이나 business rewrite가 필요해 보이면 현재 migr
 - `refactor/*`: 구조 개선 또는 FSD migration
 - `refactor/teacher-fsd*`: Teacher behavior-preserving FSD migration 전용
 - `test/*`: 테스트/contract 중심 변경
-- `chore/*`: 하네스, CI, 설정, 문서
+- `chore/*`: 하네스, 설정, 문서
 
 ## Commit rule
 

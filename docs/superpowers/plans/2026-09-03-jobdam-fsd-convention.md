@@ -6,7 +6,7 @@
 
 **Architecture:** Next.js route는 root `app/`에 유지하고 FSD layer는 `src/fsd/`에 둔다. 문서 규칙과 TypeScript 기반 boundary/convention checks를 `harness:verify`에 연결한다.
 
-**Tech Stack:** Next.js 16, TypeScript, Node.js built-ins, npm, GitHub Actions
+**Tech Stack:** Next.js 16, TypeScript, Node.js built-ins, npm
 
 **Spec:** `docs/superpowers/specs/2026-09-03-jobdam-fsd-convention-design.md`
 
@@ -69,7 +69,6 @@
 **Files:**
 - Modify: `scripts/harness/changed-files-check.ts`
 - Modify: `scripts/harness/changed-files-check.test.ts`
-- Modify: `.github/workflows/harness.yml`
 - Modify: `docs/harness/WORKFLOW.md`
 
 **Interfaces:**
@@ -78,7 +77,7 @@
 
 - [ ] migration-mode unit tests를 먼저 추가하고 실패를 확인한다.
 - [ ] branch/env 기반 Teacher migration permission을 구현한다.
-- [ ] CI가 teacher-fsd branch에서만 migration mode를 전달하도록 설정한다.
+- [ ] Teacher migration gate는 `refactor/teacher-fsd*` branch 또는 명시적 migration env로 동작하게 하고 기존 CI/CD에는 새 workflow를 추가하지 않는다.
 - [ ] WORKFLOW에 Teacher migration 전 characterization/regression 고정 규칙을 추가한다.
 - [ ] `harness:verify`와 build를 다시 실행한다.
 - [ ] `chore : add teacher fsd migration gate`로 커밋한다.
