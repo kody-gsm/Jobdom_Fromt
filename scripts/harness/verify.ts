@@ -30,6 +30,7 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "branch cleanup unit", kind: "node", target: "scripts/harness/branch-cleanup.test.ts" },
   { name: "profile contract unit", kind: "node", target: "scripts/harness/profile-contract.test.ts" },
   { name: "profile fsd pages unit", kind: "node", target: "scripts/harness/profile-fsd-pages.test.ts" },
+  { name: "admin fsd contract unit", kind: "node", target: "scripts/harness/admin-fsd-contract.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {
