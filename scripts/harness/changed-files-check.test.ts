@@ -14,3 +14,10 @@ assert.deepEqual(
   ]),
   ["app/teacher/page.tsx", "app/teacher/forms/page.tsx"],
 );
+import { isTeacherMigrationAllowed } from "./changed-files-check.ts";
+
+assert.equal(isTeacherMigrationAllowed("refactor/teacher-fsd", undefined), true);
+assert.equal(isTeacherMigrationAllowed("refactor/teacher-fsd-dashboard", undefined), true);
+assert.equal(isTeacherMigrationAllowed("refactor/consultation", undefined), false);
+assert.equal(isTeacherMigrationAllowed("fix/teacher-layout", "1"), true);
+assert.equal(isTeacherMigrationAllowed("refactor/teacher-fsd", "0"), true);

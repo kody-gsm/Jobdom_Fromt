@@ -1,14 +1,21 @@
 import { execFileSync } from "node:child_process";
 
-const PROTECTED_PREFIXES = ["app/teacher/"];
+const TEACHER_PREFIXES = ["app/teacher/"];
+const TEACHER_MIGRATION_BRANCH_PREFIX = "refactor/teacher-fsd";
 
 export const findProtectedPaths = (paths: string[]) =>
   paths
     .map((path) => path.replaceAll("\\", "/"))
-    .filter((path) => PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix)));
+    .filter((path) => TEACHER_PREFIXES.some((prefix) => path.startsWith(prefix)));
+
+export const isTeacherMigrationAllowed = (branch: string, migrationEnv?: string) =>
+  migrationEnv === "1" || branch.startsWith(TEACHER_MIGRATION_BRANCH_PREFIX);
+
+const git = (...args: string[]) =>
+  execFileSync("git", args, { encoding: "utf8" }).trim();
 
 const gitLines = (...args: string[]) => {
-  const output = execFileSync("git", args, { encoding: "utf8" }).trim();
+  const output = git(...args);
   return output ? output.split(/\r?\n/).filter(Boolean) : [];
 };
 
@@ -22,23 +29,27 @@ export const getChangedFiles = (baseRef: string) => {
 
 const runCli = () => {
   const baseRef = process.env.HARNESS_BASE_REF || "origin/develop";
+  const branch = git("branch", "--show-current");
   const changedFiles = getChangedFiles(baseRef);
-  const protectedPaths = findProtectedPaths(changedFiles);
+  const teacherPaths = findProtectedPaths(changedFiles);
 
   console.log(`Jobdam Harness Scope Check (base: ${baseRef})`);
   console.log(`✓ changed files: ${changedFiles.length}`);
 
-  if (protectedPaths.length === 0) {
+  if (teacherPaths.length === 0) {
     console.log("✓ protected Teacher paths unchanged");
     return;
   }
 
-  if (process.env.HARNESS_ALLOW_TEACHER_CHANGE === "1") {
-    console.log(`⚠ Teacher change override enabled:\n${protectedPaths.join("\n")}`);
+  if (isTeacherMigrationAllowed(branch, process.env.HARNESS_TEACHER_MIGRATION)) {
+    console.log(`⚠ Teacher FSD migration mode enabled:\n${teacherPaths.join("\n")}`);
     return;
   }
 
-  console.error(`✗ protected Teacher paths changed:\n${protectedPaths.join("\n")}`);
+  console.error(
+    `✗ Teacher paths changed outside migration mode:\n${teacherPaths.join("\n")}\n` +
+    `Use a '${TEACHER_MIGRATION_BRANCH_PREFIX}*' branch for behavior-preserving FSD migration.`,
+  );
   process.exit(1);
 };
 

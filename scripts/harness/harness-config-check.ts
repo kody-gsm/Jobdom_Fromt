@@ -121,3 +121,8 @@ assert.equal(
 );
 const tsconfig = JSON.parse(readFileSync("tsconfig.json", "utf8"));
 assert.deepEqual(tsconfig.compilerOptions?.paths?.["@fsd/*"], ["./src/fsd/*"], "@fsd/* alias is required");
+assert.match(workflow, /HARNESS_TEACHER_MIGRATION:/, "workflow must define Teacher migration mode");
+assert.match(workflow, /refactor\/teacher-fsd/, "workflow must restrict Teacher migration to the dedicated branch prefix");
+const scopePolicySource = readFileSync("scripts/harness/changed-files-check.ts", "utf8");
+assert.doesNotMatch(scopePolicySource, /HARNESS_ALLOW_TEACHER_CHANGE/, "generic Teacher override must not be used");
+assert.match(scopePolicySource, /HARNESS_TEACHER_MIGRATION/, "Teacher migration must use the dedicated gate");
