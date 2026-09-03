@@ -36,6 +36,9 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "teacher domain api unit", kind: "node", target: "scripts/harness/teacher-domain-api.test.ts" },
   { name: "teacher consultation page unit", kind: "node", target: "scripts/harness/teacher-consultation-page.test.ts" },
   { name: "teacher forms pages unit", kind: "node", target: "scripts/harness/teacher-forms-pages.test.ts" },
+  { name: "teacher recruit dashboard unit", kind: "node", target: "scripts/harness/teacher-recruit-dashboard.test.ts" },
+  { name: "teacher recruit page unit", kind: "node", target: "scripts/harness/teacher-recruit-page.test.ts" },
+  { name: "teacher fsd completion unit", kind: "node", target: "scripts/harness/teacher-fsd-completion.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {
