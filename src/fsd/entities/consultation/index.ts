@@ -16,3 +16,6 @@ export {
   validateConsultationDraft,
 } from "./model/rules.ts";
 export { createConsultationApi } from "./api/createConsultationApi.ts";
+
+export type { ProfileConsultation } from "./model/profile.ts";
+export { decodeProfileConsultationId, toProfileConsultation } from "./model/profile.ts";

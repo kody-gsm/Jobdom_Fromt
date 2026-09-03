@@ -28,6 +28,8 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "form fsd contract unit", kind: "node", target: "scripts/harness/form-fsd-contract.test.ts" },
   { name: "form fsd pages unit", kind: "node", target: "scripts/harness/form-fsd-pages.test.ts" },
   { name: "branch cleanup unit", kind: "node", target: "scripts/harness/branch-cleanup.test.ts" },
+  { name: "profile contract unit", kind: "node", target: "scripts/harness/profile-contract.test.ts" },
+  { name: "profile fsd pages unit", kind: "node", target: "scripts/harness/profile-fsd-pages.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {
