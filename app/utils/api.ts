@@ -1,15 +1,11 @@
-import {
-  isRememberedSession,
-  readAccessToken,
-} from "./authSession.ts";
-
 // Legacy Node contract checks do not resolve tsconfig aliases; keep this facade relative until it is removed.
-import { ApiError, request as rawRequest } from "../../src/fsd/shared/api/index.ts";
+import { ApiError } from "../../src/fsd/shared/api/index.ts";
 import {
   clearSession,
   getSession,
   restoreRememberedSession,
   saveSession,
+  requestWithSession as request,
 } from "../../src/fsd/entities/user/index.ts";
 import type { AuthSession } from "../../src/fsd/entities/user/index.ts";
 export { ApiError, clearSession, getSession, restoreRememberedSession, saveSession };
@@ -157,48 +153,6 @@ export interface RecruitDashboardRow {
 }
 
 
-
-const reissueSession = async (refreshToken: string, rememberLogin: boolean) => {
-  const data = await rawRequest<Omit<AuthSession, "role">>("/auth/reissue", {
-    method: "POST",
-    body: JSON.stringify({ refreshToken }),
-  });
-  return saveSession(data, rememberLogin);
-};
-
-
-let reissuePromise: Promise<AuthSession | null> | null = null;
-
-const reissueCurrentSession = async () => {
-  if (reissuePromise) return reissuePromise;
-  const session = getSession();
-  if (!session?.refreshToken) return null;
-  reissuePromise = reissueSession(session.refreshToken, isRememberedSession());
-  try {
-    return await reissuePromise;
-  } finally {
-    reissuePromise = null;
-  }
-};
-
-const request = async <T>(path: string, init: RequestInit = {}, retryAuth = true): Promise<T> => {
-  try {
-    return await rawRequest<T>(path, init, { accessToken: readAccessToken() });
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401 && retryAuth && getSession()?.refreshToken) {
-      try {
-        await reissueCurrentSession();
-        return request<T>(path, init, false);
-      } catch (reissueError) {
-        if (reissueError instanceof ApiError && (reissueError.status === 0 || reissueError.status >= 500)) {
-          throw reissueError;
-        }
-      }
-    }
-    if (error instanceof ApiError && error.status === 401) clearSession();
-    throw error;
-  }
-};
 
 export const login = async (email: string, password: string, rememberLogin = false) => {
   const response = await request<Omit<AuthSession, "role">>("/auth/login", {

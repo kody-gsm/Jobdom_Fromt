@@ -30,3 +30,4 @@ export {
   restoreRememberedSession,
   saveSession,
 } from "./model/lifecycle.ts";
+export { requestWithSession } from "./api/sessionRequest.ts";

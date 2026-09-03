@@ -6,15 +6,18 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8"
 const api = read("app/utils/api.ts");
 const entitySession = read("src/fsd/entities/user/model/session.ts");
 const entityLifecycle = read("src/fsd/entities/user/model/lifecycle.ts");
+const sessionRequest = read("src/fsd/entities/user/api/sessionRequest.ts");
+const authenticatedRequest = read("src/fsd/shared/api/createAuthenticatedRequest.ts");
 const login = read("src/fsd/features/login/ui/LoginForm.tsx");
 const auth = `${api}\n${entitySession}\n${entityLifecycle}`;
 
 assert.match(entityLifecycle, /saveSession[\s\S]*rememberLogin/);
 assert.match(auth, /sessionStorage/);
 assert.match(auth, /localStorage/);
-assert.match(api, /\/auth\/reissue/);
+assert.match(sessionRequest, /\/auth\/reissue/);
 assert.match(entityLifecycle, /restoreRememberedSession/);
-assert.match(api, /status === 401[\s\S]*reissueCurrentSession/);
+assert.match(authenticatedRequest, /status === 401/);
+assert.match(authenticatedRequest, /reissueCurrentSession\(refreshToken\)/);
 assert.match(entitySession, /jobdam_remember_login/);
 assert.match(entitySession, /jobdam_remembered_email/);
 assert.match(entitySession, /readRememberLoginPreference/);
