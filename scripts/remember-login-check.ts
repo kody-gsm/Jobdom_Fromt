@@ -4,8 +4,9 @@ import { resolve } from "node:path";
 
 const api = readFileSync(resolve(process.cwd(), "app/utils/api.ts"), "utf8");
 const storage = readFileSync(resolve(process.cwd(), "app/utils/authSession.ts"), "utf8");
+const entitySession = readFileSync(resolve(process.cwd(), "src/fsd/entities/user/model/session.ts"), "utf8");
 const login = readFileSync(resolve(process.cwd(), "app/(auth)/login/page.tsx"), "utf8");
-const auth = `${api}\n${storage}`;
+const auth = `${api}\n${storage}\n${entitySession}`;
 
 assert.match(api, /saveSession[\s\S]*rememberLogin/);
 assert.match(auth, /sessionStorage/);
@@ -13,10 +14,10 @@ assert.match(auth, /localStorage/);
 assert.match(api, /\/auth\/reissue/);
 assert.match(api, /restoreRememberedSession/);
 assert.match(api, /status === 401[\s\S]*reissueCurrentSession/);
-assert.match(storage, /jobdam_remember_login/);
-assert.match(storage, /jobdam_remembered_email/);
-assert.match(storage, /readRememberLoginPreference/);
-assert.match(storage, /backfillRememberLoginEmail/);
+assert.match(entitySession, /jobdam_remember_login/);
+assert.match(entitySession, /jobdam_remembered_email/);
+assert.match(entitySession, /readRememberLoginPreference/);
+assert.match(entitySession, /backfillRememberLoginEmail/);
 assert.match(api, /clearSession[\s\S]*backfillRememberLoginEmail\(session\.email\)[\s\S]*clearStoredSession/);
 assert.match(login, /아이디 저장/);
 assert.doesNotMatch(login, />자동 로그인</);

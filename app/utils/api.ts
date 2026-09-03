@@ -10,19 +10,11 @@ import {
 
 // Legacy Node contract checks do not resolve tsconfig aliases; keep this facade relative until it is removed.
 import { ApiError, request as rawRequest } from "../../src/fsd/shared/api/index.ts";
+import type { AuthSession } from "../../src/fsd/entities/user/index.ts";
 export { ApiError };
+export type { AuthSession } from "../../src/fsd/entities/user/index.ts";
 
 export type ConsultationKind = "course" | "common";
-
-export interface AuthSession {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  userId: number;
-  email: string;
-  name: string;
-  role: "STUDENT" | "TEACHER" | "ADMIN";
-}
 
 export interface UserResponse {
   id: number;

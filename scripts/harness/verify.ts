@@ -15,6 +15,7 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "fsd boundary unit", kind: "node", target: "scripts/harness/fsd-boundary-check.test.ts" },
   { name: "convention unit", kind: "node", target: "scripts/harness/convention-check.test.ts" },
   { name: "shared api unit", kind: "node", target: "scripts/harness/shared-api-client.test.ts" },
+  { name: "user session unit", kind: "node", target: "scripts/harness/user-session.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {

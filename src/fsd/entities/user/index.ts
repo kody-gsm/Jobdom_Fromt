@@ -1,5 +1,4 @@
-// Legacy compatibility facade. Session ownership lives in the FSD user entity.
-export type { AuthSession } from "../../src/fsd/entities/user/index.ts";
+export type { AuthSession, UserRole } from "./model/types.ts";
 export {
   backfillRememberLoginEmail,
   clearRememberedSession,
@@ -11,4 +10,4 @@ export {
   readRememberedSession,
   readRememberLoginPreference,
   readSession,
-} from "../../src/fsd/entities/user/index.ts";
+} from "./model/session.ts";
