@@ -1,17 +1,18 @@
 import {
-  backfillRememberLoginEmail,
-  clearStoredSession,
   isRememberedSession,
-  persistSession,
   readAccessToken,
-  readRememberedSession,
-  readSession,
 } from "./authSession.ts";
 
 // Legacy Node contract checks do not resolve tsconfig aliases; keep this facade relative until it is removed.
 import { ApiError, request as rawRequest } from "../../src/fsd/shared/api/index.ts";
+import {
+  clearSession,
+  getSession,
+  restoreRememberedSession,
+  saveSession,
+} from "../../src/fsd/entities/user/index.ts";
 import type { AuthSession } from "../../src/fsd/entities/user/index.ts";
-export { ApiError };
+export { ApiError, clearSession, getSession, restoreRememberedSession, saveSession };
 export type { AuthSession } from "../../src/fsd/entities/user/index.ts";
 
 export type ConsultationKind = "course" | "common";
@@ -156,34 +157,6 @@ export interface RecruitDashboardRow {
 }
 
 
-const decodeRole = (token: string): AuthSession["role"] => {
-  try {
-    const raw = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    const payload = raw.padEnd(Math.ceil(raw.length / 4) * 4, "=");
-    const role = JSON.parse(atob(payload)).role;
-    if (role === "ADMIN") return "ADMIN";
-    return role === "TEACHER" ? "TEACHER" : "STUDENT";
-  } catch {
-    return "STUDENT";
-  }
-};
-
-export const saveSession = (response: Omit<AuthSession, "role">, rememberLogin = false) => {
-  const session: AuthSession = { ...response, role: decodeRole(response.accessToken) };
-  persistSession(session, rememberLogin);
-  window.dispatchEvent(new Event("jobdam-session"));
-  return session;
-};
-
-export const getSession = (): AuthSession | null => readSession();
-
-export const clearSession = () => {
-  const session = getSession();
-  if (session) backfillRememberLoginEmail(session.email);
-  clearStoredSession();
-  if (typeof window !== "undefined") window.dispatchEvent(new Event("jobdam-session"));
-};
-
 
 const reissueSession = async (refreshToken: string, rememberLogin: boolean) => {
   const data = await rawRequest<Omit<AuthSession, "role">>("/auth/reissue", {
@@ -193,11 +166,6 @@ const reissueSession = async (refreshToken: string, rememberLogin: boolean) => {
   return saveSession(data, rememberLogin);
 };
 
-export const restoreRememberedSession = async () => {
-  const remembered = readRememberedSession();
-  if (!remembered?.refreshToken) return null;
-  return remembered;
-};
 
 let reissuePromise: Promise<AuthSession | null> | null = null;
 

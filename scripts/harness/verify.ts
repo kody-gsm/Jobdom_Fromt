@@ -16,6 +16,8 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "convention unit", kind: "node", target: "scripts/harness/convention-check.test.ts" },
   { name: "shared api unit", kind: "node", target: "scripts/harness/shared-api-client.test.ts" },
   { name: "user session unit", kind: "node", target: "scripts/harness/user-session.test.ts" },
+  { name: "user auth rules unit", kind: "node", target: "scripts/harness/user-auth-rules.test.ts" },
+  { name: "shared ui unit", kind: "node", target: "scripts/harness/shared-ui-contract.test.ts" },
 ];
 
 export const getVerificationSteps = (regressionFiles?: string[]): VerificationStep[] => {
