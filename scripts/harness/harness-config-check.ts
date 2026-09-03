@@ -10,6 +10,7 @@ const requiredFiles = [
   "docs/harness/REFACTORING_RULES.md",
   "docs/harness/API_CONTRACT.md",
   "docs/harness/FEATURE_CONTRACT.md",
+  "docs/harness/FRONTEND_CONTRACT_MAP.md",
   "docs/harness/CODE_REVIEW.md",
 ];
 
