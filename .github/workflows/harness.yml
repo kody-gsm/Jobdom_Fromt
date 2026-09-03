@@ -1,0 +1,30 @@
+name: Codex Harness
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      HARNESS_BASE_REF: origin/${{ github.base_ref }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run harness verification
+        run: npm run harness:verify
