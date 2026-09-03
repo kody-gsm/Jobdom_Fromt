@@ -98,3 +98,14 @@ assert.doesNotMatch(plan, /---###/, "plan task headings must start on a new line
 
 const gitignore = readFileSync(".gitignore", "utf8");
 assert.ok(!gitignore.startsWith("\uFEFF"), ".gitignore must not contain a UTF-8 BOM");
+
+const codeConventionPath = "docs/harness/CODE_CONVENTION.md";
+assert.ok(existsSync(codeConventionPath), "CODE_CONVENTION.md is required");
+const codeConvention = readFileSync(codeConventionPath, "utf8");
+assert.match(codeConvention, /@fsd\/\*/, "code convention must define the FSD import alias");
+assert.match(codeConvention, /api.*segment.*fetch/s, "code convention must protect direct fetch usage");
+const architecture = readFileSync("docs/harness/ARCHITECTURE.md", "utf8");
+assert.match(architecture, /src\/fsd\//, "architecture must define the FSD root");
+assert.match(architecture, /app → pages → widgets → features → entities → shared/, "architecture must define FSD layer order");
+const agentsGuide = readFileSync("AGENTS.md", "utf8");
+assert.match(agentsGuide, /Teacher.*FSD migration/s, "AGENTS must define Teacher migration policy");

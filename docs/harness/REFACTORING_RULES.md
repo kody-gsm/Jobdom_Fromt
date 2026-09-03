@@ -1,31 +1,43 @@
 # Refactoring Rules
 
-## Definition
+## Student frontend rebuild
 
-이 프로젝트에서 리팩터링은 기존 사용자 기능과 Backend 계약을 유지하면서 내부 구조를 개선하는 작업이다.
+Student 영역은 사용자 기능과 Backend/API contract를 유지하는 조건으로 내부를 재작성할 수 있다.
 
-## Allowed
+허용:
+- 디자인 전면 변경
+- component/hook/state 구조 재설계
+- 함수와 타입 재작성
+- FSD layer/slice/segment로 재배치
+- legacy component 제거
+- 테스트 가능한 domain logic으로 재구성
 
-- 컴포넌트 분리와 재구성
-- custom hook 추출
-- 순수 domain 함수 추출
-- API 코드를 domain별 모듈로 분리
-- 기존 디자인을 새로운 design system으로 교체
-- 타입과 이름 개선
-- 테스트 가능한 구조로 이동
+금지:
+- endpoint/method/payload/auth/session semantics 변경
+- 사용자 기능 삭제
+- business rule을 근거 없이 변경
+- 새 상태관리/API/폼 라이브러리의 무근거 도입
 
-## Forbidden without explicit approval
+## Teacher migration
 
-- `app/teacher/**` 수정
-- endpoint/method/payload/auth 변경
-- 기존 기능 삭제 또는 UX 의미 변경
-- 무관한 영역의 대규모 정리
-- 새 상태관리/API/폼 라이브러리 추가
+Teacher는 rebuild 대상이 아니라 behavior-preserving structural migration 대상이다.
+
+허용:
+- 파일 split/move
+- FSD layer/slice/segment 배치
+- import/export와 public API 정리
+- 구조 이동에 필요한 최소 타입/함수 signature 수정
+
+기본 금지:
+- UI redesign
+- business rule 변경
+- API contract 변경
+- migration과 무관한 함수 rewrite
 
 ## Migration rule
 
-화면 또는 feature 하나씩 vertical slice로 교체한다. 기존 동작을 contract로 고정하고 새 구현이 동일 동작을 만족한 뒤 기존 코드를 제거한다.
+화면/feature 하나씩 contract를 먼저 고정하고 새 FSD 구현이 동일 기능을 만족한 뒤 legacy 구현을 제거한다. Teacher migration은 characterization/regression을 먼저 추가한 뒤 수행한다.
 
 ## Scope rule
 
-한 PR에 여러 독립 feature를 섞지 않는다. 작업 범위 밖 문제를 발견하면 별도 작업 후보로 기록하고 현재 변경에 끼워 넣지 않는다.
+한 PR에 여러 독립 feature를 섞지 않는다. 발견한 무관한 문제는 별도 작업 후보로 남긴다.

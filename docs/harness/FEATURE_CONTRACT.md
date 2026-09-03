@@ -1,6 +1,6 @@
 # Feature Contract
 
-이 문서는 프론트 재구축 중 반드시 유지해야 하는 사용자 기능의 기준선이다. 세부 항목은 실제 리팩터링 전에 관련 코드와 API 명세를 확인해 확장한다.
+이 문서는 FSD migration/rebuild 중 반드시 유지해야 하는 사용자 기능 기준선이다. 실제 feature 작업 전 관련 코드와 API 명세를 확인해 세부 contract를 확장한다.
 
 ## Auth
 
@@ -31,4 +31,6 @@
 
 ## Teacher
 
-`app/teacher/**`는 이번 재구축 범위 밖이다. 관련 기능을 새 구조로 옮기기 위해 Teacher 구현을 수정하지 않는다.
+Teacher는 기능 contract뿐 아니라 기존 UI 의미와 interaction도 보존한다. FSD migration 전 현재 동작을 characterization/regression으로 고정하고, migration 후 동일 contract를 다시 통과시킨다.
+
+허용되는 변화는 구조 이동, 파일 분리, import/public API 정리 중심이다. Teacher redesign과 business rewrite는 별도 사용자 승인 없이는 수행하지 않는다.

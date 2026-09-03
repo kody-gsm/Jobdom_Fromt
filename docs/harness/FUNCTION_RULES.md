@@ -116,11 +116,12 @@ type ValidationResult =
 약간의 읽기 쉬운 중복은 잘못된 공통화보다 낫다.
 ## 10. Place functions by ownership
 
-- 특정 feature의 domain rule: `features/<feature>/model`
-- 특정 feature의 API: `features/<feature>/api`
-- React state/lifecycle 캡슐화: `features/<feature>/hooks`
+- entity 자체의 domain rule/type: `src/fsd/entities/<entity>/model`
+- 사용자 행동의 rule/state: `src/fsd/features/<feature>/model`
+- domain endpoint: owning entity/feature의 `api` segment
+- React state/lifecycle 캡슐화: owning slice의 `model` 또는 UI hook
 - 특정 component만 쓰는 작은 UI handler: component 내부
-- 여러 feature가 같은 의미로 쓰는 기반 유틸: `shared/lib`
+- domain-independent 기반 유틸: `src/fsd/shared/lib`
 
 모든 함수를 `utils.ts` 하나에 넣지 않는다.
 
