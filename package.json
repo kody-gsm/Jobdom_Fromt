@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "check:forms": "node --no-warnings --experimental-strip-types scripts/form-answers-check.ts",
-    "check:api": "node --no-warnings --experimental-strip-types scripts/api-contract-check.ts"
+    "check:api": "node --no-warnings --experimental-strip-types scripts/api-contract-check.ts",
+    "harness:preflight": "node --no-warnings --experimental-strip-types scripts/harness/preflight.ts",
+    "harness:scope": "node --no-warnings --experimental-strip-types scripts/harness/changed-files-check.ts"
   },
   "dependencies": {
     "next": "^16.2.7",
