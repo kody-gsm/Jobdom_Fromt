@@ -1,6 +1,14 @@
 import { execFileSync } from "node:child_process";
 
-const TEACHER_PREFIXES = ["app/teacher/"];
+const TEACHER_PREFIXES = [
+  "app/teacher/",
+  "app/admin/",
+  "src/fsd/pages/teacher/",
+  "src/fsd/pages/teacher-forms/",
+  "src/fsd/pages/teacher-form-submissions/",
+  "src/fsd/pages/teacher-recruit/",
+  "src/fsd/pages/admin/",
+];
 const TEACHER_MIGRATION_BRANCH_PREFIX = "refactor/teacher-fsd";
 
 export const findProtectedPaths = (paths: string[]) =>
