@@ -8,11 +8,11 @@
 
 ### Student frontend
 
-사용자 기능과 API contract를 보존한다. 디자인, 함수, 컴포넌트, hook, state 구조와 내부 타입은 새 FSD 기준으로 재작성할 수 있다.
+사용자 기능과 API contract를 보존한다. FSD 구조 정리 단계에서는 layer/slice/segment ownership을 정리한다. 사용자가 새 디자인을 전달한 뒤에는 기존 기능과 API/session 로직을 재사용하면서 UI, 함수, 컴포넌트, hook, state 구조를 새 디자인에 맞춰 재구성할 수 있다.
 
-### Teacher
+### Teacher / Admin
 
-기존 기능, UI 의미, business rule을 보존한다. FSD layer/slice/segment로 파일과 책임을 이동하는 구조 migration만 수행한다. migration과 관계없는 함수 rewrite나 redesign은 하지 않는다.
+Teacher와 Admin도 FSD 구조 정리 대상이다. 다만 기존 기능, UI 의미, business rule을 보존하며 layer/slice/segment로 파일과 책임을 이동하는 structural migration만 수행한다. Student 디자인 재구성 단계에서는 Teacher/Admin 코드를 수정하지 않는다.
 
 ## FSD root
 
@@ -73,7 +73,7 @@ export default function Page() {
 }
 ```
 
-Teacher route는 migration 전까지 legacy 구현을 유지할 수 있다.
+Teacher/Admin route는 structural migration 이후에도 behavior-preserving adapter 역할만 유지한다.
 
 ## Migration order
 
@@ -84,5 +84,8 @@ Teacher route는 migration 전까지 legacy 구현을 유지할 수 있다.
 5. recruit
 6. forms
 7. profile
-8. Teacher behavior-preserving FSD migration
+8. Teacher/Admin behavior-preserving FSD migration
 9. legacy cleanup
+10. 사용자가 새 디자인을 전달한 뒤 Student 페이지 재구성
+
+10단계에서는 Teacher/Admin 보호 경로를 수정하지 않는다.
