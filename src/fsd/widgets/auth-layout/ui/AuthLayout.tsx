@@ -8,39 +8,50 @@ interface AuthLayoutProps {
 }
 
 export const AuthLayout = ({ title, description, children }: AuthLayoutProps) => (
-  <main className="min-h-screen bg-[#f6f8f7] px-4 py-6 sm:px-6 lg:px-8">
-    <div className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl overflow-hidden rounded-[32px] border border-[#e4ebe6] bg-white shadow-[0_24px_80px_rgba(31,64,43,0.08)] lg:grid-cols-[0.9fr_1.1fr]">
-      <section className="relative hidden overflow-hidden bg-[#02C551] p-10 text-white lg:flex lg:flex-col lg:justify-between">
-        <div>
-          <div className="inline-flex rounded-2xl bg-white p-3">
-            <Image src="/JobdamIcon.svg" alt="잡담" width={126} height={60} priority />
-          </div>
-          <p className="mt-10 max-w-sm text-4xl font-bold leading-[1.2] tracking-tight">
-            학교생활과 진로 고민을 한 곳에서 연결합니다.
-          </p>
-          <p className="mt-5 max-w-md text-sm leading-7 text-green-50">
-            상담 신청부터 취업 정보까지, 학생과 선생님이 같은 흐름에서 소통할 수 있도록 돕습니다.
-          </p>
-        </div>        <div className="grid grid-cols-3 gap-3 text-xs font-semibold text-green-50">
-          <span className="rounded-xl border border-white/20 bg-white/10 px-3 py-3">상담</span>
-          <span className="rounded-xl border border-white/20 bg-white/10 px-3 py-3">취업</span>
-          <span className="rounded-xl border border-white/20 bg-white/10 px-3 py-3">신청 폼</span>
-        </div>
-      </section>
+  <main className="grid min-h-screen bg-[#F4F6F5] lg:grid-cols-[42%_58%]">
+    <section className="relative hidden overflow-hidden bg-[#0F1F2D] px-12 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-16 xl:py-16">
+      <div>
+        <Image
+          src="/JobdamIcon.svg"
+          alt="잡담"
+          width={132}
+          height={62}
+          priority
+          className="brightness-0 invert"
+        />
 
-      <section className="flex items-center justify-center px-5 py-10 sm:px-10 lg:px-14">
-        <div className="w-full max-w-[520px]">
-          <div className="mb-9 lg:hidden">
-            <Image src="/JobdamIcon.svg" alt="잡담" width={132} height={62} priority />
-          </div>
-          <p className="text-sm font-bold text-[#02a946]">JOBDAM</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#17201a] sm:text-4xl">
-            {title}
-          </h1>
-          <p className="mt-3 break-keep text-sm leading-6 text-[#6f7771]">{description}</p>
-          <div className="mt-9">{children}</div>
+        <div className="mt-24 max-w-[440px]">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#67DD98]">
+            JOBDAM FOR GSM
+          </p>
+          <h2 className="mt-5 text-[42px] font-bold leading-[1.2] tracking-[-0.035em]">
+            취업과 상담을 한 곳에서
+
+            <br />
+            더 편하게 이어가세요.
+          </h2>
+          <p className="mt-6 max-w-[390px] text-[15px] leading-7 text-[#AAB6BF]">
+            상담 신청부터 채용 공고와 설문까지, 학교생활에 필요한 정보를 잡담에서 확인할 수 있습니다.
+          </p>
         </div>
-      </section>
-    </div>
+      </div>
+
+      <p className="text-xs leading-6 text-[#71808C]">
+        Gwangju Software Meister High School
+      </p>
+    </section>
+
+    <section className="flex min-h-screen items-center justify-center bg-[#F4F6F5] px-5 py-10 sm:px-8 lg:px-12">
+      <div className="w-full max-w-[520px] rounded-[24px] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(15,31,45,0.08)] sm:px-10 sm:py-10">
+        <div className="mb-8 lg:hidden">
+          <Image src="/JobdamIcon.svg" alt="잡담" width={112} height={52} priority />
+        </div>
+        <h1 className="text-[32px] font-bold tracking-[-0.03em] text-[#17201A]">
+          {title}
+        </h1>
+        <p className="mt-3 break-keep text-sm leading-6 text-[#727A75]">{description}</p>
+        <div className="mt-8">{children}</div>
+      </div>
+    </section>
   </main>
 );
