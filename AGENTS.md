@@ -22,4 +22,5 @@
 - 실패한 검증을 숨기거나 무시하지 않는다.
 - `npm run harness:verify` 실패 상태에서 작업 완료를 선언하지 않는다.
 - 기존 CI/CD를 유지하며 Harness 전용 GitHub Actions workflow를 추가하지 않는다.
+- 일반 작업 PR의 base는 항상 `develop`을 사용한다. `main` 직접 반영은 사용자가 명시적으로 요청한 release/hotfix에만 허용한다.
 - push, PR 생성, merge, deploy는 사용자의 명시적 요청이 있을 때만 수행한다.
