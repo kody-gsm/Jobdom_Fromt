@@ -1,4 +1,0 @@
-export * from "./Input";
-export * from "./Button";
-export * from "./Option";
-export * from "./ProfileIcon";

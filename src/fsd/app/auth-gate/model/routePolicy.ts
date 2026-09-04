@@ -1,14 +1,12 @@
-export type AuthRole = "STUDENT" | "TEACHER" | "ADMIN";
+import type { UserRole } from "../../../entities/user/index.ts";
 
 const PUBLIC_ROUTES = new Set(["/login", "/signup", "/forgot-password"]);
 
-export const isPublicRoute = (pathname: string) => PUBLIC_ROUTES.has(pathname);
-
 export const getAuthRedirect = (
   pathname: string,
-  role: AuthRole | null,
+  role: UserRole | null,
 ): string | null => {
-  if (isPublicRoute(pathname)) return null;
+  if (PUBLIC_ROUTES.has(pathname)) return null;
   if (!role) return "/login";
 
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");

@@ -3,13 +3,12 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
-const api = read("app/utils/api.ts");
 const entitySession = read("src/fsd/entities/user/model/session.ts");
 const entityLifecycle = read("src/fsd/entities/user/model/lifecycle.ts");
 const sessionRequest = read("src/fsd/entities/user/api/sessionRequest.ts");
 const authenticatedRequest = read("src/fsd/shared/api/createAuthenticatedRequest.ts");
 const login = read("src/fsd/features/login/ui/LoginForm.tsx");
-const auth = `${api}\n${entitySession}\n${entityLifecycle}`;
+const auth = `${entitySession}\n${entityLifecycle}`;
 
 assert.match(entityLifecycle, /saveSession[\s\S]*rememberLogin/);
 assert.match(auth, /sessionStorage/);

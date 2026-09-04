@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { buildFormAnswers, getMissingRequiredQuestion } from "../app/utils/formAnswers.ts";
-import type { FormQuestion } from "../app/utils/api.ts";
+import { buildFormAnswers, getMissingRequiredQuestion } from "../../src/fsd/entities/form/index.ts";
+import type { FormQuestion } from "../../src/fsd/entities/form/index.ts";
 
 const questions = [
   { id: 10, orderIndex: 0, title: "이름", description: null, required: true, type: "SHORT_TEXT", options: [] },

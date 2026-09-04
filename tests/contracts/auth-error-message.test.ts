@@ -3,7 +3,7 @@ import {
   getAuthErrorMessage,
   getPasswordResetError,
   getSignupError,
-} from "../app/utils/authErrorMessages.ts";
+} from "../../src/fsd/entities/user/index.ts";
 
 const error = (message: string, status = 400) => ({ message, status });
 

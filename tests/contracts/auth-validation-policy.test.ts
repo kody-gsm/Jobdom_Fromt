@@ -3,7 +3,7 @@ import {
   getGsmEmailErrorMessage,
   isGsmEmail,
   isValidPassword,
-} from "../app/utils/authValidation.ts";
+} from "../../src/fsd/entities/user/index.ts";
 
 assert.equal(getGsmEmailErrorMessage(""), "이메일을 입력해주세요.");
 assert.equal(getGsmEmailErrorMessage("user@gmail.com"), "s로 시작하는 @gsm.hs.kr 이메일을 입력해주세요.");

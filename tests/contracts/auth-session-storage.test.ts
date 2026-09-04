@@ -22,7 +22,7 @@ Object.defineProperty(globalThis, "window", { value: globalThis });
 Object.defineProperty(globalThis, "localStorage", { value: local });
 Object.defineProperty(globalThis, "sessionStorage", { value: session });
 
-const authSession = await import("../app/utils/authSession.ts");
+const authSession = await import("../../src/fsd/entities/user/model/session.ts");
 const auth = {
   accessToken: "access",
   refreshToken: "refresh",
