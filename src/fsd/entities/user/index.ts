@@ -31,3 +31,4 @@ export {
   saveSession,
 } from "./model/lifecycle.ts";
 export { requestWithSession } from "./api/sessionRequest.ts";
+export { normalizeVerificationCode } from "./model/credentials.ts";

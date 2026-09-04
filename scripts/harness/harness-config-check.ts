@@ -57,9 +57,13 @@ const expectedPrTemplate = [
   "## 📌 영향 범위", "- ", "",
   "## ✅ 테스트", "- [ ] ", "",
   "**테스트 결과 / 참고 사항**", "- ", "",
-  "## 🌿 반영 브랜치", "- main", "",
+  "## 🌿 반영 브랜치", "- develop", "",
 ].join("\n");
 assert.equal(prTemplate, expectedPrTemplate, "PR template must match the approved Korean format exactly");
+
+const workflow = readFileSync("docs/harness/WORKFLOW.md", "utf8");
+assert.match(workflow, /base\/반영 브랜치는 `develop`으로 고정/, "workflow must fix normal PR base to develop");
+assert.match(workflow, /`main` 직접 반영.*release\/hotfix/, "main must be reserved for explicitly requested release/hotfix work");
 
 const architecture = readFileSync("docs/ARCHITECTURE.md", "utf8");
 assert.match(architecture, /src\/fsd\//, "architecture must define the FSD root");

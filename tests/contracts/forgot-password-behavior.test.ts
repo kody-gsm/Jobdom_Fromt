@@ -2,19 +2,21 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const source = readFileSync(
-  resolve(process.cwd(), "src/fsd/features/reset-password/ui/ResetPasswordForm.tsx"),
-  "utf8",
-);
+const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
+const hook = read("src/fsd/features/reset-password/model/useResetPasswordForm.ts");
+const validation = read("src/fsd/features/reset-password/model/validation.ts");
+const form = read("src/fsd/features/reset-password/ui/ResetPasswordForm.tsx");
+const source = `${hook}\n${validation}\n${form}`;
 
-assert.match(source, /sendPasswordResetCode/);
-assert.match(source, /resetPassword/);
+assert.match(hook, /sendPasswordResetCode/);
+assert.match(hook, /resetPassword/);
 assert.match(source, /getGsmEmailErrorMessage/);
-assert.match(source, /verificationCode\.length !== 6/);
-assert.match(source, /isValidPassword/);
-assert.match(source, /password !== confirmPassword/);
-assert.match(source, /setTimeLeft\(180\)/);
-assert.match(source, /router\.push\("\/login"\)/);
+assert.match(validation, /verificationCode\.trim\(\)\.length !== 6/);
+assert.match(validation, /isValidPassword/);
+assert.match(validation, /values\.password !== values\.confirmPassword/);
+assert.match(hook, /verificationCountdown\.start\(180\)/);
+assert.match(hook, /router\.push\("\/login"\)/);
 assert.match(source, /인증코드가 만료되었습니다\. 재발송해주세요\./);
+assert.doesNotMatch(form, /useState|useEffect/);
 
 console.log("forgot password behavior contract passed");

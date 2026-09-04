@@ -7,8 +7,10 @@ const entitySession = read("src/fsd/entities/user/model/session.ts");
 const entityLifecycle = read("src/fsd/entities/user/model/lifecycle.ts");
 const sessionRequest = read("src/fsd/entities/user/api/sessionRequest.ts");
 const authenticatedRequest = read("src/fsd/shared/api/createAuthenticatedRequest.ts");
-const login = read("src/fsd/features/login/ui/LoginForm.tsx");
+const loginForm = read("src/fsd/features/login/ui/LoginForm.tsx");
+const loginHook = read("src/fsd/features/login/model/useLoginForm.ts");
 const auth = `${entitySession}\n${entityLifecycle}`;
+const login = `${loginHook}\n${loginForm}`;
 
 assert.match(entityLifecycle, /saveSession[\s\S]*rememberLogin/);
 assert.match(auth, /sessionStorage/);
@@ -20,17 +22,15 @@ assert.match(authenticatedRequest, /reissueCurrentSession\(refreshToken\)/);
 assert.match(entitySession, /jobdam_remember_login/);
 assert.match(entitySession, /jobdam_remembered_email/);
 assert.match(entitySession, /readRememberLoginPreference/);
-assert.match(entityLifecycle, /clearSession[\s\S]*backfillRememberLoginEmail/);
-
-assert.match(login, /아이디 저장/);
-assert.match(login, /type="checkbox"/);
-assert.match(login, /checked=\{isRememberLogin\}/);
-assert.match(login, /login\(email, password, isRememberLogin\)/);
-assert.match(login, /restoreRememberedSession/);
-assert.match(login, /readRememberLoginPreference/);
-assert.match(login, /autoComplete="email"/);
-assert.match(login, /autoComplete="current-password"/);
-assert.match(login, /clearRememberLoginPreference/);
+assert.match(entityLifecycle, /clearSession[\s\S]*backfillRememberLoginEmail/);assert.match(loginForm, /아이디 저장/);
+assert.match(loginForm, /type="checkbox"/);
+assert.match(loginForm, /checked=\{form\.rememberLogin\}/);
+assert.match(loginHook, /login\(form\.email\.trim\(\), form\.password, form\.rememberLogin\)/);
+assert.match(loginHook, /restoreRememberedSession/);
+assert.match(loginHook, /readRememberLoginPreference/);
+assert.match(loginForm, /autoComplete="email"/);
+assert.match(loginForm, /autoComplete="current-password"/);
+assert.match(loginHook, /clearRememberLoginPreference/);
 assert.doesNotMatch(login, />자동 로그인</);
 
 console.log("remember login contract passed");

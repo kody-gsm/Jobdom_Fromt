@@ -16,3 +16,6 @@ export const isValidPassword = (password: string) => {
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{10,}$/;
   return passwordRegex.test(password);
 };
+
+export const normalizeVerificationCode = (value: string) =>
+  value.replace(/\D/g, "").slice(0, 6);
