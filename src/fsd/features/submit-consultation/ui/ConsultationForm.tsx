@@ -1,122 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import {
-  TEACHERS,
-  createReservationInput,
-  getAvailablePeriods,
-  getNextWeekdays,
-  toConsultationKind,
-  validateConsultationDraft,
-} from "@fsd/entities/consultation";
-import type {
-  ConsultationTeacher,
-  ConsultationType,
-} from "@fsd/entities/consultation";
-import { ApiError } from "@fsd/shared/api";
+import { useConsultationForm } from "../model/useConsultationForm.ts";
+import { TEACHERS } from "@fsd/entities/consultation";
+import type { ConsultationType } from "@fsd/entities/consultation";
 import { ActionButton, ContentCard, SegmentedTabs, TextAreaField, TextField } from "@fsd/shared/ui";
-import {
-  getUpcomingConsultations,
-  submitConsultation,
-} from "../api/consultation.ts";
-
-type Toast = { message: string; type: "error" | "success" };
 
 export const ConsultationForm = ({
   initialType,
 }: {
   initialType: ConsultationType;
 }) => {
-  const router = useRouter();
-  const [counselType, setCounselType] = useState(initialType);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacher | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [hasCareerReservation, setHasCareerReservation] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState<Toast | null>(null);
-  const toastTimer = useRef<number | null>(null);
-  const dates = useMemo(() => getNextWeekdays(), []);
-  const times = getAvailablePeriods(counselType, selectedTeacher);
+  const {
+    counselType,
+    title,
+    content,
+    selectedTeacher,
+    selectedDate,
+    selectedTime,
+    submitting,
+    toast,
+    dates,
+    times,
+    setTitle,
+    setContent,
+    handleTabChange,
+    toggleTeacher,
+    toggleDate,
+    toggleTime,
+    handleCancel,
+    handleSubmit,
+  } = useConsultationForm(initialType);
 
-  useEffect(() => {
-    let active = true;
-    void getUpcomingConsultations("course")
-      .then((items) => {
-        if (active) setHasCareerReservation(items.length > 0);
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
-    },
-    [],
-  );
-
-  const showToast = (message: string, type: Toast["type"] = "error") => {
-    setToast({ message, type });
-    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2500);
-  };
-
-  const handleTabChange = (type: ConsultationType) => {
-    setCounselType(type);
-    setSelectedTeacher(null);
-    setSelectedTime(null);
-  };
-  const handleCancel = () => {
-    setTitle("");
-    setContent("");
-    setSelectedTeacher(null);
-    setSelectedDate(null);
-    setSelectedTime(null);
-    router.push("/");
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const draft = {
-      type: counselType,
-      title,
-      content,
-      teacher: selectedTeacher,
-      date: selectedDate,
-      period: selectedTime,
-    };
-    const validationMessage = validateConsultationDraft(
-      draft,
-      hasCareerReservation,
-    );
-    if (validationMessage) {
-      showToast(validationMessage);
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      await submitConsultation(
-        toConsultationKind(counselType),
-        createReservationInput(draft),
-      );
-      if (counselType === "career") setHasCareerReservation(true);
-      showToast("상담 신청이 완료되었습니다", "success");
-    } catch (error) {
-      showToast(
-        error instanceof ApiError ? error.message : "상담 신청에 실패했습니다",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {toast ? (
@@ -180,10 +94,7 @@ export const ConsultationForm = ({
               <button
                 key={teacher}
                 type="button"
-                onClick={() => {
-                  setSelectedTeacher((current) => current === teacher ? null : teacher);
-                  setSelectedTime(null);
-                }}
+                onClick={() => toggleTeacher(teacher)}
                 className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                   selectedTeacher === teacher
                     ? "bg-[#02C551] text-white"
@@ -211,7 +122,7 @@ export const ConsultationForm = ({
             <button
               key={item.value}
               type="button"
-              onClick={() => setSelectedDate((current) => current === item.value ? null : item.value)}
+              onClick={() => toggleDate(item.value)}
               className={`rounded-2xl px-2 py-3 text-center transition sm:px-3 ${
                 selectedDate === item.value
                   ? "bg-[#02C551] text-white"
@@ -229,7 +140,7 @@ export const ConsultationForm = ({
             <button
               key={time}
               type="button"
-              onClick={() => setSelectedTime((current) => current === time ? null : time)}
+              onClick={() => toggleTime(time)}
               className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 selectedTime === time
                   ? "bg-[#02C551] text-white"
