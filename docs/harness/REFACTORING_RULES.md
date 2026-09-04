@@ -2,7 +2,7 @@
 
 ## Student frontend rebuild
 
-Student 영역은 사용자 기능과 Backend/API contract를 유지하는 조건으로 내부를 재작성할 수 있다.
+사용자가 새 디자인을 전달한 뒤 Student 영역은 사용자 기능과 Backend/API/session contract를 유지하고 기존 기능 로직을 재사용하는 조건으로 내부를 재작성할 수 있다.
 
 허용:
 - 디자인 전면 변경
@@ -17,10 +17,11 @@ Student 영역은 사용자 기능과 Backend/API contract를 유지하는 조�
 - 사용자 기능 삭제
 - business rule을 근거 없이 변경
 - 새 상태관리/API/폼 라이브러리의 무근거 도입
+- Teacher/Admin 보호 경로 수정
 
-## Teacher migration
+## Teacher/Admin migration
 
-Teacher는 rebuild 대상이 아니라 behavior-preserving structural migration 대상이다.
+Teacher/Admin은 디자인 rebuild 대상이 아니라 behavior-preserving structural migration 대상이다.
 
 허용:
 - 파일 split/move
@@ -36,7 +37,9 @@ Teacher는 rebuild 대상이 아니라 behavior-preserving structural migration 
 
 ## Migration rule
 
-화면/feature 하나씩 contract를 먼저 고정하고 새 FSD 구현이 동일 기능을 만족한 뒤 legacy 구현을 제거한다. Teacher migration은 characterization/regression을 먼저 추가한 뒤 수행한다.
+FSD structural migration은 Student와 Teacher/Admin을 포함한 전체 frontend에 적용할 수 있다. 화면/feature 하나씩 contract를 먼저 고정하고 새 FSD 구현이 동일 기능을 만족한 뒤 legacy 구현을 제거한다. Teacher/Admin migration은 characterization/regression을 먼저 추가한 뒤 수행한다.
+
+사용자 디자인 기반 재구성 단계에서는 `app/teacher/**`, `app/admin/**`, `src/fsd/pages/teacher*/**`, `src/fsd/pages/admin/**`를 수정하지 않는다. 공용 로직 변경이 필요하면 Teacher/Admin regression을 먼저 확인한다.
 
 ## Scope rule
 

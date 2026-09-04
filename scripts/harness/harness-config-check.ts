@@ -57,7 +57,7 @@ const duplicateHarnessWorkflowPath = ".github/workflows/harness.yml";
 assert.ok(existsSync(prTemplatePath), "Korean PR template is required");
 assert.equal(existsSync(duplicateHarnessWorkflowPath), false, "harness must not add a duplicate CI/CD workflow");
 
-const prTemplate = readFileSync(prTemplatePath, "utf8");
+const prTemplate = readFileSync(prTemplatePath, "utf8").replace(/\r\n?/g, "\n");
 const requiredHeadings = [
   "# ✨ PR 내용",
   "## 📝 코드 변경 사항",
