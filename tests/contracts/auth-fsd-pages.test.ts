@@ -16,9 +16,17 @@ for (const source of Object.values(routes)) {
   assert.doesNotMatch(source, /useState|useEffect|@\/app\/utils/);
 }
 
-const login = read("src/fsd/features/login/ui/LoginForm.tsx");
-const signup = read("src/fsd/features/signup/ui/SignupForm.tsx");
-const reset = read("src/fsd/features/reset-password/ui/ResetPasswordForm.tsx");
+const loginForm = read("src/fsd/features/login/ui/LoginForm.tsx");
+const loginModel = read("src/fsd/features/login/model/useLoginForm.ts");
+const loginValidation = read("src/fsd/features/login/model/validation.ts");
+const signupForm = read("src/fsd/features/signup/ui/SignupForm.tsx");
+const signupModel = read("src/fsd/features/signup/model/useSignupForm.ts");
+const signupValidation = read("src/fsd/features/signup/model/validation.ts");
+const resetForm = read("src/fsd/features/reset-password/ui/ResetPasswordForm.tsx");
+const resetModel = read("src/fsd/features/reset-password/model/useResetPasswordForm.ts");
+const resetValidation = read("src/fsd/features/reset-password/model/validation.ts");const login = `${loginModel}\n${loginValidation}\n${loginForm}`;
+const signup = `${signupModel}\n${signupValidation}\n${signupForm}`;
+const reset = `${resetModel}\n${resetValidation}\n${resetForm}`;
 
 assert.match(login, /readRememberLoginPreference/);
 assert.match(login, /restoreRememberedSession/);
@@ -36,7 +44,11 @@ assert.match(reset, /getPasswordResetError/);
 assert.match(reset, /sendPasswordResetCode/);
 assert.match(reset, /인증코드 6자리를 입력해주세요\./);
 
-for (const source of [login, signup, reset]) {
+for (const source of [loginForm, signupForm, resetForm]) {
   assert.match(source, /@fsd\/shared\/ui/);
+  assert.doesNotMatch(source, /@\/app\//);
+}
+
+for (const source of [loginModel, signupModel, resetModel]) {
   assert.doesNotMatch(source, /@\/app\//);
 }
