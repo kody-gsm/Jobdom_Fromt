@@ -57,3 +57,5 @@ PR 제목은 `<type> : <한국어 작업 설명>`을 사용한다. 본문은 `.g
 - `legacy-origin/*`은 cleanup 대상에 포함하지 않는다.
 - 열린 PR 조회에 실패하면 삭제를 진행하지 않는 fail-closed 방식을 사용한다.
 - merge 판정 기준은 `origin/develop`이며 강제 삭제(`git branch -D`)는 사용하지 않는다.
+- cleanup 후보는 branch tip 작성자 이메일이 현재 `git config user.email`과 일치하는 브랜치로 제한한다.
+- branch tip 작성자 이메일을 확인할 수 없거나 현재 Git identity와 다르면 삭제 후보에서 제외한다.
