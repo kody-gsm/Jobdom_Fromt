@@ -1,55 +1,43 @@
-"use client";
+﻿"use client";
 
-import { SiteHeader } from "@fsd/widgets/site-header";
 import { HomeServices } from "@fsd/widgets/home-services";
+import { StudentHeader } from "@fsd/widgets/student-header";
 import { useHomeStage } from "../model/useHomeStage.ts";
 
 export const HomePage = () => {
   const { stage, isHeroVisible, isServicesStage } = useHomeStage();
 
   return (
-    <>
-      <SiteHeader />
-      <main className="flex flex-1 items-stretch justify-center overflow-hidden bg-white px-4 font-sans sm:px-6 lg:px-10">
-        <section className="relative min-h-[calc(100dvh-72px)] w-full max-w-7xl sm:min-h-[calc(100dvh-80px)] lg:min-h-[calc(100dvh-100px)]">
+    <div className="min-h-dvh bg-[#F4F6F8] text-[#13233A]" style={{ fontFamily: '"Pretendard Variable", sans-serif' }}>
+      <StudentHeader />
+      <main className="mx-auto w-full max-w-[1380px] px-6 py-8 lg:px-10 lg:py-10">
+        <section className="relative min-h-[calc(100dvh-144px)] overflow-hidden rounded-[32px]">
           <div
             aria-hidden={isServicesStage}
-            className={`absolute inset-0 flex items-center justify-center transition-all duration-[600ms] ease-in-out motion-reduce:transform-none ${
-              stage === "hero-exit" || isServicesStage
-                ? "-translate-y-4 opacity-0"
-                : "translate-y-0 opacity-100"
+            className={`absolute inset-0 overflow-hidden rounded-[32px] bg-[#10243E] transition-all duration-[600ms] ease-in-out ${
+              stage === "hero-exit" || isServicesStage ? "-translate-y-4 opacity-0" : "translate-y-0 opacity-100"
             }`}
           >
-            <div className="mx-auto flex max-w-4xl flex-col items-center px-2 text-center">
-              <p
-                className={`text-sm font-bold text-[#02a946] transition-all duration-700 ${
-                  isHeroVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-                }`}
-              >
-                JOBDAM FOR GSM
-              </p>
-              <h1
-                className={`mt-4 break-keep text-3xl font-bold leading-tight tracking-tight transition-all delay-100 duration-1000 sm:text-4xl lg:text-5xl ${
-                  isHeroVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
-                }`}
-              >
-                학생과 취업진로부 선생님을 연결하는
-                <span className="mt-2 block text-[#02a946]">학교생활 통합 플랫폼</span>
-              </h1>
-              <p
-                className={`mt-6 max-w-2xl break-keep text-sm leading-7 text-gray-500 transition-all delay-200 duration-1000 sm:text-base ${
-                  isHeroVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
-                }`}
-              >
-                진로 상담과 일반 상담, 취업 공고까지 학교에서 필요한 서비스를 한곳에서
-                확인하고 이용할 수 있습니다.
-              </p>
+            <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/5" />
+            <div className="absolute -bottom-32 left-20 h-96 w-96 rounded-full bg-[#1E3A5F]/70" />
+            <div className="relative z-10 flex min-h-[calc(100dvh-144px)] items-center px-8 py-14 sm:px-12 lg:px-20">
+              <div className="max-w-3xl">
+                <p className={`text-sm font-bold tracking-[0.18em] text-[#8FB3D9] transition-all duration-700 ${isHeroVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
+                  JOBDAM STUDENT
+                </p>
+                <h1 className={`mt-5 break-keep text-4xl font-bold leading-[1.15] tracking-[-0.04em] text-white transition-all delay-100 duration-1000 sm:text-5xl lg:text-6xl ${isHeroVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
+                  상담과 취업 준비를 한눈에
+                  <span className="mt-3 block text-[#B9D3EC]">학생 대시보드에서 바로 시작하세요.</span>
+                </h1>
+                <p className={`mt-7 max-w-2xl break-keep text-base leading-8 text-[#C8D4E2] transition-all delay-200 duration-1000 ${isHeroVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
+                  진로 상담, 일반 상담, 취업 공고까지 자주 사용하는 학교생활 서비스를 한곳에서 빠르게 확인할 수 있습니다.
+                </p>
+              </div>
             </div>
           </div>
-
           <HomeServices visible={isServicesStage} />
         </section>
       </main>
-    </>
+    </div>
   );
 };

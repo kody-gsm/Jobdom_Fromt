@@ -10,9 +10,10 @@ const services = read("src/fsd/widgets/home-services/ui/HomeServices.tsx");
 
 assert.match(route, /@fsd\/pages\/home/);
 assert.doesNotMatch(route, /useState|useEffect|setTimeout/);
-assert.match(page, /SiteHeader/);
+assert.match(page, /StudentHeader/);
 assert.match(page, /useHomeStage/);
 assert.match(page, /HomeServices/);
+assert.match(page, /상담과 취업 준비를 한눈에/);
 assert.doesNotMatch(page, /@\/app\//);
 
 assert.match(model, /HERO_ANIMATION_MS\s*=\s*1200/);
@@ -25,3 +26,5 @@ assert.match(model, /clearTimeout/);
 assert.match(services, /"\/counsel\?type=career"/);
 assert.match(services, /"\/counsel\?type=general"/);
 assert.match(services, /"\/recruit"/);
+assert.match(services, /ContentCard/);
+assert.match(services, /빠른 메뉴/);
