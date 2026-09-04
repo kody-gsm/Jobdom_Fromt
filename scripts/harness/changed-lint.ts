@@ -1,6 +1,5 @@
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { getChangedFiles } from "./changed-files-check.ts";
 
 const LINTABLE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 
@@ -13,8 +12,23 @@ export const selectLintableFiles = (
   paths
     .map((path) => path.replaceAll("\\", "/"))
     .filter((path) => exists(path))
-    .filter((path) => !path.startsWith("app/teacher/"))
     .filter((path) => LINTABLE_EXTENSIONS.some((extension) => path.endsWith(extension)));
+
+const git = (...args: string[]) =>
+  execFileSync("git", args, { encoding: "utf8" }).trim();
+
+const gitLines = (...args: string[]) => {
+  const output = git(...args);
+  return output ? output.split(/\r?\n/).filter(Boolean) : [];
+};
+
+export const getChangedFiles = (baseRef: string) => {
+  const committed = gitLines("diff", "--name-only", `${baseRef}...HEAD`);
+  const working = gitLines("diff", "--name-only");
+  const staged = gitLines("diff", "--cached", "--name-only");
+  const untracked = gitLines("ls-files", "--others", "--exclude-standard");
+  return [...new Set([...committed, ...working, ...staged, ...untracked])];
+};
 
 const runCli = () => {
   const baseRef = process.env.HARNESS_BASE_REF || "origin/develop";

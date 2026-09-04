@@ -10,7 +10,6 @@
     "check:forms": "node --no-warnings --experimental-strip-types scripts/form-answers-check.ts",
     "check:api": "node --no-warnings --experimental-strip-types scripts/api-contract-check.ts",
     "harness:preflight": "node --no-warnings --experimental-strip-types scripts/harness/preflight.ts",
-    "harness:scope": "node --no-warnings --experimental-strip-types scripts/harness/changed-files-check.ts",
     "harness:verify": "node --no-warnings --experimental-strip-types scripts/harness/verify.ts",
     "harness:lint": "node --no-warnings --experimental-strip-types scripts/harness/changed-lint.ts",
     "harness:fsd": "node --no-warnings --experimental-strip-types scripts/harness/fsd-boundary-check.ts",

@@ -13,7 +13,7 @@ assert.deepEqual(
     ],
     (path) => path !== "scripts/deleted-check.ts",
   ),
-  ["app/page.tsx", "features/auth/api/login.ts"],
+  ["app/page.tsx", "features/auth/api/login.ts", "app/teacher/page.tsx"],
 );
 
 assert.deepEqual(
