@@ -1,0 +1,7 @@
+enabled: true
+channel: stable
+groups:
+  - codex
+base_branch: develop
+branch_prefix: harness-sync/
+language: ko
