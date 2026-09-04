@@ -1,157 +1,90 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
-import {
-  clearRememberLoginPreference,
-  getAuthErrorMessage,
-  getRequiredMessage,
-  getRoleHomePath,
-  readRememberLoginPreference,
-  restoreRememberedSession,
-} from "@fsd/entities/user";
-import { Button, Input } from "@fsd/shared/ui";
-import { login } from "../api/login.ts";
+import { ActionButton, PasswordField, TextField } from "@fsd/shared/ui";
+import { useLoginForm } from "../model/useLoginForm.ts";
 
 export const LoginForm = () => {
-  const [email, setEmail] = useState(() => readRememberLoginPreference().email);
-  const [password, setPassword] = useState("");
-  const [emailErrorMessage, setEmailErrorMessage] = useState("");
-  const [passwordError, setPasswordError] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRememberLogin, setIsRememberLogin] = useState(
-    () => readRememberLoginPreference().enabled,
-  );
-  const router = useRouter();
-
-  useEffect(() => {
-    let active = true;
-    restoreRememberedSession().then((session) => {
-      if (active && session) router.replace(getRoleHomePath(session.role));
-    });
-    return () => {
-      active = false;
-    };
-  }, [router]);
-
-  const isValid = email.trim() !== "" && password.trim() !== "" && !isSubmitting;
-
-  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setEmailErrorMessage("");
-    setPasswordError(false);
-
-    if (email.trim() === "") {
-      setEmailErrorMessage(getRequiredMessage("이메일을"));
-      return;
-    }
-    if (password.trim() === "") {
-      setPasswordError(true);
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      const session = await login(email, password, isRememberLogin);
-      router.push(getRoleHomePath(session.role));
-    } catch (caught) {
-      setEmailErrorMessage(
-        getAuthErrorMessage(caught, "이메일 또는 비밀번호가 올바르지 않습니다."),
-      );
-      setPasswordError(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    form,
+    errors,
+    submitError,
+    isSubmitting,
+    canSubmit,
+    setEmail,
+    setPassword,
+    setRememberLogin,
+    submit,
+  } = useLoginForm();
 
   return (
-    <form noValidate autoComplete="on" onSubmit={handleLogin} className="space-y-5">
-      <label className="block">
-        <span className="text-sm font-semibold text-[#344039]">이메일</span>
-        <Input
-          type="email"
-          name="email"
-          autoComplete="email"
-          value={email}
-          error={emailErrorMessage !== ""}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            setEmailErrorMessage("");
-          }}
-          placeholder="이메일 입력"
-          className="mt-2 h-13 w-full"
-        />
-        <span className="mt-2 block min-h-5 text-xs text-[#D61E1E]">
-          {emailErrorMessage}
-        </span>
-      </label>
+    <form
+      noValidate
+      autoComplete="on"
+      className="space-y-5"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submit();
+      }}
+    >
+      <TextField
+        label="이메일"
+        type="email"
+        name="email"
+        autoComplete="email"
+        value={form.email}
+        error={errors.email}
+        onChange={(event) => setEmail(event.target.value)}
+        placeholder="학교 이메일을 입력해주세요"
+        className="h-14 rounded-[14px]"
+      />
 
-      <label className="block">
-        <span className="text-sm font-semibold text-[#344039]">비밀번호</span>
-        <Input
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          value={password}
-          error={passwordError}
-          showPasswordToggle
-          onChange={(event) => {
-            setPassword(event.target.value);
-            setPasswordError(false);
-          }}
-          placeholder="비밀번호 입력"
-          className="mt-2 h-13 w-full"
-        />
-        <span className="mt-2 block min-h-5 text-xs text-[#D61E1E]">
-          {passwordError ? "비밀번호를 입력해주세요." : ""}
-        </span>
-      </label>
+      <PasswordField
+        label="비밀번호"
+        name="password"
+        autoComplete="current-password"
+        value={form.password}
+        error={errors.password}
+        onChange={(event) => setPassword(event.target.value)}
+        placeholder="비밀번호를 입력해주세요"
+        className="h-14 rounded-[14px]"
+      />
 
       <div className="flex items-center justify-between gap-4 text-sm">
-        <label className="flex items-center gap-2 text-[#5F6368]">
+        <label className="flex cursor-pointer items-center gap-2.5 text-[#5E6670]">
           <input
             type="checkbox"
-            checked={isRememberLogin}
-            onChange={(event) => {
-              const checked = event.target.checked;
-              setIsRememberLogin(checked);
-              if (!checked) clearRememberLoginPreference();
-            }}
-            className="sr-only"
+            checked={form.rememberLogin}
+            onChange={(event) => setRememberLogin(event.target.checked)}
+            className="h-4 w-4 accent-[#02C551]"
           />
-          <span
-            aria-hidden="true"
-            className={`flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border ${
-              isRememberLogin
-                ? "border-[#02C551] bg-[#02C551]"
-                : "border-[#B8BBC0] bg-white"
-            }`}
-          >
-            {isRememberLogin ? (
-              <span className="text-[13px] leading-none text-white">✓</span>
-            ) : null}
-          </span>
           <span>아이디 저장</span>
         </label>
-        <Link href="/forgot-password" className="font-semibold text-[#02a946]">
+        <Link
+          href="/forgot-password"
+          className="font-semibold text-[#02A94A] transition-colors hover:text-[#018D3E]"
+        >
           비밀번호 찾기
         </Link>
       </div>
 
-      <Button
-        content={isSubmitting ? "로그인 중…" : "로그인"}
-        type="submit"
-        disabled={!isValid}
-        className={`mt-3 h-13 w-full font-bold ${
-          isValid ? "cursor-pointer bg-[#02C551]" : "cursor-not-allowed bg-[#CFD0D1]"
-        }`}
-      />
+      {submitError ? (
+        <p role="alert" className="rounded-xl bg-[#FFF1F0] px-4 py-3 text-sm text-[#C9342B]">
+          {submitError}
+        </p>
+      ) : null}
 
-      <p className="text-center text-sm text-[#7d8580]">
-        잡담 회원가입을 안 하셨나요?{" "}
-        <Link href="/signup" className="font-bold text-[#02a946]">
+      <ActionButton
+        type="submit"
+        disabled={!canSubmit}
+        className="h-14 w-full rounded-[14px] text-base font-bold"
+      >
+        {isSubmitting ? "로그인 중…" : "로그인"}
+      </ActionButton>
+
+      <p className="pt-1 text-center text-sm text-[#7A828B]">
+        아직 계정이 없으신가요?{" "}
+        <Link href="/signup" className="font-bold text-[#02A94A] hover:text-[#018D3E]">
           회원가입
         </Link>
       </p>
