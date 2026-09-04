@@ -1,7 +1,7 @@
 ﻿import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { getAuthRedirect } from "../app/utils/authRoutePolicy.ts";
+import { getAuthRedirect } from "../../src/fsd/app/auth-gate/model/routePolicy.ts";
 
 assert.equal(getAuthRedirect("/login", null), null);
 assert.equal(getAuthRedirect("/signup", null), null);

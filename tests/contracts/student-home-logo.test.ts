@@ -4,10 +4,8 @@ import { resolve } from "node:path";
 
 const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
-const legacyLogo = read("app/components/atoms/HomeLogoButton.tsx");
 const navigateHome = read("src/fsd/features/navigate-home/ui/HomeLogoButton.tsx");
 
-assert.match(legacyLogo, /@fsd\/features\/navigate-home/);
 assert.match(navigateHome, /getSession/);
 assert.match(navigateHome, /getSession\(\)\?\.role\s*===\s*["']STUDENT["']/);
 assert.match(navigateHome, /router\.push\(["']\/["']\)/);
