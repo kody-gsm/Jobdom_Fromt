@@ -19,9 +19,9 @@ for (const path of [
 }
 
 const counselPage = read("src/fsd/pages/counsel/ui/CounselPage.tsx");
-const siteHeader = read("src/fsd/widgets/site-header/ui/SiteHeader.tsx");
-assert.match(counselPage, /@fsd\/widgets\/site-header/);
-assert.match(siteHeader, /getSession\(\)\?\.role\s*===\s*"STUDENT"/);
-assert.match(siteHeader, /router\.push\("\/"\)/);
+const studentHeader = read("src/fsd/widgets/student-header/ui/StudentHeader.tsx");
+assert.match(counselPage, /@fsd\/widgets\/student-header/);
+assert.match(studentHeader, /href="\/"|href=\{"\/"\}/);
+assert.match(studentHeader, /aria-label="상담 대시보드로 이동"/);
 
 console.log("student home logo contract passed");

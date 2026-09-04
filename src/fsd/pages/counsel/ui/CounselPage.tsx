@@ -1,27 +1,30 @@
 import type { ConsultationType } from "@fsd/entities/consultation";
 import { ConsultationForm } from "@fsd/features/submit-consultation";
-import { SiteHeader } from "@fsd/widgets/site-header";
+import { StudentHeader } from "@fsd/widgets/student-header";
 
 export const CounselPage = ({
   initialType,
 }: {
   initialType: ConsultationType;
 }) => (
-  <>
-    <SiteHeader />
-    <main className="min-h-[calc(100vh-4.5rem)] bg-[#f6f8f7] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-4xl">
-        <p className="text-sm font-bold text-[#02a946]">CONSULTATION</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl">
-          상담 신청
+  <div
+    className="min-h-dvh bg-[#F4F6F8] text-[#13233A]"
+    style={{ fontFamily: '"Pretendard Variable", sans-serif' }}
+  >
+    <StudentHeader />
+    <main className="mx-auto w-full max-w-[1180px] px-6 py-10 lg:px-10 lg:py-12">
+      <section className="rounded-[28px] bg-[#10243E] px-7 py-9 text-white sm:px-10 lg:px-12">
+        <p className="text-sm font-bold tracking-[0.16em] text-[#8FB3D9]">CONSULTATION</p>
+        <h1 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
+          상담 신청을 차근차근 진행해보세요
         </h1>
-        <p className="mt-3 max-w-2xl break-keep text-sm leading-6 text-gray-500 sm:text-base">
-          상담 주제와 원하는 일정을 선택하면 취업진로부 선생님과 상담을 신청할 수 있습니다.
+        <p className="mt-4 max-w-2xl break-keep text-sm leading-7 text-[#C8D4E2] sm:text-base">
+          상담 유형과 내용을 작성한 뒤 선생님과 가능한 일정을 선택하면 신청이 완료됩니다.
         </p>
-        <div className="mt-8">
-          <ConsultationForm initialType={initialType} />
-        </div>
+      </section>
+      <div className="mt-6">
+        <ConsultationForm initialType={initialType} />
       </div>
     </main>
-  </>
+  </div>
 );
