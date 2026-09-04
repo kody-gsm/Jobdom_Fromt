@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getSession } from "@/app/utils/api";
-import { getAuthRedirect } from "@/app/utils/authRoutePolicy";
+import { getSession } from "../../../entities/user/index.ts";
+import { getAuthRedirect } from "../model/routePolicy.ts";
 
 export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
