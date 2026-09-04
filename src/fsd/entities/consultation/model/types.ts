@@ -27,6 +27,13 @@ export interface StudentReservation {
   date: string;
   period: string;
 }
+
+export interface TeacherReservation {
+  reservation_id: number;
+  name: string;
+  date: string;
+  period: string;
+}
 export interface ConsultationDate {
   day: string;
   date: number;

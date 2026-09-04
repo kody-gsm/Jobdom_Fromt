@@ -6,6 +6,7 @@ export type {
   ConsultationType,
   ReservationInput,
   StudentReservation,
+  TeacherReservation,
 } from "./model/types.ts";
 export {
   TEACHERS,

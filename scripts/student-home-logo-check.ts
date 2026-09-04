@@ -4,11 +4,13 @@ import { resolve } from "node:path";
 
 const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
-const logo = read("app/components/atoms/HomeLogoButton.tsx");
+const legacyLogo = read("app/components/atoms/HomeLogoButton.tsx");
+const navigateHome = read("src/fsd/features/navigate-home/ui/HomeLogoButton.tsx");
 
-assert.match(logo, /getSession/);
-assert.match(logo, /getSession\(\)\?\.role\s*===\s*["']STUDENT["']/);
-assert.match(logo, /router\.push\(["']\/["']\)/);
+assert.match(legacyLogo, /@fsd\/features\/navigate-home/);
+assert.match(navigateHome, /getSession/);
+assert.match(navigateHome, /getSession\(\)\?\.role\s*===\s*["']STUDENT["']/);
+assert.match(navigateHome, /router\.push\(["']\/["']\)/);
 
 for (const path of [
   "app/(auth)/login/page.tsx",

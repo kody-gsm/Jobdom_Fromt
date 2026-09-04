@@ -8,3 +8,8 @@ export interface Recruit {
   createdAt: string;
   updatedAt: string;
 }
+
+export type RecruitUpdate = Pick<
+  Recruit,
+  "companyName" | "interviewDate" | "deadline" | "summary"
+>;
