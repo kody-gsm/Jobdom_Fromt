@@ -1,11 +1,18 @@
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { getChangedFiles } from "./changed-files-check.ts";
 
 const LINTABLE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 
-export const selectLintableFiles = (paths: string[]) =>
+type Exists = (path: string) => boolean;
+
+export const selectLintableFiles = (
+  paths: string[],
+  exists: Exists = existsSync,
+) =>
   paths
     .map((path) => path.replaceAll("\\", "/"))
+    .filter((path) => exists(path))
     .filter((path) => !path.startsWith("app/teacher/"))
     .filter((path) => LINTABLE_EXTENSIONS.some((extension) => path.endsWith(extension)));
 

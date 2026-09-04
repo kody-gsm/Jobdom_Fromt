@@ -10,6 +10,7 @@ const requiredFiles = [
   "docs/harness/REFACTORING_RULES.md",
   "docs/harness/API_CONTRACT.md",
   "docs/harness/FEATURE_CONTRACT.md",
+  "docs/harness/FRONTEND_CONTRACT_MAP.md",
   "docs/harness/CODE_REVIEW.md",
 ];
 
@@ -45,6 +46,11 @@ assert.equal(
   packageJson.scripts["harness:lint"],
   "node --no-warnings --experimental-strip-types scripts/harness/changed-lint.ts",
   "harness:lint script is required",
+);
+assert.equal(
+  packageJson.scripts["harness:branches"],
+  "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts",
+  "harness:branches script is required",
 );
 const prTemplatePath = ".github/pull_request_template.md";
 const duplicateHarnessWorkflowPath = ".github/workflows/harness.yml";

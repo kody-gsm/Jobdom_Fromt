@@ -1,24 +1,17 @@
+// Legacy Node contract checks do not resolve tsconfig aliases; keep this facade relative until it is removed.
+import { ApiError } from "../../src/fsd/shared/api/index.ts";
 import {
-  backfillRememberLoginEmail,
-  clearStoredSession,
-  isRememberedSession,
-  persistSession,
-  readAccessToken,
-  readRememberedSession,
-  readSession,
-} from "./authSession.ts";
+  clearSession,
+  getSession,
+  restoreRememberedSession,
+  saveSession,
+  requestWithSession as request,
+} from "../../src/fsd/entities/user/index.ts";
+import type { AuthSession } from "../../src/fsd/entities/user/index.ts";
+export { ApiError, clearSession, getSession, restoreRememberedSession, saveSession };
+export type { AuthSession } from "../../src/fsd/entities/user/index.ts";
 
 export type ConsultationKind = "course" | "common";
-
-export interface AuthSession {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  userId: number;
-  email: string;
-  name: string;
-  role: "STUDENT" | "TEACHER" | "ADMIN";
-}
 
 export interface UserResponse {
   id: number;
@@ -159,133 +152,7 @@ export interface RecruitDashboardRow {
   applicants: FormSubmissionSummary[];
 }
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
 
-export class ApiError extends Error {
-  public readonly status: number;
-
-  constructor(
-    message: string,
-    status: number,
-  ) {
-    super(message);
-    this.status = status;
-  }
-}
-
-const decodeRole = (token: string): AuthSession["role"] => {
-  try {
-    const raw = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    const payload = raw.padEnd(Math.ceil(raw.length / 4) * 4, "=");
-    const role = JSON.parse(atob(payload)).role;
-    if (role === "ADMIN") return "ADMIN";
-    return role === "TEACHER" ? "TEACHER" : "STUDENT";
-  } catch {
-    return "STUDENT";
-  }
-};
-
-export const saveSession = (response: Omit<AuthSession, "role">, rememberLogin = false) => {
-  const session: AuthSession = { ...response, role: decodeRole(response.accessToken) };
-  persistSession(session, rememberLogin);
-  window.dispatchEvent(new Event("jobdam-session"));
-  return session;
-};
-
-export const getSession = (): AuthSession | null => readSession();
-
-export const clearSession = () => {
-  const session = getSession();
-  if (session) backfillRememberLoginEmail(session.email);
-  clearStoredSession();
-  if (typeof window !== "undefined") window.dispatchEvent(new Event("jobdam-session"));
-};
-
-const parseError = async (response: Response) => {
-  if ([502, 503, 504].includes(response.status)) return "백엔드 서버에 연결할 수 없습니다.";
-  const text = await response.text();
-  if (response.status === 500 && text.trim() === "Internal Server Error") return "백엔드 서버에 연결할 수 없습니다.";
-  if (!text) return `요청에 실패했습니다. (${response.status})`;
-  try {
-    const data = JSON.parse(text);
-    return data.message || data.error || text;
-  } catch {
-    return text;
-  }
-};
-
-const reissueSession = async (refreshToken: string, rememberLogin: boolean) => {
-  let response: Response;
-  try {
-    response = await fetch(`${API_BASE_URL}/auth/reissue`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-  } catch {
-    throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
-  }
-  if (!response.ok) throw new ApiError(await parseError(response), response.status);
-  const data = await response.json() as Omit<AuthSession, "role">;
-  return saveSession(data, rememberLogin);
-};
-
-export const restoreRememberedSession = async () => {
-  const remembered = readRememberedSession();
-  if (!remembered?.refreshToken) return null;
-  return remembered;
-};
-
-let reissuePromise: Promise<AuthSession | null> | null = null;
-
-const reissueCurrentSession = async () => {
-  if (reissuePromise) return reissuePromise;
-  const session = getSession();
-  if (!session?.refreshToken) return null;
-  reissuePromise = reissueSession(session.refreshToken, isRememberedSession());
-  try {
-    return await reissuePromise;
-  } finally {
-    reissuePromise = null;
-  }
-};
-
-const request = async <T>(path: string, init: RequestInit = {}, retryAuth = true): Promise<T> => {
-  const token = readAccessToken();
-  const headers = new Headers(init.headers);
-  const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
-  if (!isFormData && init.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  let response: Response;
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
-  } catch {
-    throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
-  }
-  if (!response.ok) {
-    if (response.status === 401 && retryAuth && getSession()?.refreshToken) {
-      try {
-        await reissueCurrentSession();
-        return request<T>(path, init, false);
-      } catch (error) {
-        if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) throw error;
-      }
-    }
-    if (response.status === 401) clearSession();
-    throw new ApiError(await parseError(response), response.status);
-  }
-  if (response.status === 204) return undefined as T;
-
-  const text = await response.text();
-  if (!text) return undefined as T;
-  if (response.headers.get("content-type")?.includes("application/json")) {
-    return JSON.parse(text) as T;
-  }
-  return text as T;
-};
 
 export const login = async (email: string, password: string, rememberLogin = false) => {
   const response = await request<Omit<AuthSession, "role">>("/auth/login", {

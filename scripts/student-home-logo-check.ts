@@ -18,9 +18,10 @@ for (const path of [
   assert.doesNotMatch(read(path), /HomeLogoButton/);
 }
 
-const counsel = read("app/counsel/page.tsx");
-assert.match(counsel, /getSession/);
-assert.match(counsel, /getSession\(\)\?\.role\s*===\s*["']STUDENT["']/);
-assert.match(counsel, /router\.push\(["']\/["']\)/);
+const counselPage = read("src/fsd/pages/counsel/ui/CounselPage.tsx");
+const siteHeader = read("src/fsd/widgets/site-header/ui/SiteHeader.tsx");
+assert.match(counselPage, /@fsd\/widgets\/site-header/);
+assert.match(siteHeader, /getSession\(\)\?\.role\s*===\s*"STUDENT"/);
+assert.match(siteHeader, /router\.push\("\/"\)/);
 
 console.log("student home logo contract passed");

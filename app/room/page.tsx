@@ -1,5 +1,5 @@
-/* 면접실 예약 페이지 */
+import { RoomPage } from "@fsd/pages/room";
 
-export default function RoomPage() {
-  return <main />;
+export default function Page() {
+  return <RoomPage />;
 }

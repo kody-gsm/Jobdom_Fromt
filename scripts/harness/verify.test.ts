@@ -8,13 +8,31 @@ const steps = getVerificationSteps([
 ]);
 const names = steps.map((step) => step.name);
 
-assert.deepEqual(names.slice(0, 11), [
+assert.deepEqual(names.slice(0, 29), [
   "harness config",
   "preflight unit",
   "scope unit",
   "changed lint unit",
   "fsd boundary unit",
   "convention unit",
+  "shared api unit",
+  "user session unit",
+  "user auth rules unit",
+  "shared ui unit",
+  "auth feature api unit",
+  "auth fsd pages unit",
+  "site header unit",
+  "home fsd page unit",
+  "authenticated request unit",
+  "consultation contract unit",
+  "recruit contract unit",
+  "form fsd contract unit",
+  "form fsd pages unit",
+  "branch cleanup unit",
+  "profile contract unit",
+  "profile fsd pages unit",
+  "admin fsd contract unit",
+  "legacy route cleanup unit",
   "lint",
   "fsd boundary check",
   "convention check",

@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
-const source = readFileSync("app/counsel/page.tsx", "utf8");
+const source = readFileSync(
+  resolve(process.cwd(), "src/fsd/features/submit-consultation/ui/ConsultationForm.tsx"),
+  "utf8",
+);
 const cancelHandler = source.match(
   /const handleCancel = \(\) => \{([\s\S]*?)\n  \};/,
 )?.[1];

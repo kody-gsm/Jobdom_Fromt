@@ -9,10 +9,11 @@ Backend/API contract와 사용자 기능을 보존하면서 Student frontend를 
 1. `docs/harness/ARCHITECTURE.md`를 읽는다.
 2. `docs/harness/CODE_CONVENTION.md`를 읽는다.
 3. `docs/harness/WORKFLOW.md`를 읽는다.
-4. 함수 변경 시 `docs/harness/FUNCTION_RULES.md`를 읽는다.
-5. API 관련 변경 시 `docs/harness/API_CONTRACT.md`를 확인한다.
-6. `npm run harness:preflight`를 실행한다.
-7. 관련 기존 코드와 regression check를 먼저 읽는다.
+4. `docs/harness/FRONTEND_CONTRACT_MAP.md`에서 현재 기능 계약을 확인한다.
+5. 함수 변경 시 `docs/harness/FUNCTION_RULES.md`를 읽는다.
+6. API 관련 변경 시 `docs/harness/API_CONTRACT.md`를 확인한다.
+7. `npm run harness:preflight`를 실행한다.
+8. 관련 기존 코드와 regression check를 먼저 읽는다.
 
 ## Hard rules
 

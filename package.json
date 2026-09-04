@@ -14,7 +14,8 @@
     "harness:verify": "node --no-warnings --experimental-strip-types scripts/harness/verify.ts",
     "harness:lint": "node --no-warnings --experimental-strip-types scripts/harness/changed-lint.ts",
     "harness:fsd": "node --no-warnings --experimental-strip-types scripts/harness/fsd-boundary-check.ts",
-    "harness:convention": "node --no-warnings --experimental-strip-types scripts/harness/convention-check.ts"
+    "harness:convention": "node --no-warnings --experimental-strip-types scripts/harness/convention-check.ts",
+    "harness:branches": "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts"
   },
   "dependencies": {
     "next": "^16.2.7",
