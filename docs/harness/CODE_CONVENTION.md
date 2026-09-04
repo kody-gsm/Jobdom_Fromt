@@ -54,4 +54,9 @@
 
 ## Functions
 
-함수 추출, naming, pure logic, side effect, abstraction 기준은 `FUNCTION_RULES.md`를 우선한다. 코드 줄 수보다 책임과 존재 이유를 기준으로 판단한다.
+- 코드 줄 수보다 책임과 존재 이유를 기준으로 함수를 나눈다.
+- UI event handler는 validation, mapping, API, navigation을 모두 소유하지 않도록 얇게 유지한다.
+- 계산, validation, mapping은 가능하면 pure function으로 분리한다.
+- `get`, `find`, `format`처럼 조회/변환으로 보이는 함수에 숨은 side effect를 넣지 않는다.
+- 단순 중복만으로 `shared` abstraction을 만들지 않는다. 같은 의미이고 같은 이유로 변경될 때만 공통화를 검토한다.
+- `processData`, `helper`, `commonUtil`처럼 책임이 드러나지 않는 이름을 피한다.
