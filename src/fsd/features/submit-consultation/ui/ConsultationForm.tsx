@@ -97,8 +97,8 @@ export const ConsultationForm = ({
                 onClick={() => toggleTeacher(teacher)}
                 className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                   selectedTeacher === teacher
-                    ? "bg-[#02C551] text-white"
-                    : "border border-gray-200 bg-white text-gray-700"
+                    ? "bg-[#10243E] text-white"
+                    : "border border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#AEB9C5]"
                 }`}
               >
                 {teacher}
@@ -125,8 +125,8 @@ export const ConsultationForm = ({
               onClick={() => toggleDate(item.value)}
               className={`rounded-2xl px-2 py-3 text-center transition sm:px-3 ${
                 selectedDate === item.value
-                  ? "bg-[#02C551] text-white"
-                  : "bg-gray-50 text-gray-700 hover:bg-green-50"
+                  ? "bg-[#10243E] text-white"
+                  : "bg-[#F7F8FA] text-[#4E5B6B] hover:bg-[#EEF3F8]"
               }`}
             >
               <span className="block text-xs opacity-70">{item.day}</span>
@@ -143,8 +143,8 @@ export const ConsultationForm = ({
               onClick={() => toggleTime(time)}
               className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 selectedTime === time
-                  ? "bg-[#02C551] text-white"
-                  : "border border-gray-200 bg-white text-gray-700 hover:border-green-300"
+                  ? "bg-[#10243E] text-white"
+                  : "border border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#AEB9C5]"
               }`}
             >
               {time}
