@@ -18,9 +18,9 @@ const api = read("src/fsd/pages/profile/api/profile.ts");
 const widget = read("src/fsd/widgets/profile-consultations/ui/ProfileConsultations.tsx");
 
 assert.match(route, /@fsd\/pages\/profile/);
-assert.match(page, /SiteHeader/);
-assert.match(page, /fetchUserProfile/);
-assert.match(page, /cancelProfileConsultation/);
+assert.match(page, /StudentHeader/);
+assert.match(page, /useProfilePage/);
+assert.doesNotMatch(page, /fetchUserProfile|cancelProfileConsultation/);
 assert.match(api, /getUpcoming/);
 assert.match(api, /getAll/);
 assert.match(api, /getSession/);

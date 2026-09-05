@@ -1,92 +1,64 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
+import { ContentCard } from "@fsd/shared/ui";
 import { ProfileConsultations } from "@fsd/widgets/profile-consultations";
-import { SiteHeader } from "@fsd/widgets/site-header";
-import { fetchUserProfile } from "../api/profile.ts";
-import type { UserProfileData } from "../model/buildUserProfileData.ts";
+import { StudentHeader } from "@fsd/widgets/student-header";
+import { useProfilePage } from "../model/useProfilePage.ts";
 
 export const ProfilePage = () => {
-  const [profile, setProfile] = useState<UserProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    fetchUserProfile()
-      .then((data) => {
-        if (active) setProfile(data);
-      })
-      .catch((caught) => {
-        if (active) {
-          setError(caught instanceof Error ? caught.message : "프로필을 불러오지 못했습니다.");
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const handleCancel = async (id: number) => {
-    await cancelProfileConsultation(id);
-    setProfile((current) => current ? {
-      ...current,
-      reservations: current.reservations.filter((item) => item.id !== id),
-      history: current.history.filter((item) => item.id !== id),
-    } : current);
-  };
-
-  const handleSaveMemo = (id: number, memo: string) => {
-    setProfile((current) => current ? {
-      ...current,
-      history: current.history.map((item) =>
-        item.id === id ? { ...item, myMemo: memo } : item,
-      ),
-    } : current);
-  };
+  const {
+    profile,
+    loading,
+    error,
+    handleCancel,
+    handleSaveMemo,
+  } = useProfilePage();
 
   return (
-    <>
-      <SiteHeader />
-      <main className="min-h-[calc(100vh-5rem)] bg-gray-50 px-4 py-10 sm:px-6">
-        <div className="mx-auto w-full max-w-4xl">
-          {loading ? (
-            <p className="py-24 text-center text-gray-400">프로필을 불러오는 중…</p>
-          ) : error ? (
-            <p role="alert" className="rounded-2xl bg-red-50 p-5 text-red-700">{error}</p>
-          ) : profile ? (
-            <div className="space-y-6">
-              <section className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
-                <div className="h-28 bg-green-500" />
-                <div className="flex flex-col items-center pb-8">
-                  <div className="-mt-14 flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-green-50 shadow-md">
-                    <Image src="/profileIcon.svg" alt="profile" width={45} height={45} />
-                  </div>
-                  <h1 className="mt-4 text-2xl font-bold text-gray-900">
-                    {profile.name || "사용자"}
-                  </h1>
-                  <p className="mt-1 font-medium text-gray-400">
-                    {profile.studentId}
-                  </p>
-                </div>
-              </section>
+    <div className="min-h-dvh bg-[#F4F6F8] text-[#13233A]" style={{ fontFamily: '"Pretendard Variable", sans-serif' }}>
+      <StudentHeader />
+      <main className="mx-auto w-full max-w-[1080px] px-6 py-10 lg:px-10 lg:py-12">
+        <section className="rounded-[28px] bg-[#10243E] px-7 py-9 text-white sm:px-10 lg:px-12">
+          <p className="text-sm font-bold tracking-[0.16em] text-[#8FB3D9]">PROFILE</p>
+          <h1 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">나의 상담 현황</h1>
+          <p className="mt-4 max-w-2xl break-keep text-sm leading-7 text-[#C8D4E2] sm:text-base">
+            예약된 상담과 지난 상담 기록을 확인하고 필요한 메모를 한곳에서 관리할 수 있습니다.
+          </p>
+        </section>
 
-              <ProfileConsultations
-                reservations={profile.reservations}
-                history={profile.history}
-                onCancel={handleCancel}
-                onSaveMemo={handleSaveMemo}
-              />
-            </div>
-          ) : null}
-        </div>
+        {loading ? (
+          <ContentCard className="mt-6 py-24 text-center text-[#8A95A3]">프로필을 불러오는 중…</ContentCard>
+        ) : error ? (
+          <div role="alert" className="mt-6 rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] p-5 text-[#9A4F45]">
+            {error}
+          </div>
+        ) : profile ? (
+          <div className="mt-6 space-y-6">
+            <ContentCard className="overflow-hidden p-0">
+              <div className="h-24 bg-[#10243E]" />
+              <div className="flex flex-col items-center px-6 pb-8">
+                <div className="-mt-12 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#EEF3F8] shadow-sm">
+                  <Image src="/profileIcon.svg" alt="프로필" width={42} height={42} />
+                </div>
+                <h2 className="mt-4 text-2xl font-bold text-[#13233A]">
+                  {profile.name || "사용자"}
+                </h2>
+                <p className="mt-1 text-sm font-semibold text-[#8A95A3]">
+                  학번 {profile.studentId || "정보 없음"}
+                </p>
+              </div>
+            </ContentCard>
+
+            <ProfileConsultations
+              reservations={profile.reservations}
+              history={profile.history}
+              onCancel={handleCancel}
+              onSaveMemo={handleSaveMemo}
+            />
+          </div>
+        ) : null}
       </main>
-    </>
+    </div>
   );
 };
