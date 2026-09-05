@@ -31,3 +31,4 @@ assert.match(listHook, /getRecruits/);
 assert.match(detailHook, /getRecruit/);
 assert.match(listPage, /학생 취업 공고/);
 assert.match(detailPage, /공고 상세/);
+assert.match(detailPage, /href="\/recruit"[^\n]*min-h-11/);
