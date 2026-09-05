@@ -32,13 +32,14 @@ const detailRoute = read("app/recruit/[id]/page.tsx");
 const applyRoute = read("app/recruit/[id]/apply/page.tsx");
 const listPage = read("src/fsd/pages/recruit/ui/RecruitPage.tsx");
 const detailPage = read("src/fsd/pages/recruit-detail/ui/RecruitDetailPage.tsx");
+const listHook = read("src/fsd/pages/recruit/model/useRecruitList.ts");
 
 assert.match(listRoute, /@fsd\/pages\/recruit/);
 assert.match(detailRoute, /@fsd\/pages\/recruit-detail/);
 assert.doesNotMatch(listRoute, /useState|useEffect|getRecruits/);
 assert.doesNotMatch(detailRoute, /useState|useEffect|getRecruit/);
 assert.match(applyRoute, /redirect\("\/forms"\)/);
-assert.match(listPage, /로그인 후 취업 공고를 확인할 수 있습니다\./);
+assert.match(listHook, /로그인 후 취업 공고를 확인할 수 있습니다\./);
 assert.match(listPage, /href="\/forms"/);
 assert.match(detailPage, /@fsd\/features\/copy-recruit-link/);
 assert.match(detailPage, /href="\/forms"/);
