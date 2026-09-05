@@ -102,7 +102,7 @@ export const ProfileConsultations = ({
               <button
                 type="button"
                 onClick={() => openHistoryDetail(item)}
-                className="text-sm font-semibold text-[#315B83]"
+                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#315B83] transition-colors hover:bg-[#EEF3F8]"
               >
                 자세히 보기
               </button>
@@ -142,7 +142,7 @@ export const ProfileConsultations = ({
                 <button
                   type="button"
                   onClick={() => setIsEditingMemo(true)}
-                  className="text-sm font-semibold text-[#315B83]"
+                  className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#315B83] transition-colors hover:bg-[#EEF3F8]"
                 >
                   {selectedHistory.myMemo ? "수정하기" : "작성하기"}
                 </button>
