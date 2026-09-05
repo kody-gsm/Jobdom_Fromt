@@ -35,10 +35,10 @@ export function SegmentedTabs<T extends string>({
             role="tab"
             aria-selected={isSelected}
             onClick={() => onChange(item.value)}
-            className={`min-w-24 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+            className={`min-h-11 min-w-24 rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
               isSelected
-                ? "bg-white text-[#02C551] shadow-sm"
-                : "text-[#777C82] hover:text-[#202124]"
+                ? "bg-white text-[#10243E] shadow-sm"
+                : "text-[#607089] hover:text-[#315B83]"
             }`}
           >
             {item.label}
