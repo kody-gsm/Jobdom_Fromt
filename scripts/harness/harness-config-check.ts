@@ -69,6 +69,7 @@ assert.match(workflow, /base\/반영 브랜치는 `develop`으로 고정/, "work
 assert.match(workflow, /`main` 직접 반영.*release\/hotfix/, "main must be reserved for explicitly requested release/hotfix work");
 assert.match(workflow, /하나의 리뷰 가능한 목적/, "workflow must define PR granularity by reviewable purpose");
 assert.match(workflow, /harness:ready/, "workflow must require the PR readiness gate");
+assert.match(workflow, /exact head SHA/, "workflow must document squash-merge cleanup safety");
 
 const architecture = readFileSync("docs/ARCHITECTURE.md", "utf8");
 assert.match(architecture, /src\/fsd\//, "architecture must define the FSD root");

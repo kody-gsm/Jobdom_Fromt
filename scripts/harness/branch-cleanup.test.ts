@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { selectBranchCleanupCandidates } from "./branch-cleanup.ts";
+import { getLocalDeleteArgs, selectBranchCleanupCandidates, selectExactMergedPrRefs } from "./branch-cleanup.ts";
 
 const candidates = selectBranchCleanupCandidates({
   currentBranch: "refactor/fsd-foundation",
@@ -57,3 +57,43 @@ assert.deepEqual(
   }),
   { local: [], remote: [] },
 );
+
+const squashCandidates = selectBranchCleanupCandidates({
+  currentBranch: "feat/current",
+  openPrHeads: ["fix/open"],
+  ownerEmails: ["me@example.com"],
+  mergedLocalBranches: [],
+  mergedRemoteBranches: [],
+  squashMergedLocalBranches: [
+    { name: "fix/squash-done", authorEmail: "me@example.com" },
+    { name: "fix/squash-teammate", authorEmail: "other@example.com" },
+  ],
+  squashMergedRemoteBranches: [
+    { name: "origin/fix/squash-done", authorEmail: "me@example.com" },
+    { name: "origin/fix/squash-teammate", authorEmail: "other@example.com" },
+  ],
+});
+
+assert.deepEqual(squashCandidates.local, ["fix/squash-done"]);
+assert.deepEqual(squashCandidates.remote, ["fix/squash-done"]);
+assert.deepEqual(getLocalDeleteArgs("fix/regular", new Set(["fix/squash-done"])), ["branch", "-d", "fix/regular"]);
+assert.deepEqual(getLocalDeleteArgs("fix/squash-done", new Set(["fix/squash-done"])), ["branch", "-D", "fix/squash-done"]);
+
+const exactMergedRefs = selectExactMergedPrRefs(
+  [
+    { name: "fix/squash-done", authorEmail: "me@example.com", oid: "abc" },
+    { name: "fix/reused-after-merge", authorEmail: "me@example.com", oid: "new" },
+  ],
+  [
+    { headRefName: "fix/squash-done", headRefOid: "abc" },
+    { headRefName: "fix/reused-after-merge", headRefOid: "old" },
+  ],
+);
+assert.deepEqual(exactMergedRefs.map((branch) => branch.name), ["fix/squash-done"]);
+
+const exactMergedRemoteRefs = selectExactMergedPrRefs(
+  [{ name: "origin/fix/squash-done", authorEmail: "me@example.com", oid: "abc" }],
+  [{ headRefName: "fix/squash-done", headRefOid: "abc" }],
+  true,
+);
+assert.deepEqual(exactMergedRemoteRefs.map((branch) => branch.name), ["origin/fix/squash-done"]);

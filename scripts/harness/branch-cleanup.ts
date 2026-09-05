@@ -5,6 +5,12 @@ const ALWAYS_PROTECTED = new Set(["main", "develop"]);
 type BranchRef = {
   name: string;
   authorEmail: string;
+  oid?: string;
+};
+
+type MergedPrRef = {
+  headRefName: string;
+  headRefOid: string;
 };
 
 type CleanupInput = {
@@ -13,6 +19,8 @@ type CleanupInput = {
   ownerEmails: string[];
   mergedLocalBranches: BranchRef[];
   mergedRemoteBranches: BranchRef[];
+  squashMergedLocalBranches?: BranchRef[];
+  squashMergedRemoteBranches?: BranchRef[];
 };
 
 const normalizeEmail = (email: string) =>
@@ -28,6 +36,8 @@ export const selectBranchCleanupCandidates = ({
   ownerEmails,
   mergedLocalBranches,
   mergedRemoteBranches,
+  squashMergedLocalBranches = [],
+  squashMergedRemoteBranches = [],
 }: CleanupInput) => {
   const protectedBranches = new Set([
     ...ALWAYS_PROTECTED,
@@ -37,14 +47,13 @@ export const selectBranchCleanupCandidates = ({
   const normalizedOwnerEmails = new Set(
     ownerEmails.map(normalizeEmail).filter(Boolean),
   );
-
-  const local = mergedLocalBranches
+  const local = [...mergedLocalBranches, ...squashMergedLocalBranches]
     .filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails))
     .map((branch) => branch.name.trim())
     .filter(Boolean)
     .filter((branch) => !protectedBranches.has(branch));
 
-  const remote = mergedRemoteBranches
+  const remote = [...mergedRemoteBranches, ...squashMergedRemoteBranches]
     .filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails))
     .map((branch) => branch.name.trim())
     .filter((branch) => branch.startsWith("origin/"))
@@ -58,6 +67,30 @@ export const selectBranchCleanupCandidates = ({
   };
 };
 
+export const selectExactMergedPrRefs = (
+  branches: BranchRef[],
+  mergedPrRefs: MergedPrRef[],
+  remote = false,
+) => {
+  const mergedKeys = new Set(
+    mergedPrRefs
+      .map((pr) => `${pr.headRefName.trim()}\0${pr.headRefOid.trim()}`)
+      .filter((key) => !key.startsWith("\0") && !key.endsWith("\0")),
+  );
+
+  return branches.filter((branch) => {
+    const rawName = branch.name.trim();
+    const name = remote && rawName.startsWith("origin/")
+      ? rawName.slice("origin/".length)
+      : rawName;
+    const oid = branch.oid?.trim() ?? "";
+    return oid.length > 0 && mergedKeys.has(`${name}\0${oid}`);
+  });
+};
+
+export const getLocalDeleteArgs = (branch: string, squashMergedHeads: Set<string>) =>
+  ["branch", squashMergedHeads.has(branch) ? "-D" : "-d", branch];
+
 const lines = (value: string) =>
   value
     .split(/\r?\n/)
@@ -66,8 +99,8 @@ const lines = (value: string) =>
 
 const parseBranchRefs = (value: string): BranchRef[] =>
   lines(value).map((line) => {
-    const [name, authorEmail = ""] = line.split("\t");
-    return { name: name.trim(), authorEmail: authorEmail.trim() };
+    const [name, authorEmail = "", oid = ""] = line.split("\t");
+    return { name: name.trim(), authorEmail: authorEmail.trim(), oid: oid.trim() };
   });
 
 const run = (command: string, args: string[]) =>
@@ -86,6 +119,26 @@ const getOpenPrHeads = () =>
       ".[].headRefName",
     ]),
   );
+
+const getMergedPrRefs = (): MergedPrRef[] => {
+  const output = run("gh", [
+    "pr",
+    "list",
+    "--state",
+    "merged",
+    "--author",
+    "@me",
+    "--base",
+    "develop",
+    "--limit",
+    "200",
+    "--json",
+    "headRefName,headRefOid",
+  ]);
+  const parsed = JSON.parse(output || "[]") as MergedPrRef[];
+  return parsed.filter((pr) => pr.headRefName?.trim() && pr.headRefOid?.trim());
+};
+
 const printCandidates = (label: string, branches: string[]) => {
   console.log(`${label}: ${branches.length}`);
   for (const branch of branches) console.log(`  - ${branch}`);
@@ -96,12 +149,21 @@ const getOwnerEmails = () => {
   return email ? [email] : [];
 };
 
+const getRefs = (refRoot: string) =>
+  parseBranchRefs(
+    run("git", [
+      "for-each-ref",
+      "--format=%(refname:short)\t%(authoremail)\t%(objectname)",
+      refRoot,
+    ]),
+  );
+
 const getMergedRefs = (refRoot: string) =>
   parseBranchRefs(
     run("git", [
       "for-each-ref",
       "--merged=origin/develop",
-      "--format=%(refname:short)\t%(authoremail)",
+      "--format=%(refname:short)\t%(authoremail)\t%(objectname)",
       refRoot,
     ]),
   );
@@ -120,8 +182,13 @@ const runCli = () => {
   }
 
   const openPrHeads = getOpenPrHeads();
+  const mergedPrRefs = getMergedPrRefs();
   const mergedLocalBranches = getMergedRefs("refs/heads");
   const mergedRemoteBranches = getMergedRefs("refs/remotes/origin");
+  const allLocalBranches = getRefs("refs/heads");
+  const allRemoteBranches = getRefs("refs/remotes/origin");
+  const exactSquashLocalBranches = selectExactMergedPrRefs(allLocalBranches, mergedPrRefs);
+  const exactSquashRemoteBranches = selectExactMergedPrRefs(allRemoteBranches, mergedPrRefs, true);
 
   const candidates = selectBranchCleanupCandidates({
     currentBranch,
@@ -129,10 +196,13 @@ const runCli = () => {
     ownerEmails,
     mergedLocalBranches,
     mergedRemoteBranches,
+    squashMergedLocalBranches: exactSquashLocalBranches,
+    squashMergedRemoteBranches: exactSquashRemoteBranches,
   });
 
   console.log(`Jobdam Branch Cleanup (${apply ? "apply" : "dry-run"})`);
   console.log("ownership: branch tip author email must match git config user.email");
+  console.log("squash merge evidence: merged PR authored by @me, base develop, exact head SHA");
   console.log(`protected: main, develop, ${currentBranch}, open PR heads`);
   printCandidates("local merged branches", candidates.local);
   printCandidates("origin merged branches", candidates.remote);
@@ -143,8 +213,9 @@ const runCli = () => {
     return;
   }
 
+  const squashMergedHeads = new Set(exactSquashLocalBranches.map((branch) => branch.name.trim()));
   for (const branch of candidates.local) {
-    execFileSync("git", ["branch", "-d", branch], { stdio: "inherit" });
+    execFileSync("git", getLocalDeleteArgs(branch, squashMergedHeads), { stdio: "inherit" });
   }
 
   if (deleteRemote) {
