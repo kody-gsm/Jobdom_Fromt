@@ -20,7 +20,7 @@ export const PasswordField = (props: PasswordFieldProps) => {
           type="button"
           aria-label={label}
           onClick={() => setIsVisible((current) => !current)}
-          className="flex h-8 w-8 items-center justify-center text-[#737A82] transition-colors hover:text-[#02C551]"
+          className="flex h-11 w-11 items-center justify-center rounded-xl text-[#737A82] transition-colors hover:bg-[#F4F6F8] hover:text-[#02C551]"
         >
           {isVisible ? <FiEyeOff aria-hidden size={19} /> : <FiEye aria-hidden size={19} />}
         </button>

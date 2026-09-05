@@ -30,7 +30,7 @@ export const ResetPasswordForm = () => {
           type="button"
           disabled={resetForm.isSendingCode}
           onClick={() => void resetForm.sendCode()}
-          className="text-sm font-semibold text-[#02A946] disabled:text-[#9AA0A6]"
+          className="min-h-11 rounded-lg px-2 text-sm font-semibold text-[#02A946] transition-colors hover:bg-[#F4F6F8] disabled:text-[#9AA0A6] disabled:hover:bg-transparent"
         >
           {resetForm.isSendingCode
             ? "발송 중"
