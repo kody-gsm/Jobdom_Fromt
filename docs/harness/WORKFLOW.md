@@ -61,3 +61,5 @@ PR 생성 전에는 `npm run harness:ready`가 성공해야 하며, readiness는
 ## Branch cleanup
 
 merge된 개인 작업 브랜치는 `npm run harness:branches`로 정리 후보를 확인한다. 기본 실행은 dry-run이며 `main`, `develop`, 현재 branch, 열린 PR head는 보호한다.
+
+Squash-merged branches are cleanup candidates only when GitHub reports a merged PR authored by `@me` against `develop` and the current branch tip matches the PR exact head SHA. A force local delete (`-D`) is allowed only for that exact-match squash-merge evidence.
