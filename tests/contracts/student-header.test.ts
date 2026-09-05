@@ -38,3 +38,5 @@ assert.match(widget, /#10243E/);
 assert.match(widget, /#315B83/);
 assert.match(widget, /h-full[^\n]*whitespace-nowrap/);
 assert.equal((widget.match(/h-11 w-11/g) ?? []).length, 2);
+
+assert.match(widget, /col-span-2[^\"]*h-12[^\"]*border-t/);

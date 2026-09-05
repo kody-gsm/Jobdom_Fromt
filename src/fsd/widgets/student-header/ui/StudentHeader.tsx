@@ -35,7 +35,7 @@ export const StudentHeader = () => {
 
         <nav
           aria-label="학생 주요 메뉴"
-          className="col-span-2 row-start-2 flex h-11 items-center gap-1 border-t border-[#EDF0F2] text-sm font-semibold text-[#607089] sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:h-auto sm:justify-center sm:gap-8 sm:border-t-0 sm:text-base lg:gap-12"
+          className="col-span-2 row-start-2 flex h-12 items-center gap-1 border-t border-[#EDF0F2] text-sm font-semibold text-[#607089] sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:h-auto sm:justify-center sm:gap-8 sm:border-t-0 sm:text-base lg:gap-12"
         >
           {STUDENT_NAV_ITEMS.map((item) => {
             const isActive = isStudentNavActive(pathname, item.href);
