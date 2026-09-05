@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 
 const widgetPath = "src/fsd/widgets/student-header/ui/StudentHeader.tsx";
@@ -28,3 +28,13 @@ assert.equal(isStudentNavActive("/counsel", "/counsel"), true);
 assert.equal(isStudentNavActive("/counsel/complete", "/counsel"), true);
 assert.equal(isStudentNavActive("/profile", "/counsel"), false);
 
+
+assert.match(widget, /grid-cols-\[1fr_auto\]/);
+assert.match(widget, /sm:grid-cols-\[auto_1fr_auto\]/);
+assert.match(widget, /col-span-2/);
+assert.match(widget, /whitespace-nowrap/);
+assert.doesNotMatch(widget, /#02C551/);
+assert.match(widget, /#10243E/);
+assert.match(widget, /#315B83/);
+assert.match(widget, /h-full[^\n]*whitespace-nowrap/);
+assert.equal((widget.match(/h-11 w-11/g) ?? []).length, 2);
