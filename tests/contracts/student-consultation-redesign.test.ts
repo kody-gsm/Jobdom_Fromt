@@ -26,3 +26,5 @@ assert.match(form, /진로 상담/);
 assert.match(form, /일반 상담/);
 assert.equal((form.match(/bg-\[#02C551\]/g) ?? []).length, 1);
 assert.doesNotMatch(form, /hover:bg-green|hover:border-green/);
+assert.match(form, /grid-cols-\[repeat\(auto-fit,minmax\(44px,1fr\)\)\]/);
+assert.match(form, /toggleTime\(time\)[\s\S]{0,180}min-h-11/);

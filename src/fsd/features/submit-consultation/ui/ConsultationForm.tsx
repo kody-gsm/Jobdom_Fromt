@@ -117,7 +117,7 @@ export const ConsultationForm = ({
             {counselType === "career" ? "진로 상담" : "일반 상담"} 일정을 선택해주세요
           </h2>
         </div>
-        <div className="mt-6 grid grid-cols-5 gap-2 sm:gap-3">
+        <div className="mt-6 grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-2 sm:grid-cols-5 sm:gap-3">
           {dates.map((item) => (
             <button
               key={item.value}
@@ -141,7 +141,7 @@ export const ConsultationForm = ({
               key={time}
               type="button"
               onClick={() => toggleTime(time)}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+              className={`rounded-xl min-h-11 px-4 py-2.5 text-sm font-semibold transition ${
                 selectedTime === time
                   ? "bg-[#10243E] text-white"
                   : "border border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#AEB9C5]"
