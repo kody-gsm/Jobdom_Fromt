@@ -28,3 +28,5 @@ assert.match(consultations, /ActionButton/);
 assert.match(consultations, /onClick=\{onOpen\} className="[^"]*min-h-11/);
 assert.match(consultations, /setCancelTarget\(item\.id\)\}[\s\S]{0,120}className="[^"]*min-h-11/);
 assert.match(consultations, /onClick=\{onClose\} className="[^"]*min-h-11/);
+assert.match(consultations, /openHistoryDetail\(item\)\}[\s\S]{0,140}className="[^"]*min-h-11/);
+assert.match(consultations, /setIsEditingMemo\(true\)\}[\s\S]{0,140}className="[^"]*min-h-11/);
