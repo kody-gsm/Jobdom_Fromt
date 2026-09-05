@@ -47,14 +47,25 @@ export const selectBranchCleanupCandidates = ({
   const normalizedOwnerEmails = new Set(
     ownerEmails.map(normalizeEmail).filter(Boolean),
   );
-  const local = [...mergedLocalBranches, ...squashMergedLocalBranches]
-    .filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails))
+  const verifiedSquashLocalBranches = normalizedOwnerEmails.size > 0
+    ? squashMergedLocalBranches.filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails))
+    : squashMergedLocalBranches;
+  const verifiedSquashRemoteBranches = normalizedOwnerEmails.size > 0
+    ? squashMergedRemoteBranches.filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails))
+    : squashMergedRemoteBranches;
+
+  const local = [
+    ...mergedLocalBranches.filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails)),
+    ...verifiedSquashLocalBranches,
+  ]
     .map((branch) => branch.name.trim())
     .filter(Boolean)
     .filter((branch) => !protectedBranches.has(branch));
 
-  const remote = [...mergedRemoteBranches, ...squashMergedRemoteBranches]
-    .filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails))
+  const remote = [
+    ...mergedRemoteBranches.filter((branch) => isOwnedBranch(branch, normalizedOwnerEmails)),
+    ...verifiedSquashRemoteBranches,
+  ]
     .map((branch) => branch.name.trim())
     .filter((branch) => branch.startsWith("origin/"))
     .map((branch) => branch.slice("origin/".length))
@@ -144,10 +155,17 @@ const printCandidates = (label: string, branches: string[]) => {
   for (const branch of branches) console.log(`  - ${branch}`);
 };
 
-const getOwnerEmails = () => {
-  const email = normalizeEmail(run("git", ["config", "--get", "user.email"]));
-  return email ? [email] : [];
+export const resolveOwnerEmails = (readEmail: () => string) => {
+  try {
+    const email = normalizeEmail(readEmail());
+    return email ? [email] : [];
+  } catch {
+    return [];
+  }
 };
+
+const getOwnerEmails = () =>
+  resolveOwnerEmails(() => run("git", ["config", "--get", "user.email"]));
 
 const getRefs = (refRoot: string) =>
   parseBranchRefs(
@@ -177,9 +195,6 @@ const runCli = () => {
   if (!currentBranch) throw new Error("branch cleanup requires an attached branch");
 
   const ownerEmails = getOwnerEmails();
-  if (ownerEmails.length === 0) {
-    throw new Error("branch cleanup requires git config user.email");
-  }
 
   const openPrHeads = getOpenPrHeads();
   const mergedPrRefs = getMergedPrRefs();
@@ -201,7 +216,11 @@ const runCli = () => {
   });
 
   console.log(`Jobdam Branch Cleanup (${apply ? "apply" : "dry-run"})`);
-  console.log("ownership: branch tip author email must match git config user.email");
+  console.log(
+    ownerEmails.length > 0
+      ? "ownership: branch tip author email must match git config user.email"
+      : "ownership: git config user.email missing; ancestry-only candidates skipped",
+  );
   console.log("squash merge evidence: merged PR authored by @me, base develop, exact head SHA");
   console.log(`protected: main, develop, ${currentBranch}, open PR heads`);
   printCandidates("local merged branches", candidates.local);
