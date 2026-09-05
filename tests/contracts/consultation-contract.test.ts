@@ -81,4 +81,4 @@ const pageSource = readFileSync(resolve(process.cwd(), "src/fsd/pages/counsel/ui
 assert.match(routeSource, /@fsd\/pages\/counsel/);
 assert.doesNotMatch(routeSource, /useState|useEffect|createConsultation/);
 assert.match(pageSource, /@fsd\/features\/submit-consultation/);
-assert.match(pageSource, /@fsd\/widgets\/site-header/);
+assert.match(pageSource, /@fsd\/widgets\/student-header/);

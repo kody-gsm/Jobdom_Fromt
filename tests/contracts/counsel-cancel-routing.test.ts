@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const source = readFileSync(
-  resolve(process.cwd(), "src/fsd/features/submit-consultation/ui/ConsultationForm.tsx"),
+  resolve(process.cwd(), "src/fsd/features/submit-consultation/model/useConsultationForm.ts"),
   "utf8",
 );
 const cancelHandler = source.match(

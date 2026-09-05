@@ -18,6 +18,6 @@ assert.match(read("src/fsd/pages/teacher/ui/TeacherPage.tsx"), /HomeLogoButton/)
 const counselRoute = read("app/counsel/page.tsx");
 const counselPage = read("src/fsd/pages/counsel/ui/CounselPage.tsx");
 assert.match(counselRoute, /@fsd\/pages\/counsel/);
-assert.match(counselPage, /@fsd\/widgets\/site-header/);
+assert.match(counselPage, /@fsd\/widgets\/student-header/);
 
 console.log("home logo contract passed");
