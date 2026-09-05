@@ -27,3 +27,4 @@ assert.match(detailPage, /신청 폼 작성/);
 assert.match(submitForm, /ContentCard/);
 assert.match(submitForm, /ActionButton/);
 assert.match(submitForm, /bg-\[#10243E\]/);
+assert.match(detailPage, /href="\/forms"[^\n]*min-h-11/);
