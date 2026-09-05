@@ -29,6 +29,9 @@ const expectedScripts = {
   "harness:preflight": "node --no-warnings --experimental-strip-types scripts/harness/preflight.ts",
   "harness:verify": "node --no-warnings --experimental-strip-types scripts/harness/verify.ts",
   "harness:lint": "node --no-warnings --experimental-strip-types scripts/harness/changed-lint.ts",
+  "harness:contracts": "node --no-warnings --experimental-strip-types scripts/harness/contract-check.ts",
+  "harness:diff": "node --no-warnings --experimental-strip-types scripts/harness/diff-check.ts",
+  "harness:ready": "node --no-warnings --experimental-strip-types scripts/harness/readiness.ts",
   "harness:fsd": "node --no-warnings --experimental-strip-types scripts/harness/fsd-boundary-check.ts",
   "harness:convention": "node --no-warnings --experimental-strip-types scripts/harness/convention-check.ts",
   "harness:branches": "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts",
@@ -64,6 +67,8 @@ assert.equal(prTemplate, expectedPrTemplate, "PR template must match the approve
 const workflow = readFileSync("docs/harness/WORKFLOW.md", "utf8");
 assert.match(workflow, /base\/반영 브랜치는 `develop`으로 고정/, "workflow must fix normal PR base to develop");
 assert.match(workflow, /`main` 직접 반영.*release\/hotfix/, "main must be reserved for explicitly requested release/hotfix work");
+assert.match(workflow, /하나의 리뷰 가능한 목적/, "workflow must define PR granularity by reviewable purpose");
+assert.match(workflow, /harness:ready/, "workflow must require the PR readiness gate");
 
 const architecture = readFileSync("docs/ARCHITECTURE.md", "utf8");
 assert.match(architecture, /src\/fsd\//, "architecture must define the FSD root");
@@ -85,6 +90,7 @@ assert.doesNotMatch(codeConvention, /FUNCTION_RULES\.md/, "function rules must b
 
 const agentsGuide = readFileSync("AGENTS.md", "utf8");
 assert.match(agentsGuide, /작업 방식과 검증 기준/, "AGENTS must define harness ownership");
+assert.match(agentsGuide, /harness:ready/, "AGENTS must block PR creation when readiness fails");
 assert.doesNotMatch(agentsGuide, /Teacher\/Admin 보호 범위|Student 디자인 재구성/, "AGENTS must not encode one-off task scope");
 
 const tsconfig = JSON.parse(readFileSync("tsconfig.json", "utf8"));
