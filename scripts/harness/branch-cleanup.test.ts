@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { getLocalDeleteArgs, selectBranchCleanupCandidates, selectExactMergedPrRefs } from "./branch-cleanup.ts";
+import { getLocalDeleteArgs, resolveOwnerEmails, selectBranchCleanupCandidates, selectExactMergedPrRefs } from "./branch-cleanup.ts";
 
 const candidates = selectBranchCleanupCandidates({
   currentBranch: "refactor/fsd-foundation",
@@ -97,3 +97,17 @@ const exactMergedRemoteRefs = selectExactMergedPrRefs(
   true,
 );
 assert.deepEqual(exactMergedRemoteRefs.map((branch) => branch.name), ["origin/fix/squash-done"]);
+
+const noEmailSquashCandidates = selectBranchCleanupCandidates({
+  currentBranch: "feat/current",
+  openPrHeads: [],
+  ownerEmails: [],
+  mergedLocalBranches: [{ name: "fix/ancestry", authorEmail: "me@example.com" }],
+  mergedRemoteBranches: [{ name: "origin/fix/ancestry", authorEmail: "me@example.com" }],
+  squashMergedLocalBranches: [{ name: "fix/squash-done", authorEmail: "other@example.com" }],
+  squashMergedRemoteBranches: [{ name: "origin/fix/squash-done", authorEmail: "other@example.com" }],
+});
+assert.deepEqual(noEmailSquashCandidates.local, ["fix/squash-done"]);
+assert.deepEqual(noEmailSquashCandidates.remote, ["fix/squash-done"]);
+assert.deepEqual(resolveOwnerEmails(() => "<ME@example.com>"), ["me@example.com"]);
+assert.deepEqual(resolveOwnerEmails(() => { throw new Error("missing config"); }), []);
