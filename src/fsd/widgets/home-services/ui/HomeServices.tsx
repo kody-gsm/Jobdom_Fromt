@@ -94,7 +94,7 @@ export const HomeServices = ({ visible }: { visible: boolean }) => {
                   <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">COUNSEL</p>
                   <h3 className="mt-2 text-2xl font-bold text-[#13233A]">예정 상담</h3>
                 </div>
-                <Link href="/profile" className="text-sm font-bold text-[#315B83]">전체 보기</Link>
+                <Link href="/profile" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#F4F6F8]">전체 보기</Link>
               </div>
 
               <div className="mt-6">
@@ -103,7 +103,7 @@ export const HomeServices = ({ visible }: { visible: boolean }) => {
                 ) : overview.upcomingConsultations.length === 0 ? (
                   <div className="rounded-2xl bg-[#F7F8FA] px-5 py-8">
                     <p className="font-semibold text-[#4E5B6B]">예정된 상담이 없습니다.</p>
-                    <Link href="/counsel" className="mt-2 inline-block text-sm font-bold text-[#315B83]">상담 신청하기</Link>
+                    <Link href="/counsel" className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#EEF3F8]">상담 신청하기</Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -127,7 +127,7 @@ export const HomeServices = ({ visible }: { visible: boolean }) => {
                   <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">RECRUIT</p>
                   <h3 className="mt-2 text-2xl font-bold text-[#13233A]">최근 취업 공고</h3>
                 </div>
-                <Link href="/recruit" className="text-sm font-bold text-[#315B83]">전체 보기</Link>
+                <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#F4F6F8]">전체 보기</Link>
               </div>
 
               <div className="mt-6">

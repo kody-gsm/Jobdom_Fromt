@@ -56,3 +56,4 @@ assert.deepEqual(
   ],
 );
 assert.deepEqual(overview.recentRecruits.map((item) => item.id), [3, 4]);
+assert.ok((services.match(/min-h-11/g) ?? []).length >= 3);
