@@ -81,7 +81,7 @@ export const ProfileConsultations = ({
               <button
                 type="button"
                 onClick={() => setCancelTarget(item.id)}
-                className="text-sm font-semibold text-red-600"
+                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
               >
                 예약 취소
               </button>
@@ -233,7 +233,7 @@ const SummaryCard = ({
   <ContentCard className="p-6">
     <div className="flex items-center justify-between border-b border-[#E8EBEF] pb-4">
       <h2 className="text-lg font-bold text-[#13233A]">{title}</h2>
-      <button type="button" onClick={onOpen} className="text-sm font-bold text-[#315B83]">
+      <button type="button" onClick={onOpen} className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#EEF3F8]">
         상세보기
       </button>
     </div>
@@ -300,7 +300,7 @@ const DialogFrame = ({
     <div className={`relative z-10 w-full rounded-3xl bg-white p-6 shadow-2xl ${compact ? "max-w-sm" : "max-w-lg"}`}>
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-        <button type="button" onClick={onClose} className="text-sm font-semibold text-gray-400">
+        <button type="button" onClick={onClose} className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-gray-100">
           닫기
         </button>
       </div>

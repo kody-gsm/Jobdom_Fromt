@@ -24,3 +24,7 @@ assert.match(page, /나의 상담 현황/);
 assert.match(consultations, /ContentCard/);
 assert.match(consultations, /TextAreaField/);
 assert.match(consultations, /ActionButton/);
+
+assert.match(consultations, /onClick=\{onOpen\} className="[^"]*min-h-11/);
+assert.match(consultations, /setCancelTarget\(item\.id\)\}[\s\S]{0,120}className="[^"]*min-h-11/);
+assert.match(consultations, /onClick=\{onClose\} className="[^"]*min-h-11/);
