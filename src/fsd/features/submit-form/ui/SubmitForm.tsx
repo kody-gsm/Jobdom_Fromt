@@ -232,7 +232,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
               : [option.id];
 
           return (
-            <label key={option.id} className="flex items-center gap-3 text-sm text-gray-700">
+            <label key={option.id} className="flex min-h-11 items-center gap-3 rounded-xl px-2 text-sm text-gray-700">
               <input
                 required={question.required && question.type !== "MULTIPLE_CHOICE" && choices.length === 0}
                 type={question.type === "MULTIPLE_CHOICE" ? "checkbox" : "radio"}

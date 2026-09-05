@@ -28,3 +28,4 @@ assert.match(submitForm, /ContentCard/);
 assert.match(submitForm, /ActionButton/);
 assert.match(submitForm, /bg-\[#10243E\]/);
 assert.match(detailPage, /href="\/forms"[^\n]*min-h-11/);
+assert.match(submitForm, /<label key=\{option\.id\} className="[^"]*min-h-11/);
