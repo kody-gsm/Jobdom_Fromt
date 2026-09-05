@@ -28,4 +28,10 @@ assert.doesNotMatch(form, /useState|useEffect/);
 assert.doesNotMatch(form, /login\(/);
 assert.doesNotMatch(`${hook}\n${form}`, /gsm\.hs\.kr/);
 
+
+
+assert.match(form, /<label className="[^"]*min-h-11[^"]*">[\s\S]*?<input[\s\S]*?type="checkbox"/);
+assert.match(form, /href="\/forgot-password"[\s\S]*?className="[^"]*min-h-11/);
+assert.match(form, /href="\/signup"[^\n]*min-h-11/);
+
 console.log("student login redesign contract passed");

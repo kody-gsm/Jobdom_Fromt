@@ -51,7 +51,7 @@ export const LoginForm = () => {
       />
 
       <div className="flex items-center justify-between gap-4 text-sm">
-        <label className="flex cursor-pointer items-center gap-2.5 text-[#5E6670]">
+        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[#5E6670]">
           <input
             type="checkbox"
             checked={form.rememberLogin}
@@ -62,7 +62,7 @@ export const LoginForm = () => {
         </label>
         <Link
           href="/forgot-password"
-          className="font-semibold text-[#02A94A] transition-colors hover:text-[#018D3E]"
+          className="inline-flex min-h-11 items-center font-semibold text-[#02A94A] transition-colors hover:text-[#018D3E]"
         >
           비밀번호 찾기
         </Link>
@@ -84,7 +84,7 @@ export const LoginForm = () => {
 
       <p className="pt-1 text-center text-sm text-[#7A828B]">
         아직 계정이 없으신가요?{" "}
-        <Link href="/signup" className="font-bold text-[#02A94A] hover:text-[#018D3E]">
+        <Link href="/signup" className="inline-flex min-h-11 items-center font-bold text-[#02A94A] hover:text-[#018D3E]">
           회원가입
         </Link>
       </p>
