@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
+import { ActionButton, ContentCard, TextAreaField } from "@fsd/shared/ui";
 
 type View = "reservations" | "history" | "history-detail" | null;
 
@@ -101,7 +102,7 @@ export const ProfileConsultations = ({
               <button
                 type="button"
                 onClick={() => openHistoryDetail(item)}
-                className="text-sm font-semibold text-green-600"
+                className="text-sm font-semibold text-[#315B83]"
               >
                 자세히 보기
               </button>
@@ -112,7 +113,7 @@ export const ProfileConsultations = ({
 
       {view === "history-detail" && selectedHistory && (
         <DialogFrame title="상담 상세기록" onClose={() => setView(null)}>
-          <div className="rounded-2xl bg-green-50 p-5">
+          <div className="rounded-2xl bg-[#F7F8FA] p-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold text-gray-400">상담 담당</p>
@@ -141,7 +142,7 @@ export const ProfileConsultations = ({
                 <button
                   type="button"
                   onClick={() => setIsEditingMemo(true)}
-                  className="text-sm font-semibold text-green-600"
+                  className="text-sm font-semibold text-[#315B83]"
                 >
                   {selectedHistory.myMemo ? "수정하기" : "작성하기"}
                 </button>
@@ -149,30 +150,32 @@ export const ProfileConsultations = ({
             </div>
             {isEditingMemo ? (
               <div className="mt-2">
-                <textarea
+                <TextAreaField
+                  label="메모"
                   value={memoInput}
                   onChange={(event) => setMemoInput(event.target.value)}
-                  className="min-h-24 w-full resize-none rounded-2xl border border-gray-200 p-4 text-sm outline-none focus:border-green-500"
                   placeholder="메모를 입력하세요..."
+                  className="min-h-24"
                 />
                 <div className="mt-2 flex justify-end gap-2">
-                  <button
+                  <ActionButton
                     type="button"
+                    variant="secondary"
                     onClick={() => {
                       setMemoInput(selectedHistory.myMemo || "");
                       setIsEditingMemo(false);
                     }}
-                    className="px-3 py-2 text-sm font-semibold text-gray-500"
+                    className="h-10 px-4 text-sm"
                   >
                     취소
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
                     type="button"
                     onClick={saveMemo}
-                    className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white"
+                    className="h-10 bg-[#10243E] px-4 text-sm hover:bg-[#1B3555]"
                   >
                     저장
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ) : (
@@ -195,20 +198,20 @@ export const ProfileConsultations = ({
             </p>
           )}
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
+            <ActionButton
               type="button"
+              variant="secondary"
               onClick={() => setCancelTarget(null)}
-              className="rounded-xl border border-gray-200 py-3 font-semibold"
             >
               아니요
-            </button>
-            <button
+            </ActionButton>
+            <ActionButton
               type="button"
               onClick={() => void executeCancel()}
-              className="rounded-xl bg-green-600 py-3 font-bold text-white"
+              className="bg-[#10243E] hover:bg-[#1B3555]"
             >
               예
-            </button>
+            </ActionButton>
           </div>
         </DialogFrame>
       )}
@@ -227,25 +230,25 @@ const SummaryCard = ({
   emptyText: string;
   onOpen: () => void;
 }) => (
-  <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-      <button type="button" onClick={onOpen} className="text-sm font-bold text-green-600">
+  <ContentCard className="p-6">
+    <div className="flex items-center justify-between border-b border-[#E8EBEF] pb-4">
+      <h2 className="text-lg font-bold text-[#13233A]">{title}</h2>
+      <button type="button" onClick={onOpen} className="text-sm font-bold text-[#315B83]">
         상세보기
       </button>
     </div>
     <div className="mt-4 space-y-3">
       {items.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-400">{emptyText}</p>
+        <p className="py-8 text-center text-sm text-[#8A95A3]">{emptyText}</p>
       ) : (
         items.slice(0, 2).map((item) => <ConsultationRow key={item.id} item={item} />)
       )}
     </div>
-  </section>
+  </ContentCard>
 );
 
 const ConsultationRow = ({ item }: { item: ProfileConsultation }) => (
-  <div className="flex items-center justify-between gap-4 rounded-2xl bg-gray-50 p-4">
+  <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#F7F8FA] p-4">
     <span className="font-semibold text-gray-800">{item.type}</span>
     <span className="text-right text-sm text-gray-400">
       {item.date} / {item.slot}
