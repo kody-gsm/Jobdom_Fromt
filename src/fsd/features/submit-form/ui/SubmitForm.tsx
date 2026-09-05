@@ -13,6 +13,7 @@ import type {
   FormValue,
 } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
+import { ActionButton, ContentCard } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
 type Message = { text: string; error?: boolean };
@@ -91,11 +92,12 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   }
 
   return (
-    <form onSubmit={submitForm} className="overflow-hidden rounded-3xl bg-white shadow-sm">
-      <header className="bg-[#02C551] p-7 text-white sm:p-9">
+    <form onSubmit={submitForm}>
+      <ContentCard className="overflow-hidden p-0">
+      <header className="bg-[#10243E] p-7 text-white sm:p-9">
         <h1 className="break-keep text-3xl font-bold">{form.title}</h1>
         {form.description ? (
-          <p className="mt-3 whitespace-pre-line break-keep text-sm leading-6 text-green-50">
+          <p className="mt-3 whitespace-pre-line break-keep text-sm leading-6 text-[#C8D4E2]">
             {form.description}
           </p>
         ) : null}
@@ -118,22 +120,23 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           <p
             role="status"
             className={`rounded-xl px-4 py-3 text-sm ${
-              message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"
+              message.error ? "bg-red-50 text-red-700" : "bg-[#EEF3F8] text-[#315B83]"
             }`}
           >
             {message.text}
           </p>
         ) : null}
         {!submission ? (
-          <button
+          <ActionButton
             type="submit"
             disabled={submitting}
-            className="h-12 w-full rounded-xl bg-[#02C551] font-bold text-white disabled:bg-gray-300"
+            className="w-full bg-[#10243E] hover:bg-[#1B3555]"
           >
             {submitting ? "제출 중…" : "제출"}
-          </button>
+          </ActionButton>
         ) : null}
       </div>
+      </ContentCard>
     </form>
   );
 };
@@ -158,7 +161,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
     <p className="mt-2 text-sm font-normal text-gray-500">{question.description}</p>
   ) : null;
   const inputClass =
-    "mt-3 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-[#02C551]";
+    "mt-3 w-full rounded-xl border border-[#DDE2E7] px-4 py-3 outline-none focus:border-[#315B83]";
 
   if (question.type === "LONG_TEXT") {
     return (
@@ -236,7 +239,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
                 name={`question-${question.id}`}
                 checked={checked}
                 onChange={(event) => onChange(nextValue(event.target.checked))}
-                className="h-4 w-4 accent-[#02C551]"
+                className="h-4 w-4 accent-[#10243E]"
               />
               {option.label}
             </label>
