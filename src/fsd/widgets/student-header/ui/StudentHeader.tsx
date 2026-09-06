@@ -44,7 +44,7 @@ export const StudentHeader = () => {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex h-full flex-1 items-center justify-center whitespace-nowrap text-center transition-colors hover:text-[#315B83] sm:h-11 sm:flex-none ${isActive ? "font-bold text-[#10243E]" : "font-semibold"}`}
+                className={`flex h-full flex-1 items-center justify-center whitespace-nowrap text-center transition-colors hover:text-[#02A94A] sm:h-11 sm:flex-none ${isActive ? "font-bold text-[#02C551]" : "font-semibold"}`}
               >
                 {item.label}
               </Link>
@@ -53,14 +53,14 @@ export const StudentHeader = () => {
         </nav>
 
         <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-5 text-[#6A7077] sm:col-start-3">
-          <Link href="/profile" aria-label="프로필" className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-[#F4F6F8] hover:text-[#315B83]">
+          <Link href="/profile" aria-label="프로필" className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-[#F4F6F8] hover:text-[#02A94A]">
             <FiUser aria-hidden size={21} />
           </Link>
           <button
             type="button"
             aria-label="로그아웃"
             onClick={() => void handleLogout()}
-            className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-[#F4F6F8] hover:text-[#315B83]"
+            className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-[#F4F6F8] hover:text-[#02A94A]"
           >
             <FiLogOut aria-hidden size={21} />
           </button>
