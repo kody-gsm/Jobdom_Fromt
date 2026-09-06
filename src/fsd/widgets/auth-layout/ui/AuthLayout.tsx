@@ -15,7 +15,7 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
           src="/JobdamIcon.svg"
           alt="잡담"
           width={132}
-          height={67}
+          height={68}
           priority
           className="h-auto w-[132px]"
         />
@@ -26,7 +26,7 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
             <br />
             더 편하게 이어가세요.
           </h2>
-          <p className="mt-6 max-w-[390px] text-[15px] leading-7 text-[#AAB6BF]">
+          <p className="mt-6 max-w-[392px] text-[15px] leading-7 text-[#AAB6BF]">
             상담 신청부터 채용 공고와 설문까지, 학교생활에 필요한 정보를 잡담에서 확인할 수 있습니다.
           </p>
         </div>
@@ -34,13 +34,13 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
     </section>
 
     <section className="flex min-h-screen items-center justify-center bg-[#F4F6F5] px-5 py-10 sm:px-8 lg:px-12">
-      <div className="w-full max-w-[520px] rounded-[24px] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(15,31,45,0.08)] sm:px-10 sm:py-10">
+      <div className="w-full max-w-[520px] rounded-[24px] bg-white px-6 py-8 shadow-[0_20px_52px_rgba(15,31,45,0.08)] sm:px-10 sm:py-10">
         <div className="mb-8 flex justify-center lg:hidden">
           <Image
             src="/JobdamIcon.svg"
             alt="잡담"
             width={132}
-            height={67}
+            height={68}
             priority
             className="h-auto w-[132px]"
           />

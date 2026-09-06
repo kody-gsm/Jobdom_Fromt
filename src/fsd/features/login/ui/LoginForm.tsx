@@ -38,7 +38,7 @@ export const LoginForm = () => {
         error={errors.email}
         onChange={(event) => setEmail(event.target.value)}
         placeholder="학교 이메일을 입력해주세요"
-        className="h-14 rounded-[14px]"
+        className="h-14 rounded-2xl"
       />
 
       <PasswordField
@@ -49,11 +49,11 @@ export const LoginForm = () => {
         error={errors.password}
         onChange={(event) => setPassword(event.target.value)}
         placeholder="비밀번호를 입력해주세요"
-        className="h-14 rounded-[14px]"
+        className="h-14 rounded-2xl"
       />
 
       <div className="flex items-center justify-between gap-4 text-sm">
-        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[#5E6670]">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[#5E6670]">
           <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
             <input
               type="checkbox"
@@ -65,7 +65,7 @@ export const LoginForm = () => {
               <svg
                 aria-hidden="true"
                 viewBox="0 0 12 10"
-                className="pointer-events-none relative h-2.5 w-3 text-white"
+                className="pointer-events-none relative h-3 w-3 text-white"
                 fill="none"
               >
                 <path
@@ -97,7 +97,7 @@ export const LoginForm = () => {
       <ActionButton
         type="submit"
         disabled={isSubmitting}
-        className="h-14 w-full rounded-[14px] text-base font-bold"
+        className="h-14 w-full rounded-2xl text-base font-bold"
       >
         {isSubmitting ? "로그인 중…" : "로그인"}
       </ActionButton>
