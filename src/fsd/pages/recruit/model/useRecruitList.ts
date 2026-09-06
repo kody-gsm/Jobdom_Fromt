@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Recruit } from "@fsd/entities/recruit";
 import { ApiError } from "@fsd/shared/api";
 import { getRecruits } from "../api/recruit.ts";
+import { withRecruitPreviewFallback } from "./previewRecruits.ts";
 
 export const useRecruitList = () => {
   const [items, setItems] = useState<Recruit[]>([]);
@@ -13,7 +14,7 @@ export const useRecruitList = () => {
 
     void getRecruits()
       .then((data) => {
-        if (active) setItems(data);
+        if (active) setItems(withRecruitPreviewFallback(data));
       })
       .catch((caught) => {
         if (!active) return;
