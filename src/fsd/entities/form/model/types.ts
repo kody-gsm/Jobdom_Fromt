@@ -13,6 +13,7 @@ export interface FormSummary {
   id: number;
   title: string;
   description: string | null;
+  deadline: string | null;
   status: FormStatus;
   questionCount: number;
   createdAt: string;

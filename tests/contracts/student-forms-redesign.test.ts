@@ -26,6 +26,7 @@ assert.match(listPage, /신청 폼/);
 assert.match(detailPage, /신청 폼 작성/);
 assert.match(submitForm, /ContentCard/);
 assert.match(submitForm, /ActionButton/);
-assert.match(submitForm, /bg-\[#10243E\]/);
+assert.match(submitForm, /bg-\[#02C551\]/);
+assert.match(submitForm, /제한 기한/);
 assert.match(detailPage, /href="\/forms"[^\n]*min-h-11/);
 assert.match(submitForm, /<label key=\{option\.id\} className="[^"]*min-h-11/);

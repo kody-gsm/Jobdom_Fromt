@@ -94,13 +94,18 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   return (
     <form onSubmit={submitForm}>
       <ContentCard className="overflow-hidden p-0">
-      <header className="bg-[#10243E] p-7 text-white sm:p-9">
+      <header className="bg-[#02C551] p-7 text-white sm:p-9">
         <h1 className="break-keep text-3xl font-bold">{form.title}</h1>
         {form.description ? (
-          <p className="mt-3 whitespace-pre-line break-keep text-sm leading-6 text-[#C8D4E2]">
+          <p className="mt-3 whitespace-pre-line break-keep text-sm leading-6 text-white/85">
             {form.description}
           </p>
         ) : null}
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm font-semibold text-white/90">
+          <span>제한 기한</span>
+          <span aria-hidden="true">·</span>
+          <time>{formatFormDeadline(form.deadline)}</time>
+        </div>
       </header>
       <div className="space-y-5 p-6 sm:p-9">
         {submission ? (
@@ -120,7 +125,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           <p
             role="status"
             className={`rounded-xl px-4 py-3 text-sm ${
-              message.error ? "bg-red-50 text-red-700" : "bg-[#EEF3F8] text-[#315B83]"
+              message.error ? "bg-red-50 text-red-700" : "bg-[#EAF9F0] text-[#027A35]"
             }`}
           >
             {message.text}
@@ -130,7 +135,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           <ActionButton
             type="submit"
             disabled={submitting}
-            className="w-full bg-[#10243E] hover:bg-[#1B3555]"
+            className="w-full bg-[#02C551] hover:bg-[#02A946]"
           >
             {submitting ? "제출 중…" : "제출"}
           </ActionButton>
@@ -161,7 +166,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
     <p className="mt-2 text-sm font-normal text-gray-500">{question.description}</p>
   ) : null;
   const inputClass =
-    "mt-3 w-full rounded-xl border border-[#DDE2E7] px-4 py-3 outline-none focus:border-[#315B83]";
+    "mt-3 w-full rounded-xl border border-[#DDE2E7] px-4 py-3 outline-none focus:border-[#02C551]";
 
   if (question.type === "LONG_TEXT") {
     return (
@@ -239,7 +244,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
                 name={`question-${question.id}`}
                 checked={checked}
                 onChange={(event) => onChange(nextValue(event.target.checked))}
-                className="h-4 w-4 accent-[#10243E]"
+                className="h-4 w-4 accent-[#02C551]"
               />
               {option.label}
             </label>
@@ -248,6 +253,19 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
       </div>
     </fieldset>
   );
+};
+
+const formatFormDeadline = (deadline: string | null) => {
+  if (!deadline) return "제한 없음";
+  const date = new Date(deadline);
+  if (Number.isNaN(date.getTime())) return deadline;
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 };
 
 const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (

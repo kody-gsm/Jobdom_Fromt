@@ -34,7 +34,7 @@ export const FormsPage = () => {
             forms.map((form) => (
               <ContentCard key={form.id} className="flex min-h-[330px] flex-col p-7">
                 <div className="flex items-start justify-between gap-4">
-                  <span className="rounded-full bg-[#EEF3F8] px-3 py-1 text-xs font-bold text-[#315B83]">
+                  <span className="rounded-full bg-[#EAF9F0] px-3 py-1 text-xs font-bold text-[#02A946]">
                     신청 폼
                   </span>
                   <span className="text-xs font-semibold text-[#8A95A3]">질문 {form.questionCount}개</span>
@@ -43,12 +43,16 @@ export const FormsPage = () => {
                 <p className="mt-3 line-clamp-4 flex-1 whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
                   {form.description || "폼 설명이 없습니다."}
                 </p>
+                <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#E8EBEF] pt-4 text-sm">
+                  <span className="text-[#8A95A3]">제한 기한</span>
+                  <strong className="text-right text-[#4E5B6B]">{formatFormDeadline(form.deadline)}</strong>
+                </div>
                 {form.id < 0 ? (
-                  <span className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 text-sm font-bold text-white opacity-80">
+                  <span className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white opacity-80">
                     응답하기
                   </span>
                 ) : (
-                  <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 text-sm font-bold text-white hover:bg-[#1B3555]">
+                  <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white hover:bg-[#02A946]">
                     응답하기
                   </Link>
                 )}
@@ -64,3 +68,16 @@ export const FormsPage = () => {
 const Empty = ({ text }: { text: string }) => (
   <ContentCard className="col-span-full px-6 py-20 text-center text-[#8A95A3]">{text}</ContentCard>
 );
+
+const formatFormDeadline = (deadline: string | null) => {
+  if (!deadline) return "제한 없음";
+  const date = new Date(deadline);
+  if (Number.isNaN(date.getTime())) return deadline;
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
