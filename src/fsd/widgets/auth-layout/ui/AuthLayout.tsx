@@ -8,7 +8,7 @@ interface AuthLayoutProps {
 }
 
 export const AuthLayout = ({ title, description, children }: AuthLayoutProps) => (
-  <main className="grid min-h-screen bg-[#F4F6F5] lg:grid-cols-[42%_58%]">
+  <main className="student-auth grid min-h-screen bg-[#F4F6F5] lg:grid-cols-[42%_58%]" style={{ fontFamily: '"Pretendard Variable", Pretendard, Arial, Helvetica, sans-serif' }}>
     <section className="relative hidden overflow-hidden bg-[#0F1F2D] px-12 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-16 xl:py-16">
       <div>
         <Image

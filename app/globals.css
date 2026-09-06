@@ -27,6 +27,24 @@ html, body {
   overflow-x: hidden;
 }
 
+.student-auth input,
+.student-auth button,
+.student-auth textarea,
+.student-auth select {
+  font-family: inherit;
+}
+
+.student-auth input:-webkit-autofill,
+.student-auth input:-webkit-autofill:hover,
+.student-auth input:-webkit-autofill:focus,
+.student-auth input:-webkit-autofill:active {
+  -webkit-text-fill-color: #202124;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  caret-color: #202124;
+  font-family: inherit;
+}
+
 ::placeholder {
   color: #C5C5C5;
 }
