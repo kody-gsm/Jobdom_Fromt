@@ -9,7 +9,8 @@ const resetPage = readFileSync("src/fsd/pages/forgot-password/ui/ForgotPasswordP
 assert.match(layout, /lg:grid-cols-\[42%_58%\]/);
 assert.match(layout, /bg-\[#0F1F2D\]/);
 assert.match(layout, /src="\/JobdamIcon\.svg"/);
-assert.match(layout, /brightness-0 invert/);
+assert.match(layout, /className="h-auto w-\[132px\]"/);
+assert.doesNotMatch(layout, /brightness-0 invert/);
 assert.match(layout, /JOBDAM FOR GSM/);
 assert.match(layout, /취업과 상담을 한 곳에서/);
 assert.match(layout, /Gwangju Software Meister High School/);
@@ -18,4 +19,4 @@ assert.doesNotMatch(signupPage, /잡담 계정을 만들어보세요|학교 이�
 assert.doesNotMatch(resetPage, /학교 이메일로 인증코드를 받은 뒤/);
 assert.doesNotMatch(`${layout}\n${loginPage}\n${signupPage}\n${resetPage}`, /\/teacher|\/admin/);
 
-console.log("student auth side panel contract passed");
+console.log("student auth side panel + original logo contract passed");

@@ -15,9 +15,9 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
           src="/JobdamIcon.svg"
           alt="잡담"
           width={132}
-          height={62}
+          height={67}
           priority
-          className="brightness-0 invert"
+          className="h-auto w-[132px]"
         />
 
         <div className="mt-24 max-w-[440px]">
