@@ -32,3 +32,12 @@ export {
 } from "./model/lifecycle.ts";
 export { requestWithSession } from "./api/sessionRequest.ts";
 export { normalizeVerificationCode } from "./model/credentials.ts";
+export {
+  MAX_PROFILE_AVATAR_BYTES,
+  PROFILE_AVATAR_CHANGED_EVENT,
+  getProfileAvatarStorageKey,
+  getProfileAvatarUserKey,
+  readProfileAvatar,
+  saveProfileAvatar,
+  validateProfileAvatarFile,
+} from "./model/profileAvatar.ts";

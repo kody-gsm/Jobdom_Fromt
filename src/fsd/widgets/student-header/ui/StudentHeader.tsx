@@ -3,13 +3,35 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FiLogOut, FiUser } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiLogOut } from "react-icons/fi";
+import {
+  getProfileAvatarUserKey,
+  getSession,
+  PROFILE_AVATAR_CHANGED_EVENT,
+  readProfileAvatar,
+} from "@fsd/entities/user";
 import { logout } from "@fsd/features/logout";
 import { STUDENT_NAV_ITEMS, isStudentNavActive } from "../model/navigation.ts";
 
 export const StudentHeader = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    const session = getSession();
+    const userKey = getProfileAvatarUserKey({
+      email: session?.email,
+      name: session?.name,
+    });
+    const syncAvatar = () => setProfileAvatar(readProfileAvatar(userKey));
+
+    syncAvatar();    window.addEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
+    return () => {
+      window.removeEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -33,8 +55,7 @@ export const StudentHeader = () => {
           <Image src="/JobdamIcon.svg" alt="Jobdam" width={88} height={40} priority />
         </Link>
 
-        <nav
-          aria-label="학생 주요 메뉴"
+        <nav          aria-label="학생 주요 메뉴"
           className="col-span-2 row-start-2 flex h-12 items-center gap-1 border-t border-[#EDF0F2] text-sm font-semibold text-[#607089] sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:h-auto sm:justify-center sm:gap-8 sm:border-t-0 sm:text-base lg:gap-12"
         >
           {STUDENT_NAV_ITEMS.map((item) => {
@@ -53,8 +74,28 @@ export const StudentHeader = () => {
         </nav>
 
         <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-5 text-[#6A7077] sm:col-start-3">
-          <Link href="/profile" aria-label="프로필" className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-[#F4F6F8] hover:text-[#02A94A]">
-            <FiUser aria-hidden size={21} />
+          <Link
+            href="/profile"
+            aria-label="프로필"
+            className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl transition-colors hover:bg-[#F4F6F8]"
+          >
+            {profileAvatar ? (
+              <Image
+                src={profileAvatar}
+                alt="프로필"
+                width={32}
+                height={32}                unoptimized
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <Image
+                src="/profileIcon.svg"
+                alt=""
+                width={22}
+                height={22}
+                aria-hidden="true"
+              />
+            )}
           </Link>
           <button
             type="button"
