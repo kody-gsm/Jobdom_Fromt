@@ -11,7 +11,9 @@ const rememberControl = loginForm.match(/<label className="flex min-h-11[\s\S]*?
 assert.match(rememberControl, /appearance-none/);
 assert.match(rememberControl, /checked:bg-\[#02C551\]/);
 assert.match(rememberControl, /checked:border-\[#02C551\]/);
-assert.doesNotMatch(rememberControl, /accent-\[/);
-assert.doesNotMatch(rememberControl, /hover:/);
+assert.match(rememberControl, /<svg[\s\S]*viewBox="0 0 12 10"/);
+assert.match(rememberControl, /<path[\s\S]*stroke="currentColor"/);
+assert.doesNotMatch(rememberControl, />✓<\/span>/);
+assert.doesNotMatch(rememberControl, /accent-\[|hover:/);
 
 console.log("student login remember checkbox contract passed");

@@ -60,7 +60,14 @@ export const LoginForm = () => {
               className="absolute inset-0 h-5 w-5 appearance-none rounded-[4px] border border-[#B8C0C8] bg-white checked:border-[#02C551] checked:bg-[#02C551]"
             />
             {form.rememberLogin ? (
-              <span aria-hidden="true" className="pointer-events-none relative text-sm font-bold leading-none text-white">✓</span>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 12 10"
+                className="pointer-events-none relative h-2.5 w-3 text-white"
+                fill="none"
+              >
+                <path d="M1 5 4.5 8.5 11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             ) : null}
           </span>
           <span>아이디 저장</span>
