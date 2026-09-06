@@ -28,6 +28,7 @@ export const ConsultationForm = ({
     title,
     content,
     teachers,
+    selectedTeacher,
     selectedTeacherId,
     selectedDate,
     selectedTime,
@@ -79,27 +80,40 @@ export const ConsultationForm = ({
 
             <div>
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
-              <div
-                data-consultation-field="teacher"
-                className={`flex flex-wrap gap-2 rounded-xl ${
-                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
-                }`}
-              >
-                {displayTeachers.map((teacher) => (
-                  <button
-                    key={teacher.id}
-                    type="button"
-                    onClick={() => toggleTeacher(teacher)}
-                    className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                      selectedTeacherId === teacher.id
-                        ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                        : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                    }`}
-                  >
-                    {getConsultationTeacherLabel(teacher.name)}
-                  </button>
-                ))}
-              </div>
+              {counselType === "career" ? (
+                <div
+                  data-consultation-field="teacher"
+                  className={`flex flex-wrap gap-2 rounded-xl ${
+                    errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+                  }`}
+                >
+                  {displayTeachers.map((teacher) => (
+                    <button
+                      key={teacher.id}
+                      type="button"
+                      onClick={() => toggleTeacher(teacher)}
+                      className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                        selectedTeacherId === teacher.id
+                          ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                          : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                      }`}
+                    >
+                      {getConsultationTeacherLabel(teacher.name)}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  data-consultation-field="teacher"
+                  className={`flex min-h-11 items-center rounded-xl border bg-[#F8FAF9] px-4 text-sm font-semibold ${
+                    errorTarget === "teacher"
+                      ? "border-[#E53935] text-[#E53935]"
+                      : "border-[#DDE2E7] text-[#4E5B6B]"
+                  }`}
+                >
+                  {selectedTeacher ?? "상담 선생님 배정 중"}
+                </div>
+              )}
             </div>
 
             <TextField

@@ -19,7 +19,10 @@ import {
   submitConsultation,
 } from "../api/consultation.ts";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
-import { getConsultationTeacherLabel } from "./teacherOption.ts";
+import {
+  getConsultationTeacherLabel,
+  getDefaultGeneralTeacher,
+} from "./teacherOption.ts";
 
 export type ConsultationToast = {
   message: string;
@@ -85,6 +88,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [toast, setToast] = useState<ConsultationToast | null>(null);
   const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const counselTypeRef = useRef(initialType);
 
   const dates = useMemo(() => getNextWeekdays(), []);
   const times = getAvailablePeriods(counselType, selectedTeacher);
@@ -93,7 +97,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     let active = true;
     void getConsultationTeachers()
       .then((items) => {
-        if (active) setTeachers(items);
+        if (!active) return;
+        setTeachers(items);
+        if (counselTypeRef.current === "general") {
+          const teacher = getDefaultGeneralTeacher(items);
+          setSelectedTeacher(
+            teacher ? getConsultationTeacherLabel(teacher.name) : null,
+          );
+          setSelectedTeacherId(teacher?.id ?? null);
+        }
       })
       .catch(() => undefined);
 
@@ -154,9 +166,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const handleTabChange = (type: ConsultationType) => {
+    counselTypeRef.current = type;
     setCounselType(type);
-    setSelectedTeacher(null);
-    setSelectedTeacherId(null);
+    const generalTeacher = type === "general"
+      ? getDefaultGeneralTeacher(teachers)
+      : null;
+    setSelectedTeacher(
+      generalTeacher ? getConsultationTeacherLabel(generalTeacher.name) : null,
+    );
+    setSelectedTeacherId(generalTeacher?.id ?? null);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
     setErrorTarget(null);
