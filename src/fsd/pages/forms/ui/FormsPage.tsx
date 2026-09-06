@@ -43,9 +43,15 @@ export const FormsPage = () => {
                 <p className="mt-3 line-clamp-4 flex-1 whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
                   {form.description || "폼 설명이 없습니다."}
                 </p>
-                <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 text-sm font-bold text-white hover:bg-[#1B3555]">
-                  응답하기
-                </Link>
+                {form.id < 0 ? (
+                  <span className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 text-sm font-bold text-white opacity-80">
+                    응답하기
+                  </span>
+                ) : (
+                  <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 text-sm font-bold text-white hover:bg-[#1B3555]">
+                    응답하기
+                  </Link>
+                )}
               </ContentCard>
             ))
           )}

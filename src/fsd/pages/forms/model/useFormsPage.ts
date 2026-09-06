@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormSummary } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
 import { formsApi } from "../api/forms.ts";
+import { withFormPreviewFallback } from "./previewForms.ts";
 
 export const useFormsPage = () => {
   const [forms, setForms] = useState<FormSummary[]>([]);
@@ -11,7 +12,7 @@ export const useFormsPage = () => {
   useEffect(() => {
     formsApi
       .getAll()
-      .then(setForms)
+      .then((items) => setForms(withFormPreviewFallback(items)))
       .catch((caught) =>
         setError(
           caught instanceof ApiError && caught.status === 401
