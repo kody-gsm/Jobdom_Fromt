@@ -11,10 +11,9 @@ const resetForm = read("src/fsd/features/reset-password/ui/ResetPasswordForm.tsx
 const formsPage = read("src/fsd/pages/forms/ui/FormsPage.tsx");
 const homeServices = read("src/fsd/widgets/home-services/ui/HomeServices.tsx");
 
-assert.match(authLayout, /flex min-h-screen items-center justify-center/);
-assert.doesNotMatch(authLayout, /lg:grid-cols-\[42%_58%\]/);
-assert.doesNotMatch(authLayout, /brightness-0 invert/);
-assert.doesNotMatch(authLayout, /JOBDAM FOR GSM|취업과 상담을 한 곳에서/);
+assert.match(authLayout, /lg:grid-cols-\[42%_58%\]/);
+assert.match(authLayout, /bg-\[#0F1F2D\]/);
+assert.match(authLayout, /JOBDAM FOR GSM|취업과 상담을 한 곳에서/);
 assert.match(authLayout, /src="\/JobdamIcon\.svg"/);
 
 assert.doesNotMatch(signupPage, /잡담 계정을 만들어보세요|학교 이메일 인증 후/);
