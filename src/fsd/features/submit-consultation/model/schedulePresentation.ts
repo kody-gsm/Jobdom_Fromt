@@ -1,12 +1,12 @@
 export const CONSULTATION_SCHEDULE_ROWS = [
-  { period: "1교시", time: "09:00 - 09:50" },
-  { period: "2교시", time: "10:00 - 10:50" },
-  { period: "3교시", time: "11:00 - 11:50" },
-  { period: "4교시", time: "12:00 - 12:50" },
-  { period: "점심시간", time: "12:50 - 13:50", breakTime: true },
-  { period: "5교시", time: "14:00 - 14:50" },
-  { period: "6교시", time: "15:00 - 15:50" },
-  { period: "7교시", time: "16:00 - 16:50" },
+  { period: "1교시", time: "08:40 - 09:30" },
+  { period: "2교시", time: "09:40 - 10:30" },
+  { period: "3교시", time: "10:40 - 11:30" },
+  { period: "4교시", time: "11:40 - 12:30" },
+  { period: "점심시간", time: "12:30 - 13:30" },
+  { period: "5교시", time: "13:30 - 14:20" },
+  { period: "6교시", time: "14:30 - 15:20" },
+  { period: "7교시", time: "15:30 - 16:20" },
 ] as const;
 
 const PERIOD_TIMES = Object.fromEntries(

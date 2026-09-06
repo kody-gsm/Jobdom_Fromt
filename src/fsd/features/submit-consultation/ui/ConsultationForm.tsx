@@ -1,7 +1,13 @@
 "use client";
 
 import type { ConsultationType } from "@fsd/entities/consultation";
-import { ActionButton, ContentCard, SegmentedTabs, TextAreaField, TextField } from "@fsd/shared/ui";
+import {
+  ActionButton,
+  ContentCard,
+  SegmentedTabs,
+  TextAreaField,
+  TextField,
+} from "@fsd/shared/ui";
 import { useConsultationForm } from "../model/useConsultationForm.ts";
 import { getConsultationTeacherLabel } from "../model/teacherOption.ts";
 import {
@@ -26,7 +32,6 @@ export const ConsultationForm = ({
     toast,
     errorTarget,
     dates,
-    times,
     setTitle,
     setContent,
     handleTabChange,
@@ -51,59 +56,48 @@ export const ConsultationForm = ({
         </div>
       ) : null}
 
-      <ContentCard className="mb-6 p-5 sm:p-6">
-        <div className="flex flex-wrap items-end gap-5">
-          <div>
-            <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
-            <SegmentedTabs
-              ariaLabel="상담 유형"
-              className="[&_[aria-selected=true]]:!text-[#02C551] [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-[#02C551]"
-              items={[
-                { value: "career", label: "진로 상담" },
-                { value: "general", label: "일반 상담" },
-              ]}
-              value={counselType}
-              onChange={handleTabChange}
-            />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
-            <div
-              data-consultation-field="teacher"
-              className={`flex flex-wrap gap-2 rounded-xl ${
-                errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
-              }`}
-            >
-              {teachers.map((teacher) => (
-                <button
-                  key={teacher.id}
-                  type="button"
-                  onClick={() => toggleTeacher(teacher)}
-                  className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                    selectedTeacherId === teacher.id
-                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                      : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                  }`}
-                >
-                  {getConsultationTeacherLabel(teacher.name)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </ContentCard>
-
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-start">
         <ContentCard className="p-6 sm:p-8 lg:min-h-[620px]">
-          <div>
-            <h2 className="text-xl font-bold text-[#13233A]">상담 내용 작성</h2>
-            <p className="mt-2 text-sm leading-6 text-[#7A8592]">
-              상담받고 싶은 내용을 편하게 작성해주세요.
-            </p>
-          </div>
+          <div className="space-y-5">
+            <div>
+              <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
+              <SegmentedTabs
+                ariaLabel="상담 유형"
+                className="[&_[aria-selected=true]]:!text-[#02C551] [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-[#02C551]"
+                items={[
+                  { value: "career", label: "진로 상담" },
+                  { value: "general", label: "일반 상담" },
+                ]}
+                value={counselType}
+                onChange={handleTabChange}
+              />
+            </div>
 
-          <div className="mt-6 space-y-5">
+            <div>
+              <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
+              <div
+                data-consultation-field="teacher"
+                className={`flex flex-wrap gap-2 rounded-xl ${
+                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+                }`}
+              >
+                {teachers.map((teacher) => (
+                  <button
+                    key={teacher.id}
+                    type="button"
+                    onClick={() => toggleTeacher(teacher)}
+                    className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      selectedTeacherId === teacher.id
+                        ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                        : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                    }`}
+                  >
+                    {getConsultationTeacherLabel(teacher.name)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <TextField
               data-consultation-field="title"
               error={errorTarget === "title" ? "제목을 입력해주세요" : undefined}
@@ -112,6 +106,7 @@ export const ConsultationForm = ({
               onChange={(event) => setTitle(event.target.value)}
               placeholder="고민거리 한 줄 요약을 적어주세요"
             />
+
             <div>
               <TextAreaField
                 data-consultation-field="content"
@@ -173,21 +168,7 @@ export const ConsultationForm = ({
               }`}
             >
               {CONSULTATION_SCHEDULE_ROWS.map((row) => {
-                const isBreak = "breakTime" in row && row.breakTime;
-                const unavailableByTeacher =
-                  selectedTeacherId !== null && !times.includes(row.period);
-                const unavailable =
-                  !isBreak && (unavailableByTeacher || isTimeUnavailable(row.period));
-
-                if (isBreak) {
-                  return (
-                    <div key={row.period} className="flex min-h-[48px] items-center justify-between rounded-xl bg-[#F7F8FA] px-4 py-3 text-sm text-[#A0A8B2]">
-                      <strong>{row.period}</strong>
-                      <span className="text-xs">{row.time}</span>
-                    </div>
-                  );
-                }
-
+                const unavailable = isTimeUnavailable(row.period);
                 return (
                   <button
                     key={row.period}
