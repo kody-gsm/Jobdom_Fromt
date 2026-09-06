@@ -10,8 +10,8 @@ const validation = read("src/fsd/features/reset-password/model/validation.ts");
 const form = read("src/fsd/features/reset-password/ui/ResetPasswordForm.tsx");
 const source = `${page}\n${loginForm}\n${hook}\n${validation}\n${form}`;
 
-assert.match(page, /title="비밀번호 재설정"/);
-assert.doesNotMatch(page, /비밀번호를 다시 설정해요/);
+assert.doesNotMatch(page, /title="비밀번호 재설정"|description=/);
+assert.doesNotMatch(page, /비밀번호를 다시 설정해요|학교 이메일로 인증코드를 받은 뒤/);
 assert.match(loginForm, /비밀번호 재설정/);
 assert.doesNotMatch(loginForm, />\s*비밀번호 찾기\s*</);
 assert.match(hook, /sendPasswordResetCode/);

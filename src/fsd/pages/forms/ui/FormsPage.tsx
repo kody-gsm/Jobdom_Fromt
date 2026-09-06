@@ -11,7 +11,7 @@ export const FormsPage = () => {
   return (
     <div className="min-h-dvh bg-[#F4F6F8] text-[#13233A]" style={{ fontFamily: '"Pretendard Variable", sans-serif' }}>
       <StudentHeader />
-      <main className="mx-auto w-full max-w-[1080px] px-6 py-10 lg:px-10 lg:py-12">
+      <main className="mx-auto w-full max-w-[1180px] px-6 py-10 lg:px-10 lg:py-12">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">신청 폼</h1>
           <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]">
@@ -25,14 +25,14 @@ export const FormsPage = () => {
           </p>
         ) : null}
 
-        <section className="mt-6 grid gap-5 sm:grid-cols-2" aria-live="polite">
+        <section className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
           {loading ? (
             <Empty text="불러오는 중…" />
           ) : forms.length === 0 ? (
             <Empty text="공개된 폼이 없습니다." />
           ) : (
             forms.map((form) => (
-              <ContentCard key={form.id} className="flex min-h-[260px] flex-col p-7">
+              <ContentCard key={form.id} className="flex min-h-[330px] flex-col p-7">
                 <div className="flex items-start justify-between gap-4">
                   <span className="rounded-full bg-[#EEF3F8] px-3 py-1 text-xs font-bold text-[#315B83]">
                     신청 폼
@@ -40,7 +40,7 @@ export const FormsPage = () => {
                   <span className="text-xs font-semibold text-[#8A95A3]">질문 {form.questionCount}개</span>
                 </div>
                 <h2 className="mt-6 break-keep text-2xl font-bold tracking-[-0.02em] text-[#13233A]">{form.title}</h2>
-                <p className="mt-3 flex-1 whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
+                <p className="mt-3 line-clamp-4 flex-1 whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
                   {form.description || "폼 설명이 없습니다."}
                 </p>
                 <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 text-sm font-bold text-white hover:bg-[#1B3555]">

@@ -5,7 +5,7 @@ import { StudentHeader } from "@fsd/widgets/student-header";
 export const FormDetailPage = ({ formId }: { formId: number }) => (
   <div className="min-h-dvh bg-[#F4F6F8] text-[#13233A]" style={{ fontFamily: '"Pretendard Variable", sans-serif' }}>
     <StudentHeader />
-    <main className="mx-auto w-full max-w-[900px] px-6 py-10 lg:px-10 lg:py-12">
+    <main className="mx-auto w-full max-w-[980px] px-6 py-10 lg:px-10 lg:py-12">
       <Link href="/forms" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#607089] transition-colors hover:bg-[#EEF3F8] hover:text-[#13233A]">
         ← 폼 목록
       </Link>

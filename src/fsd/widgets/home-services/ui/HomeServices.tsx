@@ -17,8 +17,8 @@ export const HomeServices = () => {
     <section className="space-y-5" aria-label="학생 대시보드">
       <div className="grid gap-5 lg:grid-cols-2">
         <ContentCard className="flex min-h-[280px] flex-col p-7">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#02C551] text-white">
-            <IoMdChatbubbles aria-hidden="true" className="h-7 w-7" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E9FAF0] text-[#02A94A]">
+            <IoMdChatbubbles aria-hidden="true" className="h-5 w-5" />
           </div>
           <h1 className="mt-7 text-2xl font-bold tracking-[-0.02em] text-[#13233A]">
             상담 신청
