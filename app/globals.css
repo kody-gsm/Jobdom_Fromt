@@ -46,16 +46,6 @@ html, body {
   line-height: 1.5rem !important;
 }
 
-.student-auth input:-webkit-autofill::first-line,
-.student-auth input:-webkit-autofill:hover::first-line,
-.student-auth input:-webkit-autofill:focus::first-line,
-.student-auth input:-webkit-autofill:active::first-line {
-  font-family: "Pretendard Variable", Pretendard, Arial, Helvetica, sans-serif !important;
-  font-size: 1rem !important;
-  font-weight: 400 !important;
-  line-height: 1.5rem !important;
-}
-
 ::placeholder {
   color: #C5C5C5;
 }

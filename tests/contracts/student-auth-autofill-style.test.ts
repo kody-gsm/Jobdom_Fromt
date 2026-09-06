@@ -10,8 +10,6 @@ assert.match(css, /\.student-auth input:-webkit-autofill/);
 assert.match(css, /-webkit-text-fill-color:\s*#202124/);
 assert.match(css, /font-family:\s*inherit/);
 assert.match(css, /font-size:\s*1rem\s*!important/);
-assert.match(css, /input:-webkit-autofill::first-line/);
-assert.match(css, /input:-webkit-autofill::first-line[\s\S]*font-size:\s*1rem\s*!important/);
 assert.doesNotMatch(css, /-webkit-box-shadow|box-shadow:\s*0 0 0 1000px #fff inset/);
 assert.doesNotMatch(css, /body\s*\{[^}]*Pretendard/s);
 
