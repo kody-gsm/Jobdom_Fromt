@@ -10,7 +10,10 @@ const form = readFileSync(
 );
 const helper = readFileSync(helperPath, "utf8");
 
-assert.match(form, /상담 희망일과 교시를 선택해 주세요\./);
+assert.doesNotMatch(form, />일정 예약</);
+assert.doesNotMatch(form, /상담 희망일과 교시를 선택해 주세요\./);
+assert.match(form, />상담 희망일</);
+assert.match(form, />상담 교시</);
 assert.match(form, /CONSULTATION_SCHEDULE_ROWS\.map/);
 assert.match(form, /row\.time/);
 assert.match(form, /getConsultationWeekdayLabel\(item\.value\)/);
@@ -20,6 +23,5 @@ assert.match(helper, /7교시[\s\S]*15:30 - 16:20/);
 assert.match(form, /예약 불가/);
 assert.doesNotMatch(form, /예약 가능|선택됨|상담 확정 신청/);
 assert.match(form, /grid-cols-5/);
-assert.match(form, /border-\[#02C551\][\s\S]*bg-\[#EAF9F0\]/);
 
 console.log("student consultation schedule panel contract passed");

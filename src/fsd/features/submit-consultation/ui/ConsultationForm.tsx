@@ -9,7 +9,10 @@ import {
   TextField,
 } from "@fsd/shared/ui";
 import { useConsultationForm } from "../model/useConsultationForm.ts";
-import { getConsultationTeacherLabel } from "../model/teacherOption.ts";
+import {
+  getConsultationTeacherLabel,
+  getConsultationTeacherOptions,
+} from "../model/teacherOption.ts";
 import {
   CONSULTATION_SCHEDULE_ROWS,
   getConsultationWeekdayLabel,
@@ -42,6 +45,7 @@ export const ConsultationForm = ({
     handleCancel,
     handleSubmit,
   } = useConsultationForm(initialType);
+  const displayTeachers = getConsultationTeacherOptions(counselType, teachers);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -81,7 +85,7 @@ export const ConsultationForm = ({
                   errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
                 }`}
               >
-                {teachers.map((teacher) => (
+                {displayTeachers.map((teacher) => (
                   <button
                     key={teacher.id}
                     type="button"
@@ -126,14 +130,8 @@ export const ConsultationForm = ({
         </ContentCard>
 
         <ContentCard className="min-h-[720px] p-6 sm:p-8">
-          <div>
-            <h2 className="text-xl font-bold text-[#13233A]">일정 예약</h2>
-            <p className="mt-2 text-sm leading-6 text-[#7A8592]">
-              상담 희망일과 교시를 선택해 주세요.
-            </p>
-          </div>
-
-          <section className="mt-6">
+          <section>
+            <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 희망일</p>
             <div
               data-consultation-field="date"
               className={`grid grid-cols-5 gap-2 rounded-xl ${
@@ -161,6 +159,7 @@ export const ConsultationForm = ({
           </section>
 
           <section className="mt-6">
+            <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 교시</p>
             <div
               data-consultation-field="period"
               className={`space-y-2 rounded-xl ${

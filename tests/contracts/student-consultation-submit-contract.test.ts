@@ -20,10 +20,10 @@ assert.doesNotMatch(hook, /상담 신청이 완료되었습니다/);
 assert.doesNotMatch(hook, /setHasCareerReservation\(true\)/);
 assert.match(hook, /unavailableSlotKeys/);
 assert.match(hook, /isUnavailableSlotError/);
-assert.match(form, /teachers\.map/);
+assert.match(form, /getConsultationTeacherOptions\(counselType, teachers\)/);
+assert.match(form, /displayTeachers\.map/);
 assert.match(form, /isTimeUnavailable\(row\.period\)/);
 assert.match(form, /예약 불가/);
-assert.doesNotMatch(form, /예약 가능/);
-assert.doesNotMatch(form, /선택됨/);
+assert.doesNotMatch(form, /예약 가능|선택됨/);
 
 console.log("student consultation submit contract passed");
