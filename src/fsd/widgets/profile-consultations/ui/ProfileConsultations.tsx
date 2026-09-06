@@ -102,7 +102,7 @@ export const ProfileConsultations = ({
               <button
                 type="button"
                 onClick={() => openHistoryDetail(item)}
-                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#315B83] transition-colors hover:bg-[#EEF3F8]"
+                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]"
               >
                 자세히 보기
               </button>
@@ -142,7 +142,7 @@ export const ProfileConsultations = ({
                 <button
                   type="button"
                   onClick={() => setIsEditingMemo(true)}
-                  className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#315B83] transition-colors hover:bg-[#EEF3F8]"
+                  className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]"
                 >
                   {selectedHistory.myMemo ? "수정하기" : "작성하기"}
                 </button>
@@ -172,7 +172,7 @@ export const ProfileConsultations = ({
                   <ActionButton
                     type="button"
                     onClick={saveMemo}
-                    className="h-10 bg-[#10243E] px-4 text-sm hover:bg-[#1B3555]"
+                    className="h-10 bg-[#02C551] px-4 text-sm hover:bg-[#00B94C]"
                   >
                     저장
                   </ActionButton>
@@ -208,7 +208,7 @@ export const ProfileConsultations = ({
             <ActionButton
               type="button"
               onClick={() => void executeCancel()}
-              className="bg-[#10243E] hover:bg-[#1B3555]"
+              className="bg-[#02C551] hover:bg-[#00B94C]"
             >
               예
             </ActionButton>
@@ -233,7 +233,7 @@ const SummaryCard = ({
   <ContentCard className="p-6">
     <div className="flex items-center justify-between border-b border-[#E8EBEF] pb-4">
       <h2 className="text-lg font-bold text-[#13233A]">{title}</h2>
-      <button type="button" onClick={onOpen} className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#EEF3F8]">
+      <button type="button" onClick={onOpen} className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]">
         상세보기
       </button>
     </div>

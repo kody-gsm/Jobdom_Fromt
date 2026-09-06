@@ -73,14 +73,14 @@ export const HomeServices = ({ visible }: { visible: boolean }) => {
             {SERVICES.map((service) => (
               <ContentCard key={service.href} className="group flex min-h-[300px] flex-col p-7 transition-transform duration-200 hover:-translate-y-1">
                 <div className="flex items-start justify-between">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#10243E] text-white">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#02C551] text-white">
                     {service.icon}
                   </div>
                   <span className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">{service.eyebrow}</span>
                 </div>
                 <h3 className="mt-8 text-2xl font-bold tracking-[-0.02em] text-[#13233A]">{service.title}</h3>
                 <p className="mt-3 flex-1 break-keep text-sm leading-7 text-[#667281]">{service.description}</p>
-                <Link href={service.href} className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#1B3555]">
+                <Link href={service.href} className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#00B94C]">
                   {service.actionLabel}
                 </Link>
               </ContentCard>
@@ -94,7 +94,7 @@ export const HomeServices = ({ visible }: { visible: boolean }) => {
                   <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">COUNSEL</p>
                   <h3 className="mt-2 text-2xl font-bold text-[#13233A]">예정 상담</h3>
                 </div>
-                <Link href="/profile" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#F4F6F8]">전체 보기</Link>
+                <Link href="/profile" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#F4F6F8]">전체 보기</Link>
               </div>
 
               <div className="mt-6">
@@ -103,7 +103,7 @@ export const HomeServices = ({ visible }: { visible: boolean }) => {
                 ) : overview.upcomingConsultations.length === 0 ? (
                   <div className="rounded-2xl bg-[#F7F8FA] px-5 py-8">
                     <p className="font-semibold text-[#4E5B6B]">예정된 상담이 없습니다.</p>
-                    <Link href="/counsel" className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#EEF3F8]">상담 신청하기</Link>
+                    <Link href="/counsel" className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]">상담 신청하기</Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -127,7 +127,7 @@ export const HomeServices = ({ visible }: { visible: boolean }) => {
                   <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">RECRUIT</p>
                   <h3 className="mt-2 text-2xl font-bold text-[#13233A]">최근 취업 공고</h3>
                 </div>
-                <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#315B83] transition-colors hover:bg-[#F4F6F8]">전체 보기</Link>
+                <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#F4F6F8]">전체 보기</Link>
               </div>
 
               <div className="mt-6">
