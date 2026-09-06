@@ -39,10 +39,11 @@ html, body {
 .student-auth input:-webkit-autofill:focus,
 .student-auth input:-webkit-autofill:active {
   -webkit-text-fill-color: #202124;
-  -webkit-box-shadow: 0 0 0 1000px #fff inset;
-  box-shadow: 0 0 0 1000px #fff inset;
   caret-color: #202124;
-  font-family: inherit;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5rem !important;
 }
 
 ::placeholder {
