@@ -11,7 +11,8 @@ const loginPage = readFileSync(loginPagePath, "utf8");
 const signupPage = readFileSync(signupPagePath, "utf8");
 const resetPage = readFileSync(resetPagePath, "utf8");
 
-assert.match(layout, /bg-\[#0F1F2D\]/);
+assert.match(layout, /bg-\[#02C551\]/);
+assert.doesNotMatch(layout, /bg-\[#0F1F2D\]/);
 assert.match(layout, /bg-\[#F4F6F5\]/);
 assert.match(layout, /bg-white/);
 assert.match(layout, /JobdamIcon\.svg/);

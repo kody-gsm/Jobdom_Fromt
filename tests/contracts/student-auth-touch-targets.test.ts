@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -9,5 +9,11 @@ const signupForm = read("src/fsd/features/signup/ui/SignupForm.tsx");
 const resetForm = read("src/fsd/features/reset-password/ui/ResetPasswordForm.tsx");
 
 assert.match(passwordField, /h-11 w-11/);
+assert.match(passwordField, /\/openeye\.svg/);
+assert.match(passwordField, /\/closeeye\.svg/);
+assert.match(passwordField, /translate-x-2/);
+assert.doesNotMatch(passwordField, /react-icons|hover:/);
 assert.match(signupForm, /min-h-11/);
 assert.match(resetForm, /min-h-11/);
+
+console.log("student auth touch targets contract passed");
