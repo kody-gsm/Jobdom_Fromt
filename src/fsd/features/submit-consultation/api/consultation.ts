@@ -9,12 +9,34 @@ export type ConsultationTeacherOption = {
   name: string;
 };
 
+export type ConsultationSlotStatus = {
+  teacherId: number;
+  date: string;
+  period: string;
+  state: "CANCEL" | "WAITING" | "RESERVED" | "LOCKED" | "AUTO";
+  available: boolean;
+};
+
 export type SubmitConsultationInput = ReservationInput & {
   teacherId: number;
 };
 
 export const getConsultationTeachers = () =>
   requestWithSession<ConsultationTeacherOption[]>("/student/teachers");
+
+export const getConsultationSlotStatus = (
+  kind: ConsultationKind,
+  teacherId: number,
+  date: string,
+) => {
+  const query = new URLSearchParams({
+    teacherId: String(teacherId),
+    date,
+  });
+  return requestWithSession<ConsultationSlotStatus[]>(
+    `/student/${kind}/status?${query.toString()}`,
+  );
+};
 
 export const submitConsultation = (
   kind: ConsultationKind,

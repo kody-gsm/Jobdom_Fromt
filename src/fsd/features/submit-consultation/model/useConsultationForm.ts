@@ -14,6 +14,7 @@ import type {
 } from "@fsd/entities/consultation";
 import { ApiError } from "@fsd/shared/api";
 import {
+  getConsultationSlotStatus,
   getConsultationTeachers,
   submitConsultation,
 } from "../api/consultation.ts";
@@ -74,6 +75,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [serverUnavailablePeriods, setServerUnavailablePeriods] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [unavailableSlotKeys, setUnavailableSlotKeys] = useState<Set<string>>(
     () => new Set(),
   );
@@ -97,6 +101,34 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (selectedTeacherId === null || selectedDate === null) return;
+
+    let active = true;
+    void getConsultationSlotStatus(
+      toConsultationKind(counselType),
+      selectedTeacherId,
+      selectedDate,
+    )
+      .then((items) => {
+        if (!active) return;
+        const unavailable = new Set(
+          items.filter((item) => !item.available).map((item) => item.period),
+        );
+        setServerUnavailablePeriods(unavailable);
+        setSelectedTime((current) =>
+          current !== null && unavailable.has(current) ? null : current,
+        );
+      })
+      .catch(() => {
+        if (active) setServerUnavailablePeriods(new Set());
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [counselType, selectedTeacherId, selectedDate]);
 
   useEffect(
     () => () => {
@@ -126,6 +158,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setSelectedTeacher(null);
     setSelectedTeacherId(null);
     setSelectedTime(null);
+    setServerUnavailablePeriods(new Set());
     setErrorTarget(null);
   };
 
@@ -134,18 +167,22 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setSelectedTeacher(isSelected ? null : getConsultationTeacherLabel(teacher.name));
     setSelectedTeacherId(isSelected ? null : teacher.id);
     setSelectedTime(null);
+    setServerUnavailablePeriods(new Set());
     if (errorTarget === "teacher") setErrorTarget(null);
   };
 
   const toggleDate = (date: string) => {
     setSelectedDate((current) => current === date ? null : date);
+    setSelectedTime(null);
+    setServerUnavailablePeriods(new Set());
     if (errorTarget === "date") setErrorTarget(null);
   };
 
   const isTimeUnavailable = (time: string) =>
-    selectedTeacherId !== null &&
-    selectedDate !== null &&
-    unavailableSlotKeys.has(getSlotKey(selectedTeacherId, selectedDate, time));
+    serverUnavailablePeriods.has(time) ||
+    (selectedTeacherId !== null &&
+      selectedDate !== null &&
+      unavailableSlotKeys.has(getSlotKey(selectedTeacherId, selectedDate, time)));
 
   const toggleTime = (time: string) => {
     if (isTimeUnavailable(time)) return;
