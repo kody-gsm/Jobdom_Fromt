@@ -14,6 +14,7 @@ import { validateLoginForm } from "./validation.ts";
 import type { LoginFormErrors, LoginFormValues } from "./validation.ts";
 
 type LoginState = LoginFormValues & { rememberLogin: boolean };
+type LoginCredentials = Pick<LoginFormValues, "email" | "password">;
 
 export const useLoginForm = () => {
   const router = useRouter();
@@ -52,15 +53,24 @@ export const useLoginForm = () => {
     if (!rememberLogin) clearRememberLoginPreference();
   };
 
-  const submit = async () => {
-    const nextErrors = validateLoginForm(form);
+  const submit = async (credentials?: LoginCredentials) => {
+    const effectiveForm: LoginState = credentials ? { ...form, ...credentials } : form;
+    if (credentials) {
+      setForm((current) => ({ ...current, ...credentials }));
+    }
+
+    const nextErrors = validateLoginForm(effectiveForm);
     setErrors(nextErrors);
     setSubmitError("");
     if (Object.keys(nextErrors).length > 0) return;
 
     try {
       setIsSubmitting(true);
-      const session = await login(form.email.trim(), form.password, form.rememberLogin);
+      const session = await login(
+        effectiveForm.email.trim(),
+        effectiveForm.password,
+        form.rememberLogin,
+      );
       router.push(getRoleHomePath(session.role));
     } catch (caught) {
       setSubmitError(
@@ -71,15 +81,11 @@ export const useLoginForm = () => {
     }
   };
 
-  const canSubmit =
-    form.email.trim() !== "" && form.password.trim() !== "" && !isSubmitting;
-
   return {
     form,
     errors,
     submitError,
     isSubmitting,
-    canSubmit,
     setEmail,
     setPassword,
     setRememberLogin,

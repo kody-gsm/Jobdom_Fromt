@@ -10,7 +10,6 @@ export const LoginForm = () => {
     errors,
     submitError,
     isSubmitting,
-    canSubmit,
     setEmail,
     setPassword,
     setRememberLogin,
@@ -24,7 +23,10 @@ export const LoginForm = () => {
       className="space-y-5"
       onSubmit={(event) => {
         event.preventDefault();
-        void submit();
+        const formData = new FormData(event.currentTarget);
+        const email = String(formData.get("email") ?? "");
+        const password = String(formData.get("password") ?? "");
+        void submit({ email, password });
       }}
     >
       <TextField
@@ -66,7 +68,13 @@ export const LoginForm = () => {
                 className="pointer-events-none relative h-2.5 w-3 text-white"
                 fill="none"
               >
-                <path d="M1 5 4.5 8.5 11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M1 5 4.5 8.5 11 1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             ) : null}
           </span>
@@ -88,7 +96,7 @@ export const LoginForm = () => {
 
       <ActionButton
         type="submit"
-        disabled={!canSubmit}
+        disabled={isSubmitting}
         className="h-14 w-full rounded-[14px] text-base font-bold"
       >
         {isSubmitting ? "로그인 중…" : "로그인"}
@@ -96,7 +104,10 @@ export const LoginForm = () => {
 
       <p className="pt-1 text-center text-sm text-[#7A828B]">
         아직 계정이 없으신가요?{" "}
-        <Link href="/signup" className="inline-flex min-h-11 items-center font-bold text-[#02A94A] hover:text-[#018D3E]">
+        <Link
+          href="/signup"
+          className="inline-flex min-h-11 items-center font-bold text-[#02A94A] hover:text-[#018D3E]"
+        >
           회원가입
         </Link>
       </p>
