@@ -29,4 +29,4 @@ assert.match(form, /일반 상담/);
 assert.equal((form.match(/bg-\[#02C551\]/g) ?? []).length, 1);
 assert.doesNotMatch(form, /hover:bg-green|hover:border-green/);
 assert.match(form, /grid-cols-5/);
-assert.match(form, /toggleTime\(time\)[\s\S]{0,260}min-h-\[48px\]/);
+assert.match(form, /toggleTime\(row\.period\)[\s\S]{0,320}min-h-\[48px\]/);

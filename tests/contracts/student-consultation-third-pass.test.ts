@@ -9,8 +9,9 @@ const form = readFileSync(
 
 assert.match(form, /상담 내용 작성/);
 assert.match(form, /일정 예약/);
-assert.match(form, /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(360px,0\.72fr\)\]/);
+assert.match(form, /lg:grid-cols-\[minmax\(0,1fr\)_520px\]/);
 assert.match(form, /min-h-\[320px\]/);
+assert.match(form, /min-h-\[720px\]/);
 assert.match(form, /bg-\[#02C551\]/);
 assert.match(form, /border-\[#02C551\]/);
 assert.doesNotMatch(form, /bg-\[#10243E\]|hover:bg-\[#1B3555\]/);

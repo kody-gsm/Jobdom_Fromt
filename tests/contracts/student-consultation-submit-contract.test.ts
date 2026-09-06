@@ -21,7 +21,7 @@ assert.doesNotMatch(hook, /setHasCareerReservation\(true\)/);
 assert.match(hook, /unavailableSlotKeys/);
 assert.match(hook, /isUnavailableSlotError/);
 assert.match(form, /teachers\.map/);
-assert.match(form, /isTimeUnavailable\(time\)/);
+assert.match(form, /isTimeUnavailable\(row\.period\)/);
 assert.match(form, /예약 불가/);
 assert.doesNotMatch(form, /예약 가능/);
 assert.doesNotMatch(form, /선택됨/);

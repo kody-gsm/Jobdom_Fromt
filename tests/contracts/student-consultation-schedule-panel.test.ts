@@ -11,7 +11,8 @@ const form = readFileSync(
 const helper = readFileSync(helperPath, "utf8");
 
 assert.match(form, /상담 희망일과 교시를 선택해 주세요\./);
-assert.match(form, /getConsultationPeriodTime\(time\)/);
+assert.match(form, /CONSULTATION_SCHEDULE_ROWS\.map/);
+assert.match(form, /row\.time/);
 assert.match(form, /getConsultationWeekdayLabel\(item\.value\)/);
 assert.match(helper, /1교시[\s\S]*09:00 - 09:50/);
 assert.match(helper, /점심시간[\s\S]*12:50 - 13:50/);

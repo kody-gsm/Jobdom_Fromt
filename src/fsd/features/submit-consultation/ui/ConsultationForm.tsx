@@ -5,7 +5,7 @@ import { ActionButton, ContentCard, SegmentedTabs, TextAreaField, TextField } fr
 import { useConsultationForm } from "../model/useConsultationForm.ts";
 import { getConsultationTeacherLabel } from "../model/teacherOption.ts";
 import {
-  getConsultationPeriodTime,
+  CONSULTATION_SCHEDULE_ROWS,
   getConsultationWeekdayLabel,
 } from "../model/schedulePresentation.ts";
 
@@ -94,7 +94,7 @@ export const ConsultationForm = ({
         </div>
       </ContentCard>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-start">
         <ContentCard className="p-6 sm:p-8 lg:min-h-[620px]">
           <div>
             <h2 className="text-xl font-bold text-[#13233A]">상담 내용 작성</h2>
@@ -130,7 +130,7 @@ export const ConsultationForm = ({
           </div>
         </ContentCard>
 
-        <ContentCard className="p-6 sm:p-8">
+        <ContentCard className="min-h-[720px] p-6 sm:p-8">
           <div>
             <h2 className="text-xl font-bold text-[#13233A]">일정 예약</h2>
             <p className="mt-2 text-sm leading-6 text-[#7A8592]">
@@ -172,29 +172,39 @@ export const ConsultationForm = ({
                 errorTarget === "period" ? "border border-[#E53935] p-2" : ""
               }`}
             >
-              {times.map((time) => {
-                const unavailable = isTimeUnavailable(time);
+              {CONSULTATION_SCHEDULE_ROWS.map((row) => {
+                const isBreak = "breakTime" in row && row.breakTime;
+                const unavailableByTeacher =
+                  selectedTeacherId !== null && !times.includes(row.period);
+                const unavailable =
+                  !isBreak && (unavailableByTeacher || isTimeUnavailable(row.period));
+
+                if (isBreak) {
+                  return (
+                    <div key={row.period} className="flex min-h-[48px] items-center justify-between rounded-xl bg-[#F7F8FA] px-4 py-3 text-sm text-[#A0A8B2]">
+                      <strong>{row.period}</strong>
+                      <span className="text-xs">{row.time}</span>
+                    </div>
+                  );
+                }
+
                 return (
                   <button
-                    key={time}
+                    key={row.period}
                     type="button"
                     disabled={unavailable}
-                    onClick={() => toggleTime(time)}
+                    onClick={() => toggleTime(row.period)}
                     className={`flex min-h-[48px] w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
                       unavailable
                         ? "cursor-not-allowed border-[#E3E6EA] bg-[#F5F6F7] text-[#A0A8B2]"
-                        : selectedTime === time
+                        : selectedTime === row.period
                           ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
                           : "border-[#DDE2E7] bg-white text-[#27364A] hover:border-[#B8C1CC]"
                     }`}
                   >
                     <span className="flex min-w-0 items-center gap-3">
-                      <strong className="shrink-0 text-base">{time}</strong>
-                      {getConsultationPeriodTime(time) ? (
-                        <span className="truncate font-normal text-[#596579]">
-                          {getConsultationPeriodTime(time)}
-                        </span>
-                      ) : null}
+                      <strong className="shrink-0 text-base">{row.period}</strong>
+                      <span className="truncate font-normal text-[#596579]">{row.time}</span>
                     </span>
                     {unavailable ? (
                       <span className="shrink-0 text-xs font-semibold">예약 불가</span>
