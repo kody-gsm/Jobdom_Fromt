@@ -84,7 +84,7 @@ export const LoginForm = () => {
           href="/forgot-password"
           className="inline-flex min-h-11 items-center font-semibold text-[#02A94A] transition-colors hover:text-[#018D3E]"
         >
-          비밀번호 찾기
+          비밀번호 재설정
         </Link>
       </div>
 

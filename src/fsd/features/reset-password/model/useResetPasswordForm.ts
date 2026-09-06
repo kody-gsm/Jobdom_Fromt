@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  getAuthErrorMessage,
   getGsmEmailErrorMessage,
   getPasswordResetError,
   normalizeVerificationCode,
@@ -28,7 +27,8 @@ const INITIAL_VALUES: ResetPasswordFields = {
 export const useResetPasswordForm = () => {
   const router = useRouter();
   const [form, setForm] = useState<ResetPasswordFields>(INITIAL_VALUES);
-  const [errors, setErrors] = useState<ResetPasswordFormErrors>({});  const [submitError, setSubmitError] = useState("");
+  const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
+  const [submitError, setSubmitError] = useState("");
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
@@ -56,15 +56,12 @@ export const useResetPasswordForm = () => {
       setIsCodeSent(true);
       verificationCountdown.start(180);
       setErrors((current) => ({ ...current, email: undefined, verificationCode: undefined }));
-    } catch (caught) {
+    } catch {
       setIsCodeSent(false);
       verificationCountdown.reset();
       setErrors((current) => ({
         ...current,
-        email: getAuthErrorMessage(
-          caught,
-          "인증코드를 발송하지 못했습니다. 잠시 후 다시 시도해주세요.",
-        ),
+        email: "가입되지 않은 계정입니다.",
       }));
     } finally {
       setIsSendingCode(false);
