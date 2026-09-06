@@ -23,17 +23,52 @@ export type ConsultationToast = {
   type: "error" | "success";
 };
 
+export type ConsultationErrorTarget =
+  | "title"
+  | "content"
+  | "teacher"
+  | "date"
+  | "period";
+
+const getConsultationErrorTarget = (
+  message: string,
+): ConsultationErrorTarget | null => {
+  if (message === "제목을 입력해주세요") return "title";
+  if (message === "내용을 입력해주세요") return "content";
+  if (message === "선생님을 선택해주세요") return "teacher";
+  if (message === "날짜를 선택해주세요") return "date";
+  if (message === "교시를 선택해주세요") return "period";
+  return null;
+};
+
+const focusConsultationError = (target: ConsultationErrorTarget) => {
+  window.requestAnimationFrame(() => {
+    const container = document.querySelector<HTMLElement>(
+      `[data-consultation-field="${target}"]`,
+    );
+    container?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    const focusTarget = container?.matches("input, textarea, button")
+      ? container
+      : container?.querySelector<HTMLElement>(
+          "input, textarea, button:not(:disabled)",
+        );
+    focusTarget?.focus();
+  });
+};
+
 export const useConsultationForm = (initialType: ConsultationType) => {
   const router = useRouter();
   const [counselType, setCounselType] = useState(initialType);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitleState] = useState("");
+  const [content, setContentState] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacher | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [hasCareerReservation, setHasCareerReservation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<ConsultationToast | null>(null);
+  const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
   const toastTimer = useRef<number | null>(null);
 
   const dates = useMemo(() => getNextWeekdays(), []);
@@ -65,23 +100,37 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     toastTimer.current = window.setTimeout(() => setToast(null), 2500);
   };
 
+  const setTitle = (value: string) => {
+    setTitleState(value);
+    if (errorTarget === "title") setErrorTarget(null);
+  };
+
+  const setContent = (value: string) => {
+    setContentState(value);
+    if (errorTarget === "content") setErrorTarget(null);
+  };
+
   const handleTabChange = (type: ConsultationType) => {
     setCounselType(type);
     setSelectedTeacher(null);
     setSelectedTime(null);
+    setErrorTarget(null);
   };
 
   const toggleTeacher = (teacher: ConsultationTeacher) => {
     setSelectedTeacher((current) => current === teacher ? null : teacher);
     setSelectedTime(null);
+    if (errorTarget === "teacher") setErrorTarget(null);
   };
 
   const toggleDate = (date: string) => {
     setSelectedDate((current) => current === date ? null : date);
+    if (errorTarget === "date") setErrorTarget(null);
   };
 
   const toggleTime = (time: string) => {
     setSelectedTime((current) => current === time ? null : time);
+    if (errorTarget === "period") setErrorTarget(null);
   };
 
   const handleCancel = () => {
@@ -90,6 +139,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setSelectedTeacher(null);
     setSelectedDate(null);
     setSelectedTime(null);
+    setErrorTarget(null);
     router.push("/");
   };
 
@@ -107,10 +157,14 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     const validationMessage = validateConsultationDraft(draft, hasCareerReservation);
 
     if (validationMessage) {
+      const target = getConsultationErrorTarget(validationMessage);
+      setErrorTarget(target);
       showToast(validationMessage);
+      if (target) focusConsultationError(target);
       return;
     }
 
+    setErrorTarget(null);
     try {
       setSubmitting(true);
       await submitConsultation(
@@ -137,6 +191,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     selectedTime,
     submitting,
     toast,
+    errorTarget,
     dates,
     times,
     setTitle,

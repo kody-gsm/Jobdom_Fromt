@@ -19,6 +19,7 @@ export const ConsultationForm = ({
     selectedTime,
     submitting,
     toast,
+    errorTarget,
     dates,
     times,
     setTitle,
@@ -65,6 +66,8 @@ export const ConsultationForm = ({
           <h2 className="mt-2 text-xl font-bold text-[#13233A]">상담 내용을 작성해주세요</h2>
         </div>
         <TextField
+          data-consultation-field="title"
+          error={errorTarget === "title" ? "제목을 입력해주세요" : undefined}
           label="상담 제목"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -72,6 +75,8 @@ export const ConsultationForm = ({
         />
         <div>
           <TextAreaField
+            data-consultation-field="content"
+            error={errorTarget === "content" ? "내용을 입력해주세요" : undefined}
             label="상담 내용"
             value={content}
             maxLength={500}
@@ -89,7 +94,10 @@ export const ConsultationForm = ({
         <ContentCard className="p-6 sm:p-8">
           <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">STEP 03</p>
           <h2 className="mt-2 text-xl font-bold text-[#13233A]">상담 선생님을 선택해주세요</h2>
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div
+            data-consultation-field="teacher"
+            className={`mt-4 flex flex-wrap gap-3 rounded-2xl ${errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""}`}
+          >
             {TEACHERS.map((teacher) => (
               <button
                 key={teacher}
@@ -117,7 +125,10 @@ export const ConsultationForm = ({
             {counselType === "career" ? "진로 상담" : "일반 상담"} 일정을 선택해주세요
           </h2>
         </div>
-        <div className="mt-6 grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-2 sm:grid-cols-5 sm:gap-3">
+        <div
+          data-consultation-field="date"
+          className={`mt-6 grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-2 rounded-2xl sm:grid-cols-5 sm:gap-3 ${errorTarget === "date" ? "border border-[#E53935] p-2" : ""}`}
+        >
           {dates.map((item) => (
             <button
               key={item.value}
@@ -135,7 +146,10 @@ export const ConsultationForm = ({
           ))}
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div
+          data-consultation-field="period"
+          className={`mt-6 flex flex-wrap gap-2 rounded-2xl ${errorTarget === "period" ? "border border-[#E53935] p-2" : ""}`}
+        >
           {times.map((time) => (
             <button
               key={time}
