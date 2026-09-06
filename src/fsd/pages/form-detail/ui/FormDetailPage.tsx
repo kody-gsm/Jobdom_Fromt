@@ -9,13 +9,7 @@ export const FormDetailPage = ({ formId }: { formId: number }) => (
       <Link href="/forms" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#607089] transition-colors hover:bg-[#EEF3F8] hover:text-[#13233A]">
         ← 폼 목록
       </Link>
-      <section className="mt-5 rounded-[28px] bg-[#10243E] px-7 py-9 text-white sm:px-10">
-        <p className="text-sm font-bold tracking-[0.16em] text-[#8FB3D9]">FORM RESPONSE</p>
-        <h1 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">신청 폼 작성</h1>
-        <p className="mt-4 max-w-2xl break-keep text-sm leading-7 text-[#C8D4E2] sm:text-base">
-          필수 항목을 확인한 뒤 내용을 작성하고 제출해주세요.
-        </p>
-      </section>
+      <h1 className="mt-5 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">신청 폼 작성</h1>
       <div className="mt-6">
         <SubmitForm formId={formId} />
       </div>

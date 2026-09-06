@@ -22,7 +22,7 @@ assert.match(listPage, /useFormsPage/);
 assert.doesNotMatch(listPage, /useState|useEffect|formsApi/);
 assert.match(hook, /formsApi/);
 
-assert.match(listPage, /학생 신청 폼/);
+assert.match(listPage, /신청 폼/);
 assert.match(detailPage, /신청 폼 작성/);
 assert.match(submitForm, /ContentCard/);
 assert.match(submitForm, /ActionButton/);

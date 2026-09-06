@@ -8,7 +8,8 @@ const form = read("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx"
 const hook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
 
 assert.match(page, /StudentHeader/);
-assert.match(page, /상담 신청을 차근차근 진행해보세요/);
+assert.match(page, /상담 신청/);
+assert.doesNotMatch(page, /상담 신청을 차근차근 진행해보세요|CONSULTATION|rounded-\[28px\][^\n]*bg-\[#10243E\]/);
 assert.doesNotMatch(page, /SiteHeader/);
 
 assert.match(form, /SegmentedTabs/);
