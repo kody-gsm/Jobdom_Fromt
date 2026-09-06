@@ -1,9 +1,13 @@
 "use client";
 
-import { useConsultationForm } from "../model/useConsultationForm.ts";
-import { getConsultationTeacherLabel } from "../model/teacherOption.ts";
 import type { ConsultationType } from "@fsd/entities/consultation";
 import { ActionButton, ContentCard, SegmentedTabs, TextAreaField, TextField } from "@fsd/shared/ui";
+import { useConsultationForm } from "../model/useConsultationForm.ts";
+import { getConsultationTeacherLabel } from "../model/teacherOption.ts";
+import {
+  getConsultationPeriodTime,
+  getConsultationWeekdayLabel,
+} from "../model/schedulePresentation.ts";
 
 export const ConsultationForm = ({
   initialType,
@@ -47,6 +51,49 @@ export const ConsultationForm = ({
         </div>
       ) : null}
 
+      <ContentCard className="mb-6 p-5 sm:p-6">
+        <div className="flex flex-wrap items-end gap-5">
+          <div>
+            <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
+            <SegmentedTabs
+              ariaLabel="상담 유형"
+              className="[&_[aria-selected=true]]:!text-[#02C551] [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-[#02C551]"
+              items={[
+                { value: "career", label: "진로 상담" },
+                { value: "general", label: "일반 상담" },
+              ]}
+              value={counselType}
+              onChange={handleTabChange}
+            />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
+            <div
+              data-consultation-field="teacher"
+              className={`flex flex-wrap gap-2 rounded-xl ${
+                errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+              }`}
+            >
+              {teachers.map((teacher) => (
+                <button
+                  key={teacher.id}
+                  type="button"
+                  onClick={() => toggleTeacher(teacher)}
+                  className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                    selectedTeacherId === teacher.id
+                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                      : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                  }`}
+                >
+                  {getConsultationTeacherLabel(teacher.name)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ContentCard>
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)] lg:items-start">
         <ContentCard className="p-6 sm:p-8 lg:min-h-[620px]">
           <div>
@@ -87,51 +134,14 @@ export const ConsultationForm = ({
           <div>
             <h2 className="text-xl font-bold text-[#13233A]">일정 예약</h2>
             <p className="mt-2 text-sm leading-6 text-[#7A8592]">
-              상담 유형과 날짜, 교시를 선택해주세요.
+              상담 희망일과 교시를 선택해 주세요.
             </p>
           </div>
 
-          <SegmentedTabs
-            ariaLabel="상담 유형"
-            className="mt-5 [&_[aria-selected=true]]:!text-[#02C551] [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-[#02C551]"
-            items={[
-              { value: "career", label: "진로 상담" },
-              { value: "general", label: "일반 상담" },
-            ]}
-            value={counselType}
-            onChange={handleTabChange}
-          />
-
-          <section className="mt-7">
-            <h3 className="text-sm font-semibold text-[#27364A]">상담 선생님</h3>
-            <div
-              data-consultation-field="teacher"
-              className={`mt-3 flex flex-wrap gap-2 rounded-2xl ${
-                errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
-              }`}
-            >
-              {teachers.map((teacher) => (
-                <button
-                  key={teacher.id}
-                  type="button"
-                  onClick={() => toggleTeacher(teacher)}
-                  className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                    selectedTeacherId === teacher.id
-                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                      : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                  }`}
-                >
-                  {getConsultationTeacherLabel(teacher.name)}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="mt-7">
-            <h3 className="text-sm font-semibold text-[#27364A]">날짜</h3>
+          <section className="mt-6">
             <div
               data-consultation-field="date"
-              className={`mt-3 grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-2 rounded-2xl ${
+              className={`grid grid-cols-5 gap-2 rounded-xl ${
                 errorTarget === "date" ? "border border-[#E53935] p-2" : ""
               }`}
             >
@@ -140,24 +150,25 @@ export const ConsultationForm = ({
                   key={item.value}
                   type="button"
                   onClick={() => toggleDate(item.value)}
-                  className={`min-h-16 rounded-xl border px-2 py-2 text-center transition-colors ${
+                  className={`min-h-[68px] rounded-xl border px-2 py-2 text-center transition-colors ${
                     selectedDate === item.value
                       ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
                       : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
                   }`}
                 >
-                  <span className="block text-xs">{item.day}</span>
-                  <strong className="mt-1 block text-base">{item.date}</strong>
+                  <span className="block text-[11px] font-medium">
+                    {getConsultationWeekdayLabel(item.value)}
+                  </span>
+                  <strong className="mt-1 block text-lg">{item.date}</strong>
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="mt-7">
-            <h3 className="text-sm font-semibold text-[#27364A]">교시</h3>
+          <section className="mt-6">
             <div
               data-consultation-field="period"
-              className={`mt-3 space-y-2 rounded-2xl ${
+              className={`space-y-2 rounded-xl ${
                 errorTarget === "period" ? "border border-[#E53935] p-2" : ""
               }`}
             >
@@ -169,7 +180,7 @@ export const ConsultationForm = ({
                     type="button"
                     disabled={unavailable}
                     onClick={() => toggleTime(time)}
-                    className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
+                    className={`flex min-h-[48px] w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
                       unavailable
                         ? "cursor-not-allowed border-[#E3E6EA] bg-[#F5F6F7] text-[#A0A8B2]"
                         : selectedTime === time
@@ -177,8 +188,17 @@ export const ConsultationForm = ({
                           : "border-[#DDE2E7] bg-white text-[#27364A] hover:border-[#B8C1CC]"
                     }`}
                   >
-                    <span>{time}</span>
-                    {unavailable ? <span className="text-xs font-semibold">예약 불가</span> : null}
+                    <span className="flex min-w-0 items-center gap-3">
+                      <strong className="shrink-0 text-base">{time}</strong>
+                      {getConsultationPeriodTime(time) ? (
+                        <span className="truncate font-normal text-[#596579]">
+                          {getConsultationPeriodTime(time)}
+                        </span>
+                      ) : null}
+                    </span>
+                    {unavailable ? (
+                      <span className="shrink-0 text-xs font-semibold">예약 불가</span>
+                    ) : null}
                   </button>
                 );
               })}
