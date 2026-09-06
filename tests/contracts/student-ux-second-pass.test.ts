@@ -19,11 +19,8 @@ assert.match(authLayout, /src="\/JobdamIcon\.svg"/);
 
 assert.doesNotMatch(signupPage, /잡담 계정을 만들어보세요|학교 이메일 인증 후/);
 assert.doesNotMatch(resetPage, /학교 이메일로 인증코드를 받은 뒤/);
-assert.match(signupForm, /href="\/login"/);
-assert.match(signupForm, /이미 계정이 있나요\?/);
-assert.match(signupForm, /로그인하러 가기/);
-assert.match(resetForm, /href="\/login"/);
-assert.match(resetForm, /로그인으로 돌아가기/);
+assert.doesNotMatch(signupForm, /이미 계정이 있나요\?|로그인하러 가기|href="\/login"/);
+assert.doesNotMatch(resetForm, /비밀번호가 기억나셨나요\?|로그인으로 돌아가기|href="\/login"/);
 
 assert.match(formsPage, /max-w-\[1180px\]/);
 assert.match(formsPage, /md:grid-cols-2 lg:grid-cols-3/);
