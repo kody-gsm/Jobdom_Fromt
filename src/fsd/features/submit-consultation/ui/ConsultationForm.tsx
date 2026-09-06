@@ -33,7 +33,7 @@ export const ConsultationForm = ({
   } = useConsultationForm(initialType);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit}>
       {toast ? (
         <div
           role={toast.type === "error" ? "alert" : "status"}
@@ -45,142 +45,153 @@ export const ConsultationForm = ({
         </div>
       ) : null}
 
-      <ContentCard className="p-6 sm:p-8">
-        <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">STEP 01</p>
-        <h2 className="mt-2 text-xl font-bold text-[#13233A]">상담 유형을 선택해주세요</h2>
-        <SegmentedTabs
-          ariaLabel="상담 유형"
-          className="mt-5"
-          items={[
-            { value: "career", label: "진로 상담" },
-            { value: "general", label: "일반 상담" },
-          ]}
-          value={counselType}
-          onChange={handleTabChange}
-        />
-      </ContentCard>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)] lg:items-start">
+        <ContentCard className="p-6 sm:p-8 lg:min-h-[620px]">
+          <div>
+            <h2 className="text-xl font-bold text-[#13233A]">상담 내용 작성</h2>
+            <p className="mt-2 text-sm leading-6 text-[#7A8592]">
+              상담받고 싶은 내용을 편하게 작성해주세요.
+            </p>
+          </div>
 
-      <ContentCard className="space-y-5 p-6 sm:p-8">
-        <div>
-          <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">STEP 02</p>
-          <h2 className="mt-2 text-xl font-bold text-[#13233A]">상담 내용을 작성해주세요</h2>
-        </div>
-        <TextField
-          data-consultation-field="title"
-          error={errorTarget === "title" ? "제목을 입력해주세요" : undefined}
-          label="상담 제목"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="상담 제목을 입력해주세요"
-        />
-        <div>
-          <TextAreaField
-            data-consultation-field="content"
-            error={errorTarget === "content" ? "내용을 입력해주세요" : undefined}
-            label="상담 내용"
-            value={content}
-            maxLength={500}
-            onChange={(event) => setContent(event.target.value)}
-            placeholder="상담 내용을 입력해주세요"
-            className="min-h-40"
-          />
-          <span className="mt-2 block text-right text-xs text-[#8A95A3]">
-            {content.length}/500
-          </span>
-        </div>
-      </ContentCard>
-
-      {counselType === "career" ? (
-        <ContentCard className="p-6 sm:p-8">
-          <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">STEP 03</p>
-          <h2 className="mt-2 text-xl font-bold text-[#13233A]">상담 선생님을 선택해주세요</h2>
-          <div
-            data-consultation-field="teacher"
-            className={`mt-4 flex flex-wrap gap-3 rounded-2xl ${errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""}`}
-          >
-            {TEACHERS.map((teacher) => (
-              <button
-                key={teacher}
-                type="button"
-                onClick={() => toggleTeacher(teacher)}
-                className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
-                  selectedTeacher === teacher
-                    ? "bg-[#10243E] text-white"
-                    : "border border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#AEB9C5]"
-                }`}
-              >
-                {teacher}
-              </button>
-            ))}
+          <div className="mt-6 space-y-5">
+            <TextField
+              data-consultation-field="title"
+              error={errorTarget === "title" ? "제목을 입력해주세요" : undefined}
+              label="상담 제목"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="고민거리 한 줄 요약을 적어주세요"
+            />
+            <div>
+              <TextAreaField
+                data-consultation-field="content"
+                error={errorTarget === "content" ? "내용을 입력해주세요" : undefined}
+                label="구체적인 고민 내용"
+                value={content}
+                maxLength={500}
+                onChange={(event) => setContent(event.target.value)}
+                placeholder="상담하고 싶은 내용을 자유롭고 편하게 작성해주세요."
+                className="min-h-[320px] resize-none"
+              />
+              <span className="mt-2 block text-right text-xs text-[#8A95A3]">
+                {content.length} / 500자
+              </span>
+            </div>
           </div>
         </ContentCard>
-      ) : null}
 
-      <ContentCard className="p-6 sm:p-8">
-        <div>
-          <p className="text-xs font-bold tracking-[0.14em] text-[#8A95A3]">
-            {counselType === "career" ? "STEP 04" : "STEP 03"}
-          </p>
-          <h2 className="mt-2 text-xl font-bold text-[#13233A]">
-            {counselType === "career" ? "진로 상담" : "일반 상담"} 일정을 선택해주세요
-          </h2>
-        </div>
-        <div
-          data-consultation-field="date"
-          className={`mt-6 grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-2 rounded-2xl sm:grid-cols-5 sm:gap-3 ${errorTarget === "date" ? "border border-[#E53935] p-2" : ""}`}
-        >
-          {dates.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => toggleDate(item.value)}
-              className={`rounded-2xl px-2 py-3 text-center transition sm:px-3 ${
-                selectedDate === item.value
-                  ? "bg-[#10243E] text-white"
-                  : "bg-[#F7F8FA] text-[#4E5B6B] hover:bg-[#EEF3F8]"
+        <ContentCard className="p-6 sm:p-8">
+          <div>
+            <h2 className="text-xl font-bold text-[#13233A]">일정 예약</h2>
+            <p className="mt-2 text-sm leading-6 text-[#7A8592]">
+              상담 유형과 날짜, 교시를 선택해주세요.
+            </p>
+          </div>
+
+          <SegmentedTabs
+            ariaLabel="상담 유형"
+            className="mt-5 [&_[aria-selected=true]]:!text-[#02C551] [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-[#02C551]"
+            items={[
+              { value: "career", label: "진로 상담" },
+              { value: "general", label: "일반 상담" },
+            ]}
+            value={counselType}
+            onChange={handleTabChange}
+          />
+
+          {counselType === "career" ? (
+            <section className="mt-7">
+              <h3 className="text-sm font-semibold text-[#27364A]">상담 선생님</h3>
+              <div
+                data-consultation-field="teacher"
+                className={`mt-3 flex flex-wrap gap-2 rounded-2xl ${
+                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+                }`}
+              >
+                {TEACHERS.map((teacher) => (
+                  <button
+                    key={teacher}
+                    type="button"
+                    onClick={() => toggleTeacher(teacher)}
+                    className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      selectedTeacher === teacher
+                        ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                        : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                    }`}
+                  >
+                    {teacher}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <section className="mt-7">
+            <h3 className="text-sm font-semibold text-[#27364A]">날짜</h3>
+            <div
+              data-consultation-field="date"
+              className={`mt-3 grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-2 rounded-2xl ${
+                errorTarget === "date" ? "border border-[#E53935] p-2" : ""
               }`}
             >
-              <span className="block text-xs opacity-70">{item.day}</span>
-              <strong className="mt-1 block text-lg">{item.date}</strong>
-            </button>
-          ))}
-        </div>
+              {dates.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => toggleDate(item.value)}
+                  className={`min-h-16 rounded-xl border px-2 py-2 text-center transition-colors ${
+                    selectedDate === item.value
+                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                      : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                  }`}
+                >
+                  <span className="block text-xs">{item.day}</span>
+                  <strong className="mt-1 block text-base">{item.date}</strong>
+                </button>
+              ))}
+            </div>
+          </section>
 
-        <div
-          data-consultation-field="period"
-          className={`mt-6 flex flex-wrap gap-2 rounded-2xl ${errorTarget === "period" ? "border border-[#E53935] p-2" : ""}`}
-        >
-          {times.map((time) => (
-            <button
-              key={time}
-              type="button"
-              onClick={() => toggleTime(time)}
-              className={`rounded-xl min-h-11 px-4 py-2.5 text-sm font-semibold transition ${
-                selectedTime === time
-                  ? "bg-[#10243E] text-white"
-                  : "border border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#AEB9C5]"
+          <section className="mt-7">
+            <h3 className="text-sm font-semibold text-[#27364A]">교시</h3>
+            <div
+              data-consultation-field="period"
+              className={`mt-3 space-y-2 rounded-2xl ${
+                errorTarget === "period" ? "border border-[#E53935] p-2" : ""
               }`}
             >
-              {time}
-            </button>
-          ))}
-        </div>
+              {times.map((time) => (
+                <button
+                  key={time}
+                  type="button"
+                  onClick={() => toggleTime(time)}
+                  className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
+                    selectedTime === time
+                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                      : "border-[#DDE2E7] bg-white text-[#27364A] hover:border-[#B8C1CC]"
+                  }`}
+                >
+                  <span>{time}</span>
+                </button>
+              ))}
+            </div>
+          </section>
 
-        {counselType === "career" &&
-        selectedTeacher === "임경원 선생님" &&
-        selectedTime?.endsWith("교시") ? (
-          <p className="mt-4 text-sm font-medium text-red-600">
-            수업 담당 선생님의 허가를 먼저 받아주세요.
-          </p>
-        ) : null}
-      </ContentCard>
-      <div className="flex justify-end gap-3">
-        <ActionButton type="button" variant="secondary" onClick={handleCancel}>
-          취소
-        </ActionButton>
-        <ActionButton type="submit" disabled={submitting} className="min-w-32 bg-[#10243E] hover:bg-[#1B3555]">
-          {submitting ? "신청 중…" : "상담 신청"}
-        </ActionButton>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <ActionButton
+              type="button"
+              variant="secondary"
+              onClick={handleCancel}
+              className="w-full"
+            >
+              취소
+            </ActionButton>
+            <ActionButton type="submit" disabled={submitting} className="w-full">
+              {submitting ? "신청 중…" : "상담 신청"}
+            </ActionButton>
+          </div>
+        </ContentCard>
       </div>
     </form>
   );
