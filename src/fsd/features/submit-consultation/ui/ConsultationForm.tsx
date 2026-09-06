@@ -1,7 +1,7 @@
 "use client";
 
 import { useConsultationForm } from "../model/useConsultationForm.ts";
-import { TEACHERS } from "@fsd/entities/consultation";
+import { getConsultationTeacherLabel } from "../model/teacherOption.ts";
 import type { ConsultationType } from "@fsd/entities/consultation";
 import { ActionButton, ContentCard, SegmentedTabs, TextAreaField, TextField } from "@fsd/shared/ui";
 
@@ -14,7 +14,8 @@ export const ConsultationForm = ({
     counselType,
     title,
     content,
-    selectedTeacher,
+    teachers,
+    selectedTeacherId,
     selectedDate,
     selectedTime,
     submitting,
@@ -28,6 +29,7 @@ export const ConsultationForm = ({
     toggleTeacher,
     toggleDate,
     toggleTime,
+    isTimeUnavailable,
     handleCancel,
     handleSubmit,
   } = useConsultationForm(initialType);
@@ -100,32 +102,30 @@ export const ConsultationForm = ({
             onChange={handleTabChange}
           />
 
-          {counselType === "career" ? (
-            <section className="mt-7">
-              <h3 className="text-sm font-semibold text-[#27364A]">상담 선생님</h3>
-              <div
-                data-consultation-field="teacher"
-                className={`mt-3 flex flex-wrap gap-2 rounded-2xl ${
-                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
-                }`}
-              >
-                {TEACHERS.map((teacher) => (
-                  <button
-                    key={teacher}
-                    type="button"
-                    onClick={() => toggleTeacher(teacher)}
-                    className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                      selectedTeacher === teacher
-                        ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                        : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                    }`}
-                  >
-                    {teacher}
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null}
+          <section className="mt-7">
+            <h3 className="text-sm font-semibold text-[#27364A]">상담 선생님</h3>
+            <div
+              data-consultation-field="teacher"
+              className={`mt-3 flex flex-wrap gap-2 rounded-2xl ${
+                errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+              }`}
+            >
+              {teachers.map((teacher) => (
+                <button
+                  key={teacher.id}
+                  type="button"
+                  onClick={() => toggleTeacher(teacher)}
+                  className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                    selectedTeacherId === teacher.id
+                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                      : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                  }`}
+                >
+                  {getConsultationTeacherLabel(teacher.name)}
+                </button>
+              ))}
+            </div>
+          </section>
 
           <section className="mt-7">
             <h3 className="text-sm font-semibold text-[#27364A]">날짜</h3>
@@ -161,20 +161,27 @@ export const ConsultationForm = ({
                 errorTarget === "period" ? "border border-[#E53935] p-2" : ""
               }`}
             >
-              {times.map((time) => (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => toggleTime(time)}
-                  className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
-                    selectedTime === time
-                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                      : "border-[#DDE2E7] bg-white text-[#27364A] hover:border-[#B8C1CC]"
-                  }`}
-                >
-                  <span>{time}</span>
-                </button>
-              ))}
+              {times.map((time) => {
+                const unavailable = isTimeUnavailable(time);
+                return (
+                  <button
+                    key={time}
+                    type="button"
+                    disabled={unavailable}
+                    onClick={() => toggleTime(time)}
+                    className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
+                      unavailable
+                        ? "cursor-not-allowed border-[#E3E6EA] bg-[#F5F6F7] text-[#A0A8B2]"
+                        : selectedTime === time
+                          ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
+                          : "border-[#DDE2E7] bg-white text-[#27364A] hover:border-[#B8C1CC]"
+                    }`}
+                  >
+                    <span>{time}</span>
+                    {unavailable ? <span className="text-xs font-semibold">예약 불가</span> : null}
+                  </button>
+                );
+              })}
             </div>
           </section>
 

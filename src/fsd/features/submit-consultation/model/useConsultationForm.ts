@@ -14,9 +14,11 @@ import type {
 } from "@fsd/entities/consultation";
 import { ApiError } from "@fsd/shared/api";
 import {
-  getUpcomingConsultations,
+  getConsultationTeachers,
   submitConsultation,
 } from "../api/consultation.ts";
+import type { ConsultationTeacherOption } from "../api/consultation.ts";
+import { getConsultationTeacherLabel } from "./teacherOption.ts";
 
 export type ConsultationToast = {
   message: string;
@@ -47,7 +49,6 @@ const focusConsultationError = (target: ConsultationErrorTarget) => {
       `[data-consultation-field="${target}"]`,
     );
     container?.scrollIntoView({ behavior: "smooth", block: "center" });
-
     const focusTarget = container?.matches("input, textarea, button")
       ? container
       : container?.querySelector<HTMLElement>(
@@ -57,15 +58,25 @@ const focusConsultationError = (target: ConsultationErrorTarget) => {
   });
 };
 
+const getSlotKey = (teacherId: number, date: string, period: string) =>
+  `${teacherId}:${date}:${period}`;
+
+const isUnavailableSlotError = (error: ApiError) =>
+  error.status === 409 || /예약한 시간|누군가 예약|잠긴 날짜|잠긴 시간/.test(error.message);
+
 export const useConsultationForm = (initialType: ConsultationType) => {
   const router = useRouter();
   const [counselType, setCounselType] = useState(initialType);
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
+  const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacher | null>(null);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [hasCareerReservation, setHasCareerReservation] = useState(false);
+  const [unavailableSlotKeys, setUnavailableSlotKeys] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<ConsultationToast | null>(null);
   const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
@@ -76,9 +87,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   useEffect(() => {
     let active = true;
-    void getUpcomingConsultations("course")
+    void getConsultationTeachers()
       .then((items) => {
-        if (active) setHasCareerReservation(items.length > 0);
+        if (active) setTeachers(items);
       })
       .catch(() => undefined);
 
@@ -113,12 +124,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const handleTabChange = (type: ConsultationType) => {
     setCounselType(type);
     setSelectedTeacher(null);
+    setSelectedTeacherId(null);
     setSelectedTime(null);
     setErrorTarget(null);
   };
 
-  const toggleTeacher = (teacher: ConsultationTeacher) => {
-    setSelectedTeacher((current) => current === teacher ? null : teacher);
+  const toggleTeacher = (teacher: ConsultationTeacherOption) => {
+    const isSelected = selectedTeacherId === teacher.id;
+    setSelectedTeacher(isSelected ? null : getConsultationTeacherLabel(teacher.name));
+    setSelectedTeacherId(isSelected ? null : teacher.id);
     setSelectedTime(null);
     if (errorTarget === "teacher") setErrorTarget(null);
   };
@@ -128,7 +142,13 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     if (errorTarget === "date") setErrorTarget(null);
   };
 
+  const isTimeUnavailable = (time: string) =>
+    selectedTeacherId !== null &&
+    selectedDate !== null &&
+    unavailableSlotKeys.has(getSlotKey(selectedTeacherId, selectedDate, time));
+
   const toggleTime = (time: string) => {
+    if (isTimeUnavailable(time)) return;
     setSelectedTime((current) => current === time ? null : time);
     if (errorTarget === "period") setErrorTarget(null);
   };
@@ -137,14 +157,42 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setTitle("");
     setContent("");
     setSelectedTeacher(null);
+    setSelectedTeacherId(null);
     setSelectedDate(null);
     setSelectedTime(null);
     setErrorTarget(null);
     router.push("/");
   };
 
+  const getValidationMessage = () => {
+    if (!title.trim()) return "제목을 입력해주세요";
+    if (!content.trim()) return "내용을 입력해주세요";
+    if (!selectedTeacher || selectedTeacherId === null) return "선생님을 선택해주세요";
+
+    return validateConsultationDraft({
+      type: counselType,
+      title,
+      content,
+      teacher: selectedTeacher,
+      date: selectedDate,
+      period: selectedTime,
+    }, false);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const validationMessage = getValidationMessage();
+    if (validationMessage) {
+      const target = getConsultationErrorTarget(validationMessage);
+      setErrorTarget(target);
+      showToast(validationMessage);
+      if (target) focusConsultationError(target);
+      return;
+    }
+
+    const teacherId = selectedTeacherId;
+    if (teacherId === null || !selectedTeacher) return;
 
     const draft = {
       type: counselType,
@@ -154,26 +202,28 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       date: selectedDate,
       period: selectedTime,
     };
-    const validationMessage = validateConsultationDraft(draft, hasCareerReservation);
-
-    if (validationMessage) {
-      const target = getConsultationErrorTarget(validationMessage);
-      setErrorTarget(target);
-      showToast(validationMessage);
-      if (target) focusConsultationError(target);
-      return;
-    }
 
     setErrorTarget(null);
     try {
       setSubmitting(true);
-      await submitConsultation(
-        toConsultationKind(counselType),
-        createReservationInput(draft),
-      );
-      if (counselType === "career") setHasCareerReservation(true);
-      showToast("상담 신청이 완료되었습니다", "success");
+      await submitConsultation(toConsultationKind(counselType), {
+        ...createReservationInput(draft),
+        teacherId: teacherId,
+      });
+      showToast("상담 신청 요청을 보냈습니다", "success");
     } catch (error) {
+      if (
+        error instanceof ApiError &&
+        isUnavailableSlotError(error) &&
+        selectedDate &&
+        selectedTime
+      ) {
+        const key = getSlotKey(teacherId, selectedDate, selectedTime);
+        setUnavailableSlotKeys((current) => new Set(current).add(key));
+        setSelectedTime(null);
+        setErrorTarget("period");
+        focusConsultationError("period");
+      }
       showToast(
         error instanceof ApiError ? error.message : "상담 신청에 실패했습니다",
       );
@@ -186,7 +236,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     counselType,
     title,
     content,
+    teachers,
     selectedTeacher,
+    selectedTeacherId,
     selectedDate,
     selectedTime,
     submitting,
@@ -200,6 +252,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     toggleTeacher,
     toggleDate,
     toggleTime,
+    isTimeUnavailable,
     handleCancel,
     handleSubmit,
   };
