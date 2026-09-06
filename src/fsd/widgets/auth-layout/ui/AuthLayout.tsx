@@ -21,9 +21,6 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
         />
 
         <div className="mt-24 max-w-[440px]">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#67DD98]">
-            JOBDAM FOR GSM
-          </p>
           <h2 className="mt-5 text-[42px] font-bold leading-[1.2] tracking-[-0.035em]">
             취업과 상담을 한 곳에서
             <br />
@@ -34,10 +31,6 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
           </p>
         </div>
       </div>
-
-      <p className="text-xs leading-6 text-[#71808C]">
-        Gwangju Software Meister High School
-      </p>
     </section>
 
     <section className="flex min-h-screen items-center justify-center bg-[#F4F6F5] px-5 py-10 sm:px-8 lg:px-12">
