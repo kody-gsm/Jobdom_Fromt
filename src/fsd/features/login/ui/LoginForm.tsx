@@ -52,12 +52,17 @@ export const LoginForm = () => {
 
       <div className="flex items-center justify-between gap-4 text-sm">
         <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[#5E6670]">
-          <input
-            type="checkbox"
-            checked={form.rememberLogin}
-            onChange={(event) => setRememberLogin(event.target.checked)}
-            className="h-4 w-4 accent-[#02C551]"
-          />
+          <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+            <input
+              type="checkbox"
+              checked={form.rememberLogin}
+              onChange={(event) => setRememberLogin(event.target.checked)}
+              className="absolute inset-0 h-5 w-5 appearance-none rounded-[4px] border border-[#B8C0C8] bg-white checked:border-[#02C551] checked:bg-[#02C551]"
+            />
+            {form.rememberLogin ? (
+              <span aria-hidden="true" className="pointer-events-none relative text-sm font-bold leading-none text-white">✓</span>
+            ) : null}
+          </span>
           <span>아이디 저장</span>
         </label>
         <Link
