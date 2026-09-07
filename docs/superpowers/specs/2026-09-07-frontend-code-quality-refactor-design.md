@@ -90,3 +90,8 @@ The refactor is complete only when all of the following are true:
 - No new framework or styling dependency.
 - No wholesale rewrite of every teacher/admin component.
 - No performance micro-optimization without evidence of a real rendering/network bottleneck.
+
+## Scope Amendment — 2026-09-07
+
+Teacher frontend production code, teacher-only tests, and backend production code are read-only. Teacher-only FSD areas are excluded from this refactor. The approved quality work is limited to student frontend, student-used shared/entities code, and harness/tests outside teacher scope.
+Teacher frontend and backend are fully outside the approved refactor scope; teacher FSD/convention/typecheck targets are excluded, and teacher files remain unchanged.

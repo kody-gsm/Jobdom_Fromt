@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { validateFsdImport } from "./fsd-boundary-check.ts";
+import { shouldCheckFsdSource, validateFsdImport } from "./fsd-boundary-check.ts";
 
 assert.deepEqual(
   validateFsdImport("src/fsd/pages/home/ui/HomePage.tsx", "@fsd/widgets/header"),
@@ -32,7 +32,7 @@ assert.deepEqual(
 );
 
 assert.match(
-  validateFsdImport("src/fsd/features/login/ui/LoginForm.tsx", "../../../pages/home" )[0] ?? "",
+  validateFsdImport("src/fsd/features/login/ui/LoginForm.tsx", "../../../pages/home")[0] ?? "",
   /higher layer/,
 );
 
@@ -59,5 +59,24 @@ assert.deepEqual(
     "src/fsd/features/cancel-consultation/model/createCancelProfileConsultation.ts",
     "../../../entities/consultation/index.ts",
   ),
+  [],
+);
+
+assert.equal(shouldCheckFsdSource("src/fsd/pages/teacher/ui/TeacherPage.tsx"), false);
+assert.equal(shouldCheckFsdSource("src/fsd/pages/teacher-forms/ui/TeacherFormsPage.tsx"), false);
+assert.equal(
+  shouldCheckFsdSource("src/fsd/pages/teacher-form-submissions/ui/FormSubmissionsPage.tsx"),
+  false,
+);
+assert.equal(shouldCheckFsdSource("src/fsd/pages/teacher-recruit/ui/TeacherRecruitPage.tsx"), false);
+assert.equal(shouldCheckFsdSource("src/fsd/features/manage-recruit/model/dashboard.ts"), false);
+assert.equal(shouldCheckFsdSource("src/fsd/pages/recruit-detail/ui/RecruitDetailPage.tsx"), true);
+assert.equal(
+  shouldCheckFsdSource("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx"),
+  true,
+);
+
+assert.deepEqual(
+  validateFsdImport("src/fsd/pages/teacher/ui/TeacherPage.tsx", "@fsd/pages/home"),
   [],
 );

@@ -175,3 +175,12 @@
 - [ ] **Step 4: Run the complete harness. Expected: all steps pass, including the new typecheck step.**
 - [ ] **Step 5: Run `git diff --check`, inspect changed production paths, and verify the backend repository has zero modified files.**
 - [ ] **Step 6: Push `test/vercel-preview`, verify the Vercel status is `success`, then rerun the full harness on the committed tree.**
+
+## Scope Amendment — 2026-09-07
+
+- Teacher frontend production code and teacher contract tests are read-only for this refactor.
+- Backend production code is read-only.
+- Teacher-only FSD areas are excluded from the FSD boundary scan.
+- Tasks 5 and 6 in this plan are cancelled and must not be executed.
+- Remaining work is limited to student frontend, shared/entities code used by students, and harness/tests outside teacher scope.
+- Final scope: teacher frontend and backend are fully excluded from this refactor, including teacher FSD/convention/typecheck targets. Existing teacher tests may run only as unchanged regression checks.

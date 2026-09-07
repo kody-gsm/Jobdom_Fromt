@@ -9,6 +9,19 @@ const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
 
 const normalizePath = (path: string) => path.replaceAll("\\", "/");
 
+const FSD_EXCLUDED_PREFIXES = [
+  "src/fsd/pages/teacher/",
+  "src/fsd/pages/teacher-forms/",
+  "src/fsd/pages/teacher-form-submissions/",
+  "src/fsd/pages/teacher-recruit/",
+  "src/fsd/features/manage-recruit/",
+] as const;
+
+export const shouldCheckFsdSource = (sourceFile: string) => {
+  const normalized = normalizePath(sourceFile);
+  return !FSD_EXCLUDED_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+};
+
 const getSourceLocation = (sourceFile: string) => {
   const parts = normalizePath(sourceFile).split("/");
   if (parts[0] !== "src" || parts[1] !== "fsd") return null;
@@ -44,6 +57,7 @@ const getTargetLocation = (sourceFile: string, specifier: string) => {
 };
 
 export const validateFsdImport = (sourceFile: string, specifier: string): string[] => {
+  if (!shouldCheckFsdSource(sourceFile)) return [];
   const source = getSourceLocation(sourceFile);
   const target = getTargetLocation(sourceFile, specifier);
   if (!source || !target) return [];
@@ -107,7 +121,7 @@ const getImportSpecifiers = (source: string) => {
 };
 
 const runCli = () => {
-  const files = findSourceFiles("src/fsd");
+  const files = findSourceFiles("src/fsd").filter(shouldCheckFsdSource);
   const violations: string[] = [];
   for (const file of files) {
     const source = readFileSync(file, "utf8");
