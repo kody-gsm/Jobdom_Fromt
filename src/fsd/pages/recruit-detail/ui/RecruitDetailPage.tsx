@@ -10,10 +10,10 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
   const { item, error } = useRecruitDetail(recruitId);
 
   return (
-    <div className="min-h-dvh bg-[#F4F6F8] text-[#13233A]" style={{ fontFamily: '"Pretendard Variable", sans-serif' }}>
+    <div className="min-h-dvh bg-surface text-ink">
       <StudentHeader />
       <main className="mx-auto w-full max-w-[980px] px-6 py-10 lg:px-10 lg:py-12">
-        <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#607089] transition-colors hover:bg-[#EEF3F8] hover:text-[#13233A]">
+        <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#607089] transition-colors hover:bg-[#EEF3F8] hover:text-ink">
           ← 공고 목록
         </Link>
         <h1 className="mt-5 break-keep text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
@@ -25,27 +25,27 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
             {error}
           </p>
         ) : !item ? (
-          <ContentCard className="mt-6 py-20 text-center text-[#8A95A3]">공고를 불러오는 중…</ContentCard>
+          <ContentCard className="mt-6 py-20 text-center text-muted">공고를 불러오는 중…</ContentCard>
         ) : (
           <ContentCard className="mt-6 p-7 sm:p-10">
             <div className="flex items-center justify-between gap-3">
               <span className="inline-flex rounded-full bg-[#EEF3F8] px-3 py-1 text-xs font-bold text-[#315B83]">공개 공고</span>
-              <span className="text-xs font-semibold text-[#8A95A3]">{item.deadline || "마감 별도 확인"}</span>
+              <span className="text-xs font-semibold text-muted">{item.deadline || "마감 별도 확인"}</span>
             </div>
 
             <dl className="mt-7 grid gap-4 rounded-2xl bg-[#F7F8FA] p-5 sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-semibold text-[#8A95A3]">지원 마감</dt>
-                <dd className="mt-2 font-bold text-[#13233A]">{item.deadline || "별도 확인"}</dd>
+                <dt className="text-xs font-semibold text-muted">지원 마감</dt>
+                <dd className="mt-2 font-bold text-ink">{item.deadline || "별도 확인"}</dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold text-[#8A95A3]">면접 일정</dt>
-                <dd className="mt-2 font-bold text-[#13233A]">{item.interviewDate || "별도 확인"}</dd>
+                <dt className="text-xs font-semibold text-muted">면접 일정</dt>
+                <dd className="mt-2 font-bold text-ink">{item.interviewDate || "별도 확인"}</dd>
               </div>
             </dl>
 
             <section className="mt-8">
-              <h2 className="text-lg font-bold text-[#13233A]">공고 내용</h2>
+              <h2 className="text-lg font-bold text-ink">공고 내용</h2>
               <p className="mt-3 whitespace-pre-line break-keep leading-8 text-[#667281]">{item.summary || "공고 요약이 없습니다."}</p>
             </section>
 

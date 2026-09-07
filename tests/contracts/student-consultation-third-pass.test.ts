@@ -14,12 +14,12 @@ assert.match(form, />상담 선생님</);
 assert.match(form, /label="상담 제목"/);
 assert.match(form, /label="구체적인 고민 내용"/);
 assert.doesNotMatch(form, />일정 예약</);
-assert.match(form, />상담 희망일</);
-assert.match(form, />상담 교시</);
+assert.match(form, />상담 희망일/);
+assert.match(form, />상담 교시/);
 assert.match(form, /lg:grid-cols-\[minmax\(0,1fr\)_520px\]/);
 assert.match(form, /min-h-\[320px\]/);
 assert.match(form, /min-h-\[720px\]/);
-assert.match(form, /bg-\[#02C551\]/);
+assert.match(form, /bg-brand/);
 assert.doesNotMatch(form, /bg-\[#10243E\]|hover:bg-\[#1B3555\]/);
 assert.doesNotMatch(form, /수업 담당 선생님의 허가를 먼저 받아주세요|예약 가능|선택됨/);
 

@@ -9,5 +9,5 @@ assert.doesNotMatch(hook, /withRecruitPreviewFallback|previewRecruits/);
 assert.match(hook, /setItems\(data\)/);
 assert.doesNotMatch(page, /item\.id < 0|const preview/);
 assert.match(page, /현재 공개된 취업 공고가 없습니다/);
-assert.match(page, /bg-\[#02C551\]/);
+assert.match(page, /bg-brand/);
 console.log("student recruit real-data-only contract passed");

@@ -30,14 +30,14 @@ export const Input = ({
   const borderClass = error
     ? "border border-red-500"
     : skin === "outlined"
-      ? "border border-[#CFD0D1] focus-within:border-2 focus-within:border-[#02C551]"
+      ? "border border-[#CFD0D1] focus-within:border-2 focus-within:border-brand"
       : "border-none";
   const inputType = showPasswordToggle ? (isVisible ? "text" : "password") : type;
 
   return (
     <div
       className={`relative flex items-center rounded-lg ${backgroundClass} ${borderClass} ${className}`}
-      style={{ fontFamily: '"Pretendard Variable", sans-serif', ...style }}
+      style={style}
     >
       <input
         type={inputType}

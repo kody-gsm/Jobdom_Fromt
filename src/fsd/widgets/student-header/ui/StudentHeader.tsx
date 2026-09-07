@@ -44,7 +44,7 @@ export const StudentHeader = () => {
   return (
     <header
       className="sticky top-0 z-50 border-b border-[#EDF0F2] bg-white/95 backdrop-blur"
-      style={{ fontFamily: '"Pretendard Variable", sans-serif' }}
+
     >
       <div className="mx-auto grid w-full max-w-[1380px] grid-cols-[1fr_auto] items-center px-4 sm:grid-cols-[auto_1fr_auto] sm:px-6 lg:px-10">
         <Link
@@ -65,7 +65,7 @@ export const StudentHeader = () => {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex h-full flex-1 items-center justify-center whitespace-nowrap text-center transition-colors hover:text-[#02A94A] sm:h-11 sm:flex-none ${isActive ? "font-bold text-[#02C551]" : "font-semibold"}`}
+                className={`flex h-full flex-1 items-center justify-center whitespace-nowrap text-center transition-colors hover:text-brand-accent sm:h-11 sm:flex-none ${isActive ? "font-bold text-brand" : "font-semibold"}`}
               >
                 {item.label}
               </Link>
@@ -77,7 +77,7 @@ export const StudentHeader = () => {
           <Link
             href="/profile"
             aria-label="프로필"
-            className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl transition-colors hover:bg-[#F4F6F8]"
+            className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl transition-colors hover:bg-surface"
           >
             {profileAvatar ? (
               <Image
@@ -101,7 +101,7 @@ export const StudentHeader = () => {
             type="button"
             aria-label="로그아웃"
             onClick={() => void handleLogout()}
-            className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-[#F4F6F8] hover:text-[#02A94A]"
+            className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-surface hover:text-brand-accent"
           >
             <FiLogOut aria-hidden size={21} />
           </button>

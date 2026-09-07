@@ -29,7 +29,7 @@ export const TextAreaField = ({
         className={`min-h-32 resize-y rounded-xl border bg-white px-4 py-3 text-base font-normal text-[#202124] outline-none transition-colors placeholder:text-[#9AA0A6] ${
           error
             ? "border-[#E53935] focus:border-[#E53935]"
-            : "border-[#DDE2E7] focus:border-[#02C551]"
+            : "border-border focus:border-brand"
         } ${className}`}
         {...props}
       />

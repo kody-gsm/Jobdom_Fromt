@@ -22,8 +22,8 @@ assert.deepEqual(STUDENT_NAV_ITEMS, [
 ]);
 assert.equal(isStudentNavActive("/recruit", "/recruit"), true);
 assert.equal(isStudentNavActive("/recruit/3", "/recruit"), true);
-assert.match(widget, /hover:text-\[#02A94A\]/);
-assert.match(widget, /text-\[#02C551\]/);
+assert.match(widget, /hover:text-brand-accent/);
+assert.match(widget, /text-brand/);
 assert.doesNotMatch(widget, /#315B83|#10243E/);
 assert.equal((widget.match(/h-11 w-11/g) ?? []).length, 2);
 

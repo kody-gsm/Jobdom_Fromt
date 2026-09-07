@@ -59,7 +59,7 @@ export const LoginForm = () => {
               type="checkbox"
               checked={form.rememberLogin}
               onChange={(event) => setRememberLogin(event.target.checked)}
-              className="absolute inset-0 h-5 w-5 appearance-none rounded-[4px] border border-[#B8C0C8] bg-white checked:border-[#02C551] checked:bg-[#02C551]"
+              className="absolute inset-0 h-5 w-5 appearance-none rounded-[4px] border border-[#B8C0C8] bg-white checked:border-brand checked:bg-brand"
             />
             {form.rememberLogin ? (
               <svg
@@ -82,7 +82,7 @@ export const LoginForm = () => {
         </label>
         <Link
           href="/forgot-password"
-          className="inline-flex min-h-11 items-center font-semibold text-[#02A94A] transition-colors hover:text-[#018D3E]"
+          className="inline-flex min-h-11 items-center font-semibold text-brand-accent transition-colors hover:text-[#018D3E]"
         >
           비밀번호 재설정
         </Link>
@@ -106,7 +106,7 @@ export const LoginForm = () => {
         아직 계정이 없으신가요?{" "}
         <Link
           href="/signup"
-          className="inline-flex min-h-11 items-center font-bold text-[#02A94A] hover:text-[#018D3E]"
+          className="inline-flex min-h-11 items-center font-bold text-brand-accent hover:text-[#018D3E]"
         >
           회원가입
         </Link>

@@ -37,7 +37,7 @@ export const SignupForm = () => {
           type="button"
           disabled={!signupForm.canSendCode}
           onClick={() => void signupForm.sendCode()}
-          className="min-h-11 rounded-lg px-2 text-sm font-semibold text-[#02A946] transition-colors hover:bg-[#F4F6F8] disabled:text-[#9AA0A6] disabled:hover:bg-transparent"
+          className="min-h-11 rounded-lg px-2 text-sm font-semibold text-brand-hover transition-colors hover:bg-surface disabled:text-[#9AA0A6] disabled:hover:bg-transparent"
         >
           {codeActionLabel}
         </button>
@@ -95,7 +95,7 @@ export const SignupForm = () => {
 
       <p className="pt-1 text-center text-sm text-[#7A828B]">
         이미 계정이 있으신가요?{" "}
-        <Link href="/login" className="font-semibold text-[#02A946] hover:underline">
+        <Link href="/login" className="font-semibold text-brand-hover hover:underline">
           로그인
         </Link>
       </p>

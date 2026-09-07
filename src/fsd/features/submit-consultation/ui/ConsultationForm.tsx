@@ -54,7 +54,7 @@ export const ConsultationForm = ({
         <div
           role={toast.type === "error" ? "alert" : "status"}
           className={`fixed right-6 top-6 z-[60] rounded-2xl px-5 py-4 text-sm font-semibold text-white shadow-lg ${
-            toast.type === "success" ? "bg-[#02C551]" : "bg-red-600"
+            toast.type === "success" ? "bg-brand" : "bg-red-600"
           }`}
         >
           {toast.message}
@@ -68,7 +68,7 @@ export const ConsultationForm = ({
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
               <SegmentedTabs
                 ariaLabel="상담 유형"
-                className="[&_[aria-selected=true]]:!text-[#02C551] [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-[#02C551]"
+                className="[&_[aria-selected=true]]:!text-brand [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-brand"
                 items={[
                   { value: "career", label: "진로 상담" },
                   { value: "general", label: "일반 상담" },
@@ -94,8 +94,8 @@ export const ConsultationForm = ({
                       onClick={() => toggleTeacher(teacher)}
                       className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
                         selectedTeacherId === teacher.id
-                          ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                          : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                          ? "border-brand bg-[#EAF9F0] text-brand-hover"
+                          : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
                       }`}
                     >
                       {getConsultationTeacherLabel(teacher.name)}
@@ -108,7 +108,7 @@ export const ConsultationForm = ({
                   className={`flex min-h-11 items-center rounded-xl border bg-[#F8FAF9] px-4 text-sm font-semibold ${
                     errorTarget === "teacher"
                       ? "border-[#E53935] text-[#E53935]"
-                      : "border-[#DDE2E7] text-[#4E5B6B]"
+                      : "border-border text-[#4E5B6B]"
                   }`}
                 >
                   {selectedTeacher ?? "상담 선생님 배정 중"}
@@ -136,7 +136,7 @@ export const ConsultationForm = ({
                 placeholder="상담하고 싶은 내용을 자유롭고 편하게 작성해주세요."
                 className="min-h-[320px] resize-none"
               />
-              <span className="mt-2 block text-right text-xs text-[#8A95A3]">
+              <span className="mt-2 block text-right text-xs text-muted">
                 {content.length} / 500자
               </span>
             </div>
@@ -159,8 +159,8 @@ export const ConsultationForm = ({
                   onClick={() => toggleDate(item.value)}
                   className={`min-h-[68px] rounded-xl border px-2 py-2 text-center transition-colors ${
                     selectedDate === item.value
-                      ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                      : "border-[#DDE2E7] bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                      ? "border-brand bg-[#EAF9F0] text-brand-hover"
+                      : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
                   }`}
                 >
                   <span className="block text-[11px] font-medium">
@@ -192,8 +192,8 @@ export const ConsultationForm = ({
                       unavailable
                         ? "cursor-not-allowed border-[#E3E6EA] bg-[#F5F6F7] text-[#A0A8B2]"
                         : selectedTime === row.period
-                          ? "border-[#02C551] bg-[#EAF9F0] text-[#02A946]"
-                          : "border-[#DDE2E7] bg-white text-[#27364A] hover:border-[#B8C1CC]"
+                          ? "border-brand bg-[#EAF9F0] text-brand-hover"
+                          : "border-border bg-white text-[#27364A] hover:border-[#B8C1CC]"
                     }`}
                   >
                     <span className="flex min-w-0 items-center gap-3">

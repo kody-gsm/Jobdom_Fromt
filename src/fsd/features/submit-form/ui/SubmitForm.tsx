@@ -94,7 +94,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   return (
     <form onSubmit={submitForm}>
       <ContentCard className="overflow-hidden p-0">
-      <header className="bg-[#02C551] p-7 text-white sm:p-9">
+      <header className="bg-brand p-7 text-white sm:p-9">
         <h1 className="break-keep text-3xl font-bold">{form.title}</h1>
         {form.description ? (
           <p className="mt-3 whitespace-pre-line break-keep text-sm leading-6 text-white/85">
@@ -135,7 +135,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           <ActionButton
             type="submit"
             disabled={submitting}
-            className="w-full bg-[#02C551] hover:bg-[#02A946]"
+            className="w-full bg-brand hover:bg-brand-hover"
           >
             {submitting ? "제출 중…" : "제출"}
           </ActionButton>
@@ -166,7 +166,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
     <p className="mt-2 text-sm font-normal text-gray-500">{question.description}</p>
   ) : null;
   const inputClass =
-    "mt-3 w-full rounded-xl border border-[#DDE2E7] px-4 py-3 outline-none focus:border-[#02C551]";
+    "mt-3 w-full rounded-xl border border-border px-4 py-3 outline-none focus:border-brand";
 
   if (question.type === "LONG_TEXT") {
     return (
@@ -244,7 +244,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
                 name={`question-${question.id}`}
                 checked={checked}
                 onChange={(event) => onChange(nextValue(event.target.checked))}
-                className="h-4 w-4 accent-[#02C551]"
+                className="h-4 w-4 accent-brand"
               />
               {option.label}
             </label>

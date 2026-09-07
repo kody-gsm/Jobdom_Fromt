@@ -45,10 +45,10 @@ export const HomeServices = () => {
     <section className="space-y-5" aria-label="학생 대시보드">
       <div className="grid gap-5 lg:grid-cols-2">
         <ContentCard className="flex min-h-[280px] flex-col p-7">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E9FAF0] text-[#02A94A]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand-accent">
             <IoMdChatbubbles aria-hidden="true" className="h-5 w-5" />
           </div>
-          <h1 className="mt-7 text-2xl font-bold tracking-[-0.02em] text-[#13233A]">
+          <h1 className="mt-7 text-2xl font-bold tracking-[-0.02em] text-ink">
             상담 신청
           </h1>
           <p className="mt-3 flex-1 break-keep text-sm leading-7 text-[#667281]">
@@ -56,7 +56,7 @@ export const HomeServices = () => {
           </p>
           <Link
             href="/counsel"
-            className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#00B94C]"
+            className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#00B94C]"
           >
             상담 신청
           </Link>
@@ -64,11 +64,11 @@ export const HomeServices = () => {
 
         <ContentCard className="p-7">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-bold text-[#13233A]">예정 상담</h2>
+            <h2 className="text-2xl font-bold text-ink">예정 상담</h2>
             <button
               type="button"
               onClick={() => setIsConsultationModalOpen(true)}
-              className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]"
+              className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft"
             >
               전체 보기
             </button>
@@ -76,13 +76,13 @@ export const HomeServices = () => {
 
           <div className="mt-6">
             {loading ? (
-              <p className="py-8 text-sm text-[#8A95A3]">상담 일정을 불러오는 중입니다.</p>
+              <p className="py-8 text-sm text-muted">상담 일정을 불러오는 중입니다.</p>
             ) : consultationPreview.length === 0 ? (
               <div className="rounded-2xl bg-[#F7F8FA] px-5 py-8">
                 <p className="font-semibold text-[#4E5B6B]">예정된 상담이 없습니다.</p>
                 <Link
                   href="/counsel"
-                  className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]"
+                  className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft"
                 >
                   상담 신청하기
                 </Link>
@@ -101,14 +101,14 @@ export const HomeServices = () => {
       <ContentCard className="p-7">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E9FAF0] text-[#02A94A]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand-accent">
               <FaBriefcase aria-hidden="true" className="h-5 w-5" />
             </div>
-            <h2 className="text-2xl font-bold text-[#13233A]">취업 공고</h2>
+            <h2 className="text-2xl font-bold text-ink">취업 공고</h2>
           </div>
           <Link
             href="/recruit"
-            className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]"
+            className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft"
           >
             전체 보기
           </Link>
@@ -116,7 +116,7 @@ export const HomeServices = () => {
 
         <div className="mt-6">
           {loading ? (
-            <p className="py-8 text-sm text-[#8A95A3]">취업 공고를 불러오는 중입니다.</p>
+            <p className="py-8 text-sm text-muted">취업 공고를 불러오는 중입니다.</p>
           ) : overview.recentRecruits.length === 0 ? (
             <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-sm text-[#6B7787]">
               현재 공개된 취업 공고가 없습니다.
@@ -129,7 +129,7 @@ export const HomeServices = () => {
                   href={`/recruit/${item.id}`}
                   className="block rounded-2xl border border-[#E8EBEF] px-5 py-4 transition-colors hover:bg-[#F7F8FA]"
                 >
-                  <p className="truncate font-bold text-[#13233A]">
+                  <p className="truncate font-bold text-ink">
                     {item.companyName || "회사명 확인 중"}
                   </p>
                   <p className="mt-1 line-clamp-1 text-sm text-[#7A8592]">
@@ -162,13 +162,13 @@ export const HomeServices = () => {
           />
           <div className="relative z-10 w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between gap-4">
-              <h2 id="upcoming-consultations-title" className="text-xl font-bold text-[#13233A]">
+              <h2 id="upcoming-consultations-title" className="text-xl font-bold text-ink">
                 예정 상담
               </h2>
               <button
                 type="button"
                 onClick={() => setIsConsultationModalOpen(false)}
-                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#667281] transition-colors hover:bg-[#F4F6F8]"
+                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#667281] transition-colors hover:bg-surface"
               >
                 닫기
               </button>
@@ -220,8 +220,8 @@ const ConsultationRow = ({
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#F7F8FA] px-5 py-4">
       <div>
-        <p className="font-bold text-[#13233A]">{item.type}</p>
-        <p className="mt-1 text-xs text-[#8A95A3]">예약 일정</p>
+        <p className="font-bold text-ink">{item.type}</p>
+        <p className="mt-1 text-xs text-muted">예약 일정</p>
       </div>
       <div className="text-right">
         <p className="text-sm font-semibold text-[#5F6C7B]">

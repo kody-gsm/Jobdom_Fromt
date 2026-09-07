@@ -33,7 +33,7 @@ export const TextField = ({
           } ${
             error
               ? "border-[#E53935] focus:border-[#E53935]"
-              : "border-[#DDE2E7] focus:border-[#02C551]"
+              : "border-border focus:border-brand"
           } ${className}`}
           {...props}
         />

@@ -19,13 +19,13 @@ export const ProfilePage = () => {
 
   return (
     <div
-      className="min-h-dvh bg-[#F4F6F8] text-[#13233A]"
-      style={{ fontFamily: '"Pretendard Variable", sans-serif' }}
+      className="min-h-dvh bg-surface text-ink"
+
     >
       <StudentHeader />
       <main className="mx-auto w-full max-w-[840px] px-6 py-10 lg:px-10 lg:py-12">
         {loading ? (
-          <ContentCard className="py-24 text-center text-[#8A95A3]">프로필을 불러오는 중…</ContentCard>
+          <ContentCard className="py-24 text-center text-muted">프로필을 불러오는 중…</ContentCard>
         ) : error ? (
           <div role="alert" className="rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] p-5 text-[#9A4F45]">
             {error}
@@ -48,7 +48,7 @@ export const ProfilePage = () => {
                     }
                   />
                 </div>
-                <label className="mt-4 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-sm font-bold text-[#02A94A] transition-colors hover:bg-[#E9FAF0]">
+                <label className="mt-4 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft">
                   사진 변경
                   <input
                     type="file"
@@ -66,10 +66,10 @@ export const ProfilePage = () => {
                     {avatarError}
                   </p>
                 ) : null}
-                <h1 className="mt-3 text-2xl font-bold text-[#13233A]">
+                <h1 className="mt-3 text-2xl font-bold text-ink">
                   {profile.name || "사용자"}
                 </h1>
-                <p className="mt-1 text-sm font-semibold text-[#8A95A3]">
+                <p className="mt-1 text-sm font-semibold text-muted">
                   학번 {profile.studentId || "정보 없음"}
                 </p>
               </div>

@@ -48,10 +48,10 @@ export const ProfileConsultations = ({
   return (
     <>
       <ContentCard className="p-6">
-        <h2 className="text-xl font-bold text-[#13233A]">예약 현황</h2>
+        <h2 className="text-xl font-bold text-ink">예약 현황</h2>
         <div className="mt-5 space-y-3">
           {visibleReservations.length === 0 ? (
-            <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-center text-sm text-[#8A95A3]">
+            <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-center text-sm text-muted">
               예약된 상담이 없습니다.
             </p>
           ) : (
@@ -61,7 +61,7 @@ export const ProfileConsultations = ({
                 className="flex flex-col gap-3 rounded-2xl bg-[#F7F8FA] p-5 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <p className="font-bold text-[#13233A]">{item.type}</p>
+                  <p className="font-bold text-ink">{item.type}</p>
                   <p className="mt-1 text-sm text-[#7A8592]">
                     {item.date} / {item.slot}
                   </p>
@@ -97,7 +97,7 @@ export const ProfileConsultations = ({
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
           />
           <div className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 id="cancel-reservation-title" className="text-center text-xl font-bold text-[#13233A]">
+            <h2 id="cancel-reservation-title" className="text-center text-xl font-bold text-ink">
               예약 취소
             </h2>
             <p className="mt-4 text-center font-semibold text-gray-800">
@@ -119,7 +119,7 @@ export const ProfileConsultations = ({
               <ActionButton
                 type="button"
                 onClick={() => void executeCancel()}
-                className="bg-[#02C551] hover:bg-[#00B94C]"
+                className="bg-brand hover:bg-[#00B94C]"
               >
                 예
               </ActionButton>
