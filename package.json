@@ -18,7 +18,8 @@
     "harness:ready": "node --no-warnings --experimental-strip-types scripts/harness/readiness.ts",
     "harness:fsd": "node --no-warnings --experimental-strip-types scripts/harness/fsd-boundary-check.ts",
     "harness:convention": "node --no-warnings --experimental-strip-types scripts/harness/convention-check.ts",
-    "harness:branches": "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts"
+    "harness:branches": "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts",
+    "check:notifications": "node --no-warnings --experimental-strip-types tests/contracts/notification.test.ts"
   },
   "dependencies": {
     "next": "^16.2.7",

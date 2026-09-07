@@ -4,5 +4,6 @@ import { getSession, requestWithSession } from "@fsd/entities/user";
 const consultationApi = createConsultationApi(requestWithSession);
 
 export const getTeacherConsultations = consultationApi.getTeacher;
+export const getPendingTeacherConsultations = consultationApi.getPendingTeacher;
 export const approveConsultation = consultationApi.approve;
 export { getSession };

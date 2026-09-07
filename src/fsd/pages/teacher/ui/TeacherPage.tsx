@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { FiChevronLeft as ChevronLeft, FiChevronRight as ChevronRight } from "react-icons/fi";
 import Link from "next/link";
 import { HomeLogoButton } from "@fsd/features/navigate-home";
-import { approveConsultation, getSession, getTeacherConsultations } from "../api/teacher";
+import { approveConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations } from "../api/teacher";
+import { NotificationBell } from "@fsd/features/notifications";
 
 // ── 타입 ─────────────────────────────────────────────
 interface RequestData {
@@ -236,15 +237,20 @@ export function TeacherPage() {
         setLoadRequestsError(null);
 
         try {
-            const approved = await getTeacherConsultations("course");
-            setRequestData([]);
+            const [approved, pending] = await Promise.all([
+                getTeacherConsultations("course"),
+                getPendingTeacherConsultations("course"),
+            ]);
+            setRequestData(pending.map((item) => ({
+                ...item, student_number: "", content: "", approved: false, slotKey: `${item.date}_${item.period}`,
+            })));
             setApprovedBySlot(Object.fromEntries(approved.map((item) => [
                 `${item.date}_${item.period}`,
                 { ...item, student_number: "", content: "", approved: true, slotKey: `${item.date}_${item.period}` },
             ])));
         } catch (error) {
             console.error(error);
-            setLoadRequestsError("상담 신청 데이터를 불러오지 못했습니다.");
+            setLoadRequestsError(error instanceof Error ? error.message : "상담 신청 데이터를 불러오지 못했습니다.");
             throw error;
         } finally {
             setIsLoadingRequests(false);
@@ -285,6 +291,7 @@ export function TeacherPage() {
 
     return (
         <div className="relative flex min-h-screen bg-white">
+            <div className="absolute right-8 top-6 z-50"><NotificationBell /></div>
 
             {/* 왼쪽 영역 */}
             <div className="m-7">

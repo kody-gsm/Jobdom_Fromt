@@ -23,6 +23,8 @@ export const createConsultationApi = (request: RequestFn) => ({
     request<string>(`/student/${kind}/cancel/${id}`, { method: "PATCH" }),
   getTeacher: (kind: ConsultationKind) =>
     request<TeacherReservation[]>(`/teacher/${kind}`),
+  getPendingTeacher: (kind: ConsultationKind) =>
+    request<TeacherReservation[]>(`/teacher/${kind}/pending`),
   approve: (kind: ConsultationKind, id: number) =>
     request<string>(`/teacher/${kind}/allow/${id}`, { method: "PATCH" }),
   lock: (

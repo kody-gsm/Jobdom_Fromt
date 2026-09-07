@@ -1,5 +1,7 @@
 "use client";
 
+import { NotificationBell } from "@fsd/features/notifications";
+
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -74,6 +76,7 @@ export const StudentHeader = () => {
         </nav>
 
         <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-5 text-[#6A7077] sm:col-start-3">
+          <NotificationBell />
           <Link
             href="/profile"
             aria-label="프로필"
