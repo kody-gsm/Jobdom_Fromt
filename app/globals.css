@@ -1,10 +1,19 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css");
 @import "tailwindcss";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: Arial, Helvetica, sans-serif;
+@theme {
+  --color-brand: #02C551;
+  --color-brand-hover: #02A946;
+  --color-brand-accent: #02A94A;
+  --color-brand-soft: #E9FAF0;
+  --color-ink: #13233A;
+  --color-muted: #8A95A3;
+  --color-surface: #F4F6F8;
+  --color-border: #DDE2E7;
+  --color-panel: #F7F8FA;
+  --color-secondary-text: #7A8592;
+  --color-disabled-text: #A8AFB8;
+  --font-sans: "Pretendard Variable", Pretendard, Arial, Helvetica, sans-serif;
   --font-mono: "Courier New", monospace;
 }
 
@@ -13,10 +22,7 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  display: block !important;
+  font-family: var(--font-sans);
 }
 
 html {
@@ -24,7 +30,26 @@ html {
 }
 
 html, body {
-  overflow-x: hidden;
+  font-family: var(--font-sans);
+}
+
+.student-auth input,
+.student-auth button,
+.student-auth textarea,
+.student-auth select {
+  font-family: inherit;
+}
+
+.student-auth input:-webkit-autofill,
+.student-auth input:-webkit-autofill:hover,
+.student-auth input:-webkit-autofill:focus,
+.student-auth input:-webkit-autofill:active {
+  -webkit-text-fill-color: #202124;
+  caret-color: #202124;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5rem !important;
 }
 
 ::placeholder {

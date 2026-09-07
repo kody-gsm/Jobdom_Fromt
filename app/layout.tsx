@@ -1,5 +1,5 @@
 import "./globals.css";
-import { AuthGate } from "@/app/components/AuthGate";
+import { AuthGate } from "@fsd/app/auth-gate";
 
 export default function RootLayout({
   children,
@@ -7,11 +7,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className="h-full antialiased"
-    >
-      <body className="min-h-full flex flex-col"><AuthGate>{children}</AuthGate></body>
+    <html lang="ko" className="h-full antialiased">
+      <body className="min-h-full flex flex-col">
+        <AuthGate>{children}</AuthGate>
+      </body>
     </html>
   );
 }
