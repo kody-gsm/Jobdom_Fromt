@@ -20,6 +20,13 @@ const git = (...args: string[]) => execFileSync("git", args, { encoding: "utf8" 
 
 const runCli = () => {
   const baseRef = process.env.HARNESS_BASE_REF || "origin/develop";
+  const preflight = spawnSync(
+    process.execPath,
+    ["--no-warnings", "--experimental-strip-types", "scripts/harness/preflight.ts"],
+    { stdio: "inherit" },
+  );
+  if (preflight.status !== 0) process.exit(preflight.status ?? 1);
+
   let baseRefFresh = true;
   try {
     execFileSync("git", ["fetch", "origin", "develop", "--quiet"], { stdio: "ignore" });
