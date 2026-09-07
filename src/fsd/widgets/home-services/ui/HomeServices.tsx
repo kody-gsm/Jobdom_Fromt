@@ -148,6 +148,11 @@ export const HomeServices = () => {
         </div>
       </ContentCard>
 
+      <ContentCard className="min-h-32 border-dashed bg-[#F7F8FA] p-7" aria-label="배너">
+        <p className="text-xs font-bold tracking-[0.16em] text-[#02a946]">BANNER</p>
+        <p className="mt-2 text-sm font-semibold text-[#667281]">배너가 등록되면 이 공간에 표시됩니다.</p>
+      </ContentCard>
+
       {error ? <p role="status" className="text-sm text-[#9A675E]">{error}</p> : null}
 
       {isConsultationModalOpen ? (

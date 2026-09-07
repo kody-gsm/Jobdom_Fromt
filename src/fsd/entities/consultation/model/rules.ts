@@ -14,7 +14,10 @@ export const TEACHERS: ConsultationTeacher[] = [
   "정윤기 선생님",
 ];
 
-const GENERAL_PERIODS = CONSULTATION_SCHEDULE.map(({ period }) => period);
+const BLOCKED_GENERAL_PERIODS = new Set(["4교시"]);
+const GENERAL_PERIODS = CONSULTATION_SCHEDULE
+  .map(({ period }) => period)
+  .filter((period) => !BLOCKED_GENERAL_PERIODS.has(period));
 
 export const toConsultationKind = (type: ConsultationType): ConsultationKind =>
   type === "career" ? "course" : "common";
