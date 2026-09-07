@@ -15,10 +15,7 @@ import {
   submitConsultation,
 } from "../api/consultation.ts";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
-import {
-  getConsultationTeacherLabel,
-  getDefaultGeneralTeacher,
-} from "./teacherOption.ts";
+import { getConsultationTeacherLabel } from "./teacherOption.ts";
 
 export type ConsultationToast = {
   message: string;
@@ -83,7 +80,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [toast, setToast] = useState<ConsultationToast | null>(null);
   const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
   const toastTimer = useRef<number | null>(null);
-  const counselTypeRef = useRef(initialType);
 
   const dates = useMemo(() => getNextWeekdays(), []);
 
@@ -93,10 +89,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       .then((items) => {
         if (!active) return;
         setTeachers(items);
-        if (counselTypeRef.current === "general") {
-          const teacher = getDefaultGeneralTeacher(items);
-          setSelectedTeacher(teacher);
-        }
       })
       .catch(() => undefined);
 
@@ -157,12 +149,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const handleTabChange = (type: ConsultationType) => {
-    counselTypeRef.current = type;
     setCounselType(type);
-    const generalTeacher = type === "general"
-      ? getDefaultGeneralTeacher(teachers)
-      : null;
-    setSelectedTeacher(generalTeacher);
+    setSelectedTeacher(null);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
     setErrorTarget(null);

@@ -79,40 +79,30 @@ export const ConsultationForm = ({
 
             <div>
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
-              {counselType === "career" ? (
-                <div
-                  data-consultation-field="teacher"
-                  className={`flex flex-wrap gap-2 rounded-xl ${
-                    errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
-                  }`}
-                >
-                  {displayTeachers.map((teacher) => (
-                    <button
-                      key={teacher.id}
-                      type="button"
-                      onClick={() => toggleTeacher(teacher)}
-                      className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                        selectedTeacher?.id === teacher.id
-                          ? "border-brand bg-[#EAF9F0] text-brand-hover"
-                          : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                      }`}
-                    >
-                      {getConsultationTeacherLabel(teacher.name)}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div
-                  data-consultation-field="teacher"
-                  className={`flex min-h-11 items-center rounded-xl border bg-[#F8FAF9] px-4 text-sm font-semibold ${
-                    errorTarget === "teacher"
-                      ? "border-[#E53935] text-[#E53935]"
-                      : "border-border text-[#4E5B6B]"
-                  }`}
-                >
-                  {selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : "상담 선생님 배정 중"}
-                </div>
-              )}
+              <div
+                data-consultation-field="teacher"
+                className={`flex flex-wrap gap-2 rounded-xl ${
+                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+                }`}
+              >
+                {displayTeachers.map((teacher) => (
+                  <button
+                    key={teacher.id}
+                    type="button"
+                    onClick={() => toggleTeacher(teacher)}
+                    className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      selectedTeacher?.id === teacher.id
+                        ? "border-brand bg-[#EAF9F0] text-brand-hover"
+                        : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                    }`}
+                  >
+                    {getConsultationTeacherLabel(teacher.name)}
+                  </button>
+                ))}
+                {displayTeachers.length === 0 ? (
+                  <p className="px-1 py-2 text-sm font-semibold text-muted">선생님 정보를 불러오는 중입니다.</p>
+                ) : null}
+              </div>
             </div>
 
             <TextField
