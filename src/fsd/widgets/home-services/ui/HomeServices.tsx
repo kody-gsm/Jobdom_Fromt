@@ -8,7 +8,7 @@ import {
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
-import { ContentCard } from "@fsd/shared/ui";
+import { ConsultationReservationCard, ContentCard } from "@fsd/shared/ui";
 import type { HomeConsultationItem } from "../model/overview.ts";
 import { useHomeOverview } from "../model/useHomeOverview.ts";
 
@@ -90,7 +90,7 @@ export const HomeServices = () => {
             ) : (
               <div className="space-y-3">
                 {consultationPreview.map((item) => (
-                  <ConsultationRow key={item.id} item={item} />
+                  <ConsultationReservationCard key={item.id} type={item.type} date={item.date} period={item.period} />
                 ))}
               </div>
             )}
@@ -185,12 +185,14 @@ export const HomeServices = () => {
                 </p>
               ) : (
                 upcomingConsultations.map((item) => (
-                  <ConsultationRow
+                  <ConsultationReservationCard
                     key={item.id}
-                    item={item}
-                    now={now}
+                    type={item.type}
+                    date={item.date}
+                    period={item.period}
+                    canCancel={isConsultationCancelable(item.date, item.period, now)}
                     canceling={cancelingId === item.id}
-                    onCancel={cancelConsultation}
+                    onCancel={() => void cancelConsultation(item)}
                   />
                 ))
               )}
@@ -199,45 +201,5 @@ export const HomeServices = () => {
         </div>
       ) : null}
     </section>
-  );
-};
-
-const ConsultationRow = ({
-  item,
-  now,
-  canceling = false,
-  onCancel,
-}: {
-  item: HomeConsultationItem;
-  now?: Date;
-  canceling?: boolean;
-  onCancel?: (item: HomeConsultationItem) => void;
-}) => {
-  const canCancel = Boolean(
-    onCancel && now && isConsultationCancelable(item.date, item.period, now),
-  );
-
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#F7F8FA] px-5 py-4">
-      <div>
-        <p className="font-bold text-ink">{item.type}</p>
-        <p className="mt-1 text-xs text-muted">예약 일정</p>
-      </div>
-      <div className="text-right">
-        <p className="text-sm font-semibold text-[#5F6C7B]">
-          {item.date} · {item.period}
-        </p>
-        {onCancel ? (
-          <button
-            type="button"
-            disabled={!canCancel || canceling}
-            onClick={() => onCancel(item)}
-            className="mt-2 inline-flex min-h-9 items-center rounded-lg px-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-[#A8AFB8] disabled:hover:bg-transparent"
-          >
-            {canceling ? "취소 중" : "예약 취소"}
-          </button>
-        ) : null}
-      </div>
-    </div>
   );
 };

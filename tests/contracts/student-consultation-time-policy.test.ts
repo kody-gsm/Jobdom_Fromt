@@ -18,10 +18,12 @@ assert.equal(isConsultationUpcoming("2026-09-06", "점심시간", beforeCutoff),
 
 const home = readFileSync("src/fsd/widgets/home-services/ui/HomeServices.tsx", "utf8");
 const profile = readFileSync("src/fsd/widgets/profile-consultations/ui/ProfileConsultations.tsx", "utf8");
+const card = readFileSync("src/fsd/shared/ui/ConsultationReservationCard.tsx", "utf8");
 assert.match(home, /cancelProfileConsultation|handleCancel/);
-assert.match(home, /예약 취소/);
 assert.match(home, /isConsultationCancelable\(item\.date, item\.period, new Date\(\)\)/);
-assert.match(profile, /isConsultationCancelable/);
-assert.match(profile, /disabled=/);
 assert.match(profile, /isConsultationCancelable\(target\.date, target\.slot, new Date\(\)\)/);
+assert.match(home, /ConsultationReservationCard/);
+assert.match(profile, /ConsultationReservationCard/);
+assert.match(card, /예약 취소/);
+assert.match(card, /disabled=\{!canCancel \|\| canceling\}/);
 console.log("student consultation time policy contract passed");

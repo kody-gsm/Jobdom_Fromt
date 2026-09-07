@@ -6,7 +6,7 @@ import {
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
-import { ActionButton, ContentCard } from "@fsd/shared/ui";
+import { ActionButton, ConsultationReservationCard, ContentCard } from "@fsd/shared/ui";
 
 interface ProfileConsultationsProps {
   reservations: ProfileConsultation[];
@@ -56,25 +56,14 @@ export const ProfileConsultations = ({
             </p>
           ) : (
             visibleReservations.map((item) => (
-              <div
+              <ConsultationReservationCard
                 key={item.id}
-                className="flex flex-col gap-3 rounded-2xl bg-[#F7F8FA] p-5 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="font-bold text-ink">{item.type}</p>
-                  <p className="mt-1 text-sm text-[#7A8592]">
-                    {item.date} / {item.slot}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={!isConsultationCancelable(item.date, item.slot, now)}
-                  onClick={() => setCancelTarget(item.id)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:text-[#A8AFB8] disabled:hover:bg-transparent"
-                >
-                  예약 취소
-                </button>
-              </div>
+                type={item.type}
+                date={item.date}
+                period={item.slot}
+                canCancel={isConsultationCancelable(item.date, item.slot, now)}
+                onCancel={() => setCancelTarget(item.id)}
+              />
             ))
           )}
         </div>
