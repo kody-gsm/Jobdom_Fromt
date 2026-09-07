@@ -70,8 +70,8 @@ export const ConsultationForm = ({
                 ariaLabel="상담 유형"
                 className="[&_[aria-selected=true]]:!text-brand [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-brand"
                 items={[
-                  { value: "career", label: "진로 상담" },
-                  { value: "general", label: "일반 상담" },
+                  { value: "career", label: "취업 진로 상담" },
+                  { value: "general", label: "상담" },
                 ]}
                 value={counselType}
                 onChange={handleTabChange}
