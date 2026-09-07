@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { FormEvent } from "react";
 import { formatCountdown } from "@fsd/shared/lib";
 import { ActionButton, PasswordField, TextField } from "@fsd/shared/ui";
@@ -89,6 +90,12 @@ export const ResetPasswordForm = () => {
       <ActionButton type="submit" disabled={!resetForm.canSubmit} className="w-full">
         {resetForm.isSubmitting ? "변경 중" : "비밀번호 재설정"}
       </ActionButton>
+
+      <p className="pt-1 text-center text-sm text-[#7A828B]">
+        <Link href="/login" className="font-semibold text-[#02A946] hover:underline">
+          로그인으로 돌아가기
+        </Link>
+      </p>
     </form>
   );
 };
