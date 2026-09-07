@@ -30,3 +30,34 @@ assert.deepEqual(
   validateFsdImport("src/fsd/features/login/ui/LoginForm.tsx", "@fsd/entities/user"),
   [],
 );
+
+assert.match(
+  validateFsdImport("src/fsd/features/login/ui/LoginForm.tsx", "../../../pages/home" )[0] ?? "",
+  /higher layer/,
+);
+
+assert.match(
+  validateFsdImport(
+    "src/fsd/pages/home/ui/HomePage.tsx",
+    "../../../features/login/ui/LoginForm",
+  )[0] ?? "",
+  /public API/,
+);
+
+assert.deepEqual(
+  validateFsdImport("src/fsd/shared/api/client.ts", "./ApiError.ts"),
+  [],
+);
+
+assert.deepEqual(
+  validateFsdImport("src/fsd/app/auth-gate/ui/AuthGate.tsx", "../model/routePolicy.ts"),
+  [],
+);
+
+assert.deepEqual(
+  validateFsdImport(
+    "src/fsd/features/cancel-consultation/model/createCancelProfileConsultation.ts",
+    "../../../entities/consultation/index.ts",
+  ),
+  [],
+);
