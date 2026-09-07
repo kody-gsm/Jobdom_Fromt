@@ -5,3 +5,4 @@ assert.deepEqual(evaluateReadiness({ branch: "fix/mobile", statusLines: [], ahea
 assert.equal(evaluateReadiness({ branch: "develop", statusLines: [], aheadCount: 1 }).errors.length, 1);
 assert.equal(evaluateReadiness({ branch: "fix/mobile", statusLines: [" M file.ts"], aheadCount: 1 }).errors.length, 1);
 assert.equal(evaluateReadiness({ branch: "fix/mobile", statusLines: [], aheadCount: 0 }).errors.length, 1);
+assert.equal(evaluateReadiness({ branch: "fix/mobile", statusLines: [], aheadCount: 1, baseRefFresh: false }).errors.length, 1);

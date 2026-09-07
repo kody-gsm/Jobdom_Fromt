@@ -32,6 +32,7 @@ const expectedScripts = {
   "harness:contracts": "node --no-warnings --experimental-strip-types scripts/harness/contract-check.ts",
   "harness:diff": "node --no-warnings --experimental-strip-types scripts/harness/diff-check.ts",
   "harness:ready": "node --no-warnings --experimental-strip-types scripts/harness/readiness.ts",
+  "harness:pr": "node --no-warnings --experimental-strip-types scripts/harness/pr-metadata.ts",
   "harness:fsd": "node --no-warnings --experimental-strip-types scripts/harness/fsd-boundary-check.ts",
   "harness:convention": "node --no-warnings --experimental-strip-types scripts/harness/convention-check.ts",
   "harness:branches": "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts",

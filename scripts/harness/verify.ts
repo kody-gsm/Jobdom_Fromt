@@ -33,6 +33,7 @@ const NODE_CHECKS: VerificationStep[] = [
   { name: "convention unit", kind: "node", target: "scripts/harness/convention-check.test.ts" },
   { name: "branch cleanup unit", kind: "node", target: "scripts/harness/branch-cleanup.test.ts" },
   { name: "readiness unit", kind: "node", target: "scripts/harness/readiness.test.ts" },
+  { name: "PR metadata unit", kind: "node", target: "scripts/harness/pr-metadata.test.ts" },
   { name: "lightweight harness unit", kind: "node", target: "scripts/harness/lightweight-harness.test.ts" },
   { name: "verify unit", kind: "node", target: "scripts/harness/verify.test.ts" },
 ];

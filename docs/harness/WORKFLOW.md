@@ -65,3 +65,5 @@ merge된 개인 작업 브랜치는 `npm run harness:branches`로 정리 후보�
 Squash-merged branches are cleanup candidates only when GitHub reports a merged PR authored by `@me` against `develop` and the current branch tip matches the PR exact head SHA. A force local delete (`-D`) is allowed only for that exact-match squash-merge evidence.
 
 If git config user.email is unavailable, ancestry-only candidates are skipped; exact-SHA squash-merge candidates remain eligible because GitHub @me merged-PR evidence supplies ownership.
+
+`npm run harness:pr` validates an existing open PR's title, `develop` base, required template sections, and checked test results. If no open PR exists or GitHub CLI authentication is unavailable, it reports the metadata check as skipped.
