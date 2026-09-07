@@ -32,3 +32,12 @@ assert.deepEqual(
   validateFsdSource("src/fsd/features/login/api/login.ts", "return fetch('/backend/login');"),
   [],
 );
+
+assert.deepEqual(
+  validateFsdPath("src/fsd/pages/teacher/InvalidSegment/TeacherPage.tsx"),
+  [],
+);
+assert.deepEqual(
+  validateFsdSource("src/fsd/pages/teacher/ui/TeacherPage.tsx", "console.log('legacy teacher code');"),
+  [],
+);

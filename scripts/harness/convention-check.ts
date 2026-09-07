@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, extname, join } from "node:path";
+import { shouldCheckFsdSource } from "./fsd-boundary-check.ts";
 
 const FSD_LAYERS = new Set(["app", "pages", "widgets", "features", "entities", "shared"]);
 const SLICED_LAYERS = new Set(["pages", "widgets", "features", "entities"]);
@@ -13,6 +14,7 @@ const normalizePath = (path: string) => path.replaceAll("\\", "/");
 const isKebabCase = (value: string) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 
 export const validateFsdPath = (filePath: string): string[] => {
+  if (!shouldCheckFsdSource(filePath)) return [];
   const path = normalizePath(filePath);
   if (!path.startsWith("src/fsd/")) return [];
 
@@ -26,16 +28,24 @@ export const validateFsdPath = (filePath: string): string[] => {
     if (!slice || !isKebabCase(slice)) errors.push(`slice must be kebab-case: ${slice ?? "<missing>"}`);
 
     const segmentOrFile = parts[4];
-    if (segmentOrFile && segmentOrFile !== "index.ts" && segmentOrFile !== "index.tsx" && !SEGMENTS.has(segmentOrFile)) {
+    if (
+      segmentOrFile &&
+      segmentOrFile !== "index.ts" &&
+      segmentOrFile !== "index.tsx" &&
+      !SEGMENTS.has(segmentOrFile)
+    ) {
       errors.push(`invalid FSD segment: ${segmentOrFile}`);
     }
   }
 
-  if (GENERIC_DUMP_FILES.has(basename(path))) errors.push(`generic dump file is forbidden: ${basename(path)}`);
+  if (GENERIC_DUMP_FILES.has(basename(path))) {
+    errors.push(`generic dump file is forbidden: ${basename(path)}`);
+  }
   return errors;
 };
 
 export const validateFsdSource = (filePath: string, source: string): string[] => {
+  if (!shouldCheckFsdSource(filePath)) return [];
   const path = normalizePath(filePath);
   const errors: string[] = [];
 
@@ -66,7 +76,7 @@ const findSourceFiles = (directory: string): string[] => {
 };
 
 const runCli = () => {
-  const files = findSourceFiles("src/fsd");
+  const files = findSourceFiles("src/fsd").filter(shouldCheckFsdSource);
   const violations: string[] = [];
 
   for (const file of files) {

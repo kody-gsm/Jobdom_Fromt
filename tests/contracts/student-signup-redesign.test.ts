@@ -22,6 +22,8 @@ assert.match(form, /useSignupForm/);
 assert.match(form, /TextField/);
 assert.match(form, /PasswordField/);
 assert.match(form, /ActionButton/);
+assert.match(form, /href="\/login"/);
+assert.match(form, /로그인/);
 assert.match(slice, /인증코드 발송/);
 assert.match(slice, /인증코드 재발송/);
 assert.doesNotMatch(form, /useState|useEffect/);

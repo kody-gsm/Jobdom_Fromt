@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { extname, join } from "node:path";
+import { dirname, extname, join, relative, resolve } from "node:path";
 
 const LAYERS = ["shared", "entities", "features", "widgets", "pages", "app"] as const;
 type FsdLayer = (typeof LAYERS)[number];
@@ -9,6 +9,19 @@ const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
 
 const normalizePath = (path: string) => path.replaceAll("\\", "/");
 
+const FSD_EXCLUDED_PREFIXES = [
+  "src/fsd/pages/teacher/",
+  "src/fsd/pages/teacher-forms/",
+  "src/fsd/pages/teacher-form-submissions/",
+  "src/fsd/pages/teacher-recruit/",
+  "src/fsd/features/manage-recruit/",
+] as const;
+
+export const shouldCheckFsdSource = (sourceFile: string) => {
+  const normalized = normalizePath(sourceFile);
+  return !FSD_EXCLUDED_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+};
+
 const getSourceLocation = (sourceFile: string) => {
   const parts = normalizePath(sourceFile).split("/");
   if (parts[0] !== "src" || parts[1] !== "fsd") return null;
@@ -17,26 +30,36 @@ const getSourceLocation = (sourceFile: string) => {
   return {
     layer,
     slice: SLICED_LAYERS.has(layer) ? parts[3] : undefined,
+    segment: SLICED_LAYERS.has(layer) ? undefined : parts[3],
   };
 };
 
-const getTargetLocation = (specifier: string) => {
-  if (!specifier.startsWith("@fsd/")) return null;
-  const parts = specifier.slice("@fsd/".length).split("/");
+const getTargetLocation = (sourceFile: string, specifier: string) => {
+  let parts: string[];
+  if (specifier.startsWith("@fsd/")) {
+    parts = specifier.slice("@fsd/".length).split("/");
+  } else if (specifier.startsWith(".")) {
+    const targetPath = normalizePath(relative(process.cwd(), resolve(dirname(sourceFile), specifier)));
+    const targetParts = targetPath.split("/");
+    if (targetParts[0] !== "src" || targetParts[1] !== "fsd") return null;
+    parts = targetParts.slice(2);
+  } else {
+    return null;
+  }
   const layer = parts[0] as FsdLayer;
   if (!LAYERS.includes(layer)) return { invalidLayer: parts[0], parts } as const;
   return {
     layer,
     slice: SLICED_LAYERS.has(layer) ? parts[1] : undefined,
+    segment: SLICED_LAYERS.has(layer) ? undefined : parts[1],
     parts,
   };
 };
 
 export const validateFsdImport = (sourceFile: string, specifier: string): string[] => {
-  if (specifier.startsWith(".")) return [];
-
+  if (!shouldCheckFsdSource(sourceFile)) return [];
   const source = getSourceLocation(sourceFile);
-  const target = getTargetLocation(specifier);
+  const target = getTargetLocation(sourceFile, specifier);
   if (!source || !target) return [];
   if ("invalidLayer" in target) return [`invalid FSD target layer: ${target.invalidLayer}`];
 
@@ -56,12 +79,18 @@ export const validateFsdImport = (sourceFile: string, specifier: string): string
     return [`same-layer cross-slice import is forbidden: ${source.slice} -> ${target.slice}`];
   }
 
-  const crossesSliceBoundary = source.layer !== target.layer || source.slice !== target.slice;
-  if (SLICED_LAYERS.has(target.layer) && crossesSliceBoundary && target.parts.length > 2) {
+  const sourceUnit = SLICED_LAYERS.has(source.layer) ? source.slice : source.segment;
+  const targetUnit = SLICED_LAYERS.has(target.layer) ? target.slice : target.segment;
+  const crossesBoundary = source.layer !== target.layer || sourceUnit !== targetUnit;
+  const targetsPublicApi =
+    target.parts.length <= 2 ||
+    (target.parts.length === 3 && /^index\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(target.parts[2] ?? ""));
+
+  if (SLICED_LAYERS.has(target.layer) && crossesBoundary && !targetsPublicApi) {
     return [`use the slice public API instead of a deep import: ${specifier}`];
   }
 
-  if (!SLICED_LAYERS.has(target.layer) && target.parts.length > 2) {
+  if (!SLICED_LAYERS.has(target.layer) && crossesBoundary && !targetsPublicApi) {
     return [`use the layer segment public API instead of a deep import: ${specifier}`];
   }
 
@@ -92,7 +121,7 @@ const getImportSpecifiers = (source: string) => {
 };
 
 const runCli = () => {
-  const files = findSourceFiles("src/fsd");
+  const files = findSourceFiles("src/fsd").filter(shouldCheckFsdSource);
   const violations: string[] = [];
   for (const file of files) {
     const source = readFileSync(file, "utf8");

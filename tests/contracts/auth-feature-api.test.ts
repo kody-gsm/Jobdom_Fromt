@@ -25,7 +25,7 @@ let remembered = false;
 const login = createLoginAction({
   request,
   saveSession: (response, rememberLogin) => {
-    remembered = rememberLogin;
+    remembered = Boolean(rememberLogin);
     return { ...response, role: "STUDENT" as const };
   },
 });

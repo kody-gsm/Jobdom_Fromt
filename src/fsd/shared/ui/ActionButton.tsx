@@ -8,8 +8,8 @@ type ActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const VARIANT_CLASS_NAME: Record<ActionButtonVariant, string> = {
-  primary: "bg-[#02C551] text-white hover:bg-[#00B94C]",
-  secondary: "border border-[#DDE2E7] bg-white text-[#202124] hover:bg-[#F7F8F9]",
+  primary: "bg-brand text-white hover:bg-[#00B94C]",
+  secondary: "border border-border bg-white text-[#202124] hover:bg-[#F7F8F9]",
   ghost: "bg-transparent text-[#5F6368] hover:bg-[#F3F4F6]",
 };
 

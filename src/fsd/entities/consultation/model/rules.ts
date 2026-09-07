@@ -6,6 +6,7 @@ import type {
   ConsultationType,
   ReservationInput,
 } from "./types.ts";
+import { CONSULTATION_SCHEDULE } from "./schedule.ts";
 
 export const TEACHERS: ConsultationTeacher[] = [
   "임경원 선생님",
@@ -13,9 +14,7 @@ export const TEACHERS: ConsultationTeacher[] = [
   "정윤기 선생님",
 ];
 
-const GENERAL_PERIODS = [
-  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시",
-];
+const GENERAL_PERIODS = CONSULTATION_SCHEDULE.map(({ period }) => period);
 
 export const toConsultationKind = (type: ConsultationType): ConsultationKind =>
   type === "career" ? "course" : "common";

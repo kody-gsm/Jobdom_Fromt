@@ -22,9 +22,10 @@ assert.match(page, /StudentHeader/);
 assert.match(page, /useProfilePage/);
 assert.doesNotMatch(page, /fetchUserProfile|cancelProfileConsultation/);
 assert.match(api, /getUpcoming/);
-assert.match(api, /getAll/);
+assert.doesNotMatch(api, /getAll/);
 assert.match(api, /getSession/);
 assert.match(widget, /예약 현황/);
-assert.match(widget, /상담 기록/);
-assert.match(widget, /myMemo/);
 assert.match(widget, /예약 취소/);
+assert.doesNotMatch(widget, /상담 기록|myMemo|TextAreaField/);
+
+console.log("profile fsd page contract passed");

@@ -25,7 +25,7 @@ assert.match(entitySession, /readRememberLoginPreference/);
 assert.match(entityLifecycle, /clearSession[\s\S]*backfillRememberLoginEmail/);assert.match(loginForm, /아이디 저장/);
 assert.match(loginForm, /type="checkbox"/);
 assert.match(loginForm, /checked=\{form\.rememberLogin\}/);
-assert.match(loginHook, /login\(form\.email\.trim\(\), form\.password, form\.rememberLogin\)/);
+assert.match(loginHook, /login\([\s\S]*effectiveForm\.email\.trim\(\)[\s\S]*effectiveForm\.password[\s\S]*form\.rememberLogin[\s\S]*\)/);
 assert.match(loginHook, /restoreRememberedSession/);
 assert.match(loginHook, /readRememberLoginPreference/);
 assert.match(loginForm, /autoComplete="email"/);

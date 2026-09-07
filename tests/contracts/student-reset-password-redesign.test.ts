@@ -21,6 +21,8 @@ assert.match(form, /useResetPasswordForm/);
 assert.match(form, /TextField/);
 assert.match(form, /PasswordField/);
 assert.match(form, /ActionButton/);
+assert.match(form, /href="\/login"/);
+assert.match(form, /로그인으로 돌아가기/);
 assert.match(slice, /인증코드 발송/);
 assert.doesNotMatch(form, /useState|useEffect/);
 assert.doesNotMatch(form, /sendPasswordResetCode|resetPassword\(/);

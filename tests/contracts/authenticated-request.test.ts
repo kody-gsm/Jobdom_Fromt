@@ -7,13 +7,13 @@ let accessToken = "old-token";
 let first = true;
 
 const request = createAuthenticatedRequest({
-  request: async (_path, _init, options) => {
+  request: async <T>(_path: string, _init: RequestInit | undefined, options: { accessToken?: string | null } | undefined) => {
     calls.push(`request:${options?.accessToken ?? "none"}`);
     if (first) {
       first = false;
       throw new ApiError("expired", 401);
     }
-    return "ok";
+    return "ok" as unknown as T;
   },
   readAccessToken: () => accessToken,
   getRefreshToken: () => "refresh-token",

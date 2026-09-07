@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
-import { FiEye, FiEyeOff } from "react-icons/fi";
 import { TextField } from "./TextField.tsx";
 import type { TextFieldProps } from "./TextField.tsx";
 
@@ -20,9 +20,15 @@ export const PasswordField = (props: PasswordFieldProps) => {
           type="button"
           aria-label={label}
           onClick={() => setIsVisible((current) => !current)}
-          className="flex h-11 w-11 items-center justify-center rounded-xl text-[#737A82] transition-colors hover:bg-[#F4F6F8] hover:text-[#02C551]"
+          className="flex h-11 w-11 translate-x-2 items-center justify-center"
         >
-          {isVisible ? <FiEyeOff aria-hidden size={19} /> : <FiEye aria-hidden size={19} />}
+          <Image
+            src={isVisible ? "/openeye.svg" : "/closeeye.svg"}
+            alt=""
+            width={24}
+            height={24}
+            aria-hidden="true"
+          />
         </button>
       }
     />

@@ -37,7 +37,7 @@ export const buildHomeOverview = ({
     })),
   ]
     .sort((a, b) => `${a.date} ${a.period}`.localeCompare(`${b.date} ${b.period}`))
-    .slice(0, 3),
+,
   recentRecruits: recruits
     .filter((item) => item.status === "PUBLISHED")
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

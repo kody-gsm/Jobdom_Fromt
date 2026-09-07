@@ -9,23 +9,15 @@ export const FormsPage = () => {
   const { forms, loading, error } = useFormsPage();
 
   return (
-    <div className="min-h-dvh bg-[#F4F6F8] text-[#13233A]" style={{ fontFamily: '"Pretendard Variable", sans-serif' }}>
+    <div className="min-h-dvh bg-surface text-ink">
       <StudentHeader />
-      <main className="mx-auto w-full max-w-[1080px] px-6 py-10 lg:px-10 lg:py-12">
-        <section className="rounded-[28px] bg-[#10243E] px-7 py-9 text-white sm:px-10 lg:px-12">
-          <p className="text-sm font-bold tracking-[0.16em] text-[#8FB3D9]">APPLICATION FORMS</p>
-          <div className="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">학생 신청 폼</h1>
-              <p className="mt-4 max-w-2xl break-keep text-sm leading-7 text-[#C8D4E2] sm:text-base">
-                학교에서 공개한 신청 폼을 확인하고 필요한 항목에 바로 응답할 수 있습니다.
-              </p>
-            </div>
-            <Link href="/recruit" className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#10243E]">
-              취업 공고 보기
-            </Link>
-          </div>
-        </section>
+      <main className="mx-auto w-full max-w-[1180px] px-6 py-10 lg:px-10 lg:py-12">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">신청 폼</h1>
+          <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft">
+            취업 공고 보기
+          </Link>
+        </div>
 
         {error ? (
           <p role="alert" className="mt-6 rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] p-5 text-sm text-[#9A4F45]">
@@ -33,30 +25,29 @@ export const FormsPage = () => {
           </p>
         ) : null}
 
-        <section className="mt-6 grid gap-5 sm:grid-cols-2" aria-live="polite">
+        <section className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
           {loading ? (
             <Empty text="불러오는 중…" />
           ) : forms.length === 0 ? (
             <Empty text="공개된 폼이 없습니다." />
           ) : (
             forms.map((form) => (
-              <ContentCard key={form.id} className="flex min-h-[260px] flex-col p-7">
+              <ContentCard key={form.id} className="flex min-h-[330px] flex-col p-7">
                 <div className="flex items-start justify-between gap-4">
-                  <span className="rounded-full bg-[#EEF3F8] px-3 py-1 text-xs font-bold text-[#315B83]">
+                  <span className="rounded-full bg-[#EAF9F0] px-3 py-1 text-xs font-bold text-brand-hover">
                     신청 폼
                   </span>
-                  <span className="text-xs font-semibold text-[#8A95A3]">질문 {form.questionCount}개</span>
+                  <span className="text-xs font-semibold text-muted">질문 {form.questionCount}개</span>
                 </div>
-                <h2 className="mt-6 break-keep text-2xl font-bold tracking-[-0.02em] text-[#13233A]">
-                  {form.title}
-                </h2>
-                <p className="mt-3 flex-1 whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
+                <h2 className="mt-6 break-keep text-2xl font-bold tracking-[-0.02em] text-ink">{form.title}</h2>
+                <p className="mt-3 line-clamp-4 flex-1 whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
                   {form.description || "폼 설명이 없습니다."}
                 </p>
-                <Link
-                  href={`/forms/${form.id}`}
-                  className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-5 text-sm font-bold text-white hover:bg-[#1B3555]"
-                >
+                <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#E8EBEF] pt-4 text-sm">
+                  <span className="text-muted">제한 기한</span>
+                  <strong className="text-right text-[#4E5B6B]">{formatFormDeadline(form.deadline)}</strong>
+                </div>
+                <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover">
                   응답하기
                 </Link>
               </ContentCard>
@@ -69,7 +60,18 @@ export const FormsPage = () => {
 };
 
 const Empty = ({ text }: { text: string }) => (
-  <ContentCard className="col-span-full px-6 py-20 text-center text-[#8A95A3]">
-    {text}
-  </ContentCard>
+  <ContentCard className="col-span-full px-6 py-20 text-center text-muted">{text}</ContentCard>
 );
+
+const formatFormDeadline = (deadline: string | null) => {
+  if (!deadline) return "제한 없음";
+  const date = new Date(deadline);
+  if (Number.isNaN(date.getTime())) return deadline;
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};

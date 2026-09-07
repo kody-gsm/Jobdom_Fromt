@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "check:forms": "node --no-warnings --experimental-strip-types tests/contracts/form-answers.test.ts",
     "check:api": "node --no-warnings --experimental-strip-types tests/contracts/api-contract.test.ts",
     "harness:preflight": "node --no-warnings --experimental-strip-types scripts/harness/preflight.ts",

@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false
+  },
+  "exclude": [
+    "node_modules",
+    "app/teacher/**",
+    "src/fsd/pages/teacher/**",
+    "src/fsd/pages/teacher-forms/**",
+    "src/fsd/pages/teacher-form-submissions/**",
+    "src/fsd/pages/teacher-recruit/**",
+    "src/fsd/features/manage-recruit/**",
+    "tests/contracts/teacher-*.test.ts"
+  ]
+}

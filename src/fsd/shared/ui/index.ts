@@ -10,3 +10,4 @@ export type { SegmentedTabItem } from "./SegmentedTabs.tsx";
 export { TextAreaField } from "./TextAreaField.tsx";
 export { TextField } from "./TextField.tsx";
 export { PasswordField } from "./PasswordField.tsx";
+export { SummaryActionCard } from "./SummaryActionCard.tsx";

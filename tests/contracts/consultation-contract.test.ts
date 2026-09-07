@@ -7,6 +7,7 @@ import {
   toConsultationKind,
   validateConsultationDraft,
 } from "../../src/fsd/entities/consultation/model/rules.ts";
+import type { ConsultationDraft } from "../../src/fsd/entities/consultation/model/types.ts";
 import { createConsultationApi } from "../../src/fsd/entities/consultation/api/createConsultationApi.ts";
 
 assert.deepEqual(TEACHERS, [
@@ -32,7 +33,7 @@ assert.deepEqual(weekdays.map((item) => item.value), [
   "2026-09-04", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10",
 ]);
 
-const baseDraft = {
+const baseDraft: ConsultationDraft = {
   type: "career" as const,
   title: "진로 고민",
   content: "상담 내용",

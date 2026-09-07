@@ -44,6 +44,7 @@ export const getVerificationSteps = (): VerificationStep[] => [
   { name: "fsd boundary check", kind: "npm", target: "harness:fsd" },
   { name: "convention check", kind: "npm", target: "harness:convention" },
   { name: "diff check", kind: "npm", target: "harness:diff" },
+  { name: "typecheck", kind: "npm", target: "typecheck" },
   { name: "build", kind: "npm", target: "build" },
 ];
 

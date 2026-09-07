@@ -1,9 +1,6 @@
 export type ConsultationType = "career" | "general";
 export type ConsultationKind = "course" | "common";
-export type ConsultationTeacher =
-  | "임경원 선생님"
-  | "김권예소 선생님"
-  | "정윤기 선생님";
+export type ConsultationTeacher = string;
 
 export interface ConsultationDraft {
   type: ConsultationType;

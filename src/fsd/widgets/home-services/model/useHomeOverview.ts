@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createConsultationApi } from "@fsd/entities/consultation";
 import { createRecruitApi } from "@fsd/entities/recruit";
 import { requestWithSession } from "@fsd/entities/user";
+import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
 import { buildHomeOverview, type HomeOverview } from "./overview.ts";
 
 const consultationApi = createConsultationApi(requestWithSession);
@@ -41,5 +42,13 @@ export const useHomeOverview = () => {
     };
   }, []);
 
-  return { overview, loading, error };
+  const handleCancel = async (id: number) => {
+    await cancelProfileConsultation(id);
+    setOverview((current) => ({
+      ...current,
+      upcomingConsultations: current.upcomingConsultations.filter((item) => item.id !== id),
+    }));
+  };
+
+  return { overview, loading, error, handleCancel };
 };

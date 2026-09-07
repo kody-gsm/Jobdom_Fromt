@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { FormEvent } from "react";
 import { formatCountdown } from "@fsd/shared/lib";
 import { ActionButton, PasswordField, TextField } from "@fsd/shared/ui";
@@ -36,7 +37,7 @@ export const SignupForm = () => {
           type="button"
           disabled={!signupForm.canSendCode}
           onClick={() => void signupForm.sendCode()}
-          className="min-h-11 rounded-lg px-2 text-sm font-semibold text-[#02A946] transition-colors hover:bg-[#F4F6F8] disabled:text-[#9AA0A6] disabled:hover:bg-transparent"
+          className="min-h-11 rounded-lg px-2 text-sm font-semibold text-brand-hover transition-colors hover:bg-surface disabled:text-[#9AA0A6] disabled:hover:bg-transparent"
         >
           {codeActionLabel}
         </button>
@@ -91,6 +92,13 @@ export const SignupForm = () => {
       <ActionButton type="submit" disabled={!signupForm.canSubmit} className="w-full">
         {signupForm.isSubmitting ? "가입 중" : "회원가입"}
       </ActionButton>
+
+      <p className="pt-1 text-center text-sm text-[#7A828B]">
+        이미 계정이 있으신가요?{" "}
+        <Link href="/login" className="font-semibold text-brand-hover hover:underline">
+          로그인
+        </Link>
+      </p>
     </form>
   );
 };
