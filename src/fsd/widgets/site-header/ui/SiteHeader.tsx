@@ -1,5 +1,7 @@
 "use client";
 
+import { NotificationBell } from "@fsd/features/notifications";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -82,6 +84,7 @@ export const SiteHeader = () => {
           >
             로그아웃
           </button>
+          <NotificationBell />
           <Link href="/profile">프로필</Link>
         </div>
       </header>

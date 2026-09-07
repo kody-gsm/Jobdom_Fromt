@@ -85,3 +85,16 @@ button:disabled {
     transform: none;
   }
 }
+
+@keyframes notification-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-notification-shrink {
+  animation: notification-shrink 4000ms linear forwards;
+}
