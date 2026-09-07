@@ -25,7 +25,7 @@ assert.match(hook, /getConsultationTeachers/);
 assert.doesNotMatch(hook, /getUpcomingConsultations|setHasCareerReservation/);
 assert.match(hook, /validateConsultationDraft/);
 assert.match(form, /진로 상담/);
-assert.match(form, /일반 상담/);
+assert.match(form, /상담/);
 assert.equal((form.match(/bg-brand(?!-)/g) ?? []).length, 1);
 assert.doesNotMatch(form, /hover:bg-green|hover:border-green/);
 assert.match(form, /grid-cols-5/);

@@ -6,7 +6,7 @@ const form = readFileSync("src/fsd/features/submit-consultation/ui/ConsultationF
 const home = readFileSync("src/fsd/widgets/home-services/ui/HomeServices.tsx", "utf8");
 const recruit = readFileSync("src/fsd/entities/recruit/model/types.ts", "utf8");
 
-if (/period:\s*"4교시"/.test(schedule)) throw new Error("4교시 must not be selectable");
+if (!/period:\s*"4교시"/.test(schedule)) throw new Error("4교시 must remain in the shared schedule source");
 if (!rules.includes("BLOCKED_GENERAL_PERIODS") || !rules.includes(".filter")) throw new Error("general consultation periods must filter blocked periods");
 if (!form.includes("취업 진로 상담")) throw new Error("career consultation label is missing");
 if (!form.includes("상담")) throw new Error("consultation label is missing");
