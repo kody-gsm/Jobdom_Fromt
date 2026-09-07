@@ -29,7 +29,6 @@ export const ConsultationForm = ({
     content,
     teachers,
     selectedTeacher,
-    selectedTeacherId,
     selectedDate,
     selectedTime,
     submitting,
@@ -93,7 +92,7 @@ export const ConsultationForm = ({
                       type="button"
                       onClick={() => toggleTeacher(teacher)}
                       className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                        selectedTeacherId === teacher.id
+                        selectedTeacher?.id === teacher.id
                           ? "border-brand bg-[#EAF9F0] text-brand-hover"
                           : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
                       }`}
@@ -111,7 +110,7 @@ export const ConsultationForm = ({
                       : "border-border text-[#4E5B6B]"
                   }`}
                 >
-                  {selectedTeacher ?? "상담 선생님 배정 중"}
+                  {selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : "상담 선생님 배정 중"}
                 </div>
               )}
             </div>

@@ -1,14 +1,8 @@
-import type {
-  ConsultationTeacher,
-  ConsultationType,
-} from "@fsd/entities/consultation";
+import type { ConsultationType } from "@fsd/entities/consultation";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
 
-export const getConsultationTeacherLabel = (
-  name: string,
-): ConsultationTeacher => (
-  name.endsWith(" 선생님") ? name : `${name} 선생님`
-) as ConsultationTeacher;
+export const getConsultationTeacherLabel = (name: string) =>
+  name.endsWith(" 선생님") ? name : `${name} 선생님`;
 
 export const getDefaultGeneralTeacher = (
   teachers: ConsultationTeacherOption[],

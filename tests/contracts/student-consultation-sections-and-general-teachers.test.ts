@@ -10,8 +10,9 @@ assert.match(teacherOption, /getDefaultGeneralTeacher/);
 assert.match(teacherOption, /type === "career" \? teachers : \[\]/);
 assert.match(form, /counselType === "career"/);
 assert.match(form, /displayTeachers\.map/);
-assert.match(form, /selectedTeacher \?\? "상담 선생님 배정 중"/);
+assert.match(form, /selectedTeacher \? getConsultationTeacherLabel\(selectedTeacher\.name\) : "상담 선생님 배정 중"/);
 assert.match(hook, /getDefaultGeneralTeacher/);
+assert.doesNotMatch(hook, /selectedTeacherId|setSelectedTeacherId/);
 
 assert.doesNotMatch(form, />일정 예약</);
 assert.doesNotMatch(form, /상담 희망일과 교시를 선택해 주세요\./);

@@ -15,7 +15,8 @@ assert.match(api, /available:\s*boolean/);
 
 assert.match(hook, /getConsultationSlotStatus/);
 assert.match(hook, /toConsultationKind\(counselType\)/);
-assert.match(hook, /selectedTeacherId/);
+assert.match(hook, /selectedTeacher\.id/);
+assert.doesNotMatch(hook, /selectedTeacherId|setSelectedTeacherId/);
 assert.match(hook, /selectedDate/);
 assert.match(hook, /!item\.available/);
 assert.match(hook, /serverUnavailablePeriods/);

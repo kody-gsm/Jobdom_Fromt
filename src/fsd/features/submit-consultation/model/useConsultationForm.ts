@@ -3,15 +3,11 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   createReservationInput,
-  getAvailablePeriods,
   getNextWeekdays,
   toConsultationKind,
   validateConsultationDraft,
 } from "@fsd/entities/consultation";
-import type {
-  ConsultationTeacher,
-  ConsultationType,
-} from "@fsd/entities/consultation";
+import type { ConsultationType } from "@fsd/entities/consultation";
 import { ApiError } from "@fsd/shared/api";
 import {
   getConsultationSlotStatus,
@@ -74,8 +70,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
-  const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacher | null>(null);
-  const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [serverUnavailablePeriods, setServerUnavailablePeriods] = useState<Set<string>>(
@@ -91,7 +86,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const counselTypeRef = useRef(initialType);
 
   const dates = useMemo(() => getNextWeekdays(), []);
-  const times = getAvailablePeriods(counselType, selectedTeacher);
 
   useEffect(() => {
     let active = true;
@@ -101,10 +95,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         setTeachers(items);
         if (counselTypeRef.current === "general") {
           const teacher = getDefaultGeneralTeacher(items);
-          setSelectedTeacher(
-            teacher ? getConsultationTeacherLabel(teacher.name) : null,
-          );
-          setSelectedTeacherId(teacher?.id ?? null);
+          setSelectedTeacher(teacher);
         }
       })
       .catch(() => undefined);
@@ -115,12 +106,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   }, []);
 
   useEffect(() => {
-    if (selectedTeacherId === null || selectedDate === null) return;
+    if (selectedTeacher === null || selectedDate === null) return;
 
     let active = true;
     void getConsultationSlotStatus(
       toConsultationKind(counselType),
-      selectedTeacherId,
+      selectedTeacher.id,
       selectedDate,
     )
       .then((items) => {
@@ -140,7 +131,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     return () => {
       active = false;
     };
-  }, [counselType, selectedTeacherId, selectedDate]);
+  }, [counselType, selectedTeacher, selectedDate]);
 
   useEffect(
     () => () => {
@@ -171,19 +162,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     const generalTeacher = type === "general"
       ? getDefaultGeneralTeacher(teachers)
       : null;
-    setSelectedTeacher(
-      generalTeacher ? getConsultationTeacherLabel(generalTeacher.name) : null,
-    );
-    setSelectedTeacherId(generalTeacher?.id ?? null);
+    setSelectedTeacher(generalTeacher);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
     setErrorTarget(null);
   };
 
   const toggleTeacher = (teacher: ConsultationTeacherOption) => {
-    const isSelected = selectedTeacherId === teacher.id;
-    setSelectedTeacher(isSelected ? null : getConsultationTeacherLabel(teacher.name));
-    setSelectedTeacherId(isSelected ? null : teacher.id);
+    const isSelected = selectedTeacher?.id === teacher.id;
+    setSelectedTeacher(isSelected ? null : teacher);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
     if (errorTarget === "teacher") setErrorTarget(null);
@@ -198,9 +185,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const isTimeUnavailable = (time: string) =>
     serverUnavailablePeriods.has(time) ||
-    (selectedTeacherId !== null &&
+    (selectedTeacher !== null &&
       selectedDate !== null &&
-      unavailableSlotKeys.has(getSlotKey(selectedTeacherId, selectedDate, time)));
+      unavailableSlotKeys.has(getSlotKey(selectedTeacher.id, selectedDate, time)));
 
   const toggleTime = (time: string) => {
     if (isTimeUnavailable(time)) return;
@@ -212,7 +199,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setTitle("");
     setContent("");
     setSelectedTeacher(null);
-    setSelectedTeacherId(null);
     setSelectedDate(null);
     setSelectedTime(null);
     setErrorTarget(null);
@@ -222,13 +208,13 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const getValidationMessage = () => {
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
-    if (!selectedTeacher || selectedTeacherId === null) return "선생님을 선택해주세요";
+    if (!selectedTeacher) return "선생님을 선택해주세요";
 
     return validateConsultationDraft({
       type: counselType,
       title,
       content,
-      teacher: selectedTeacher,
+      teacher: getConsultationTeacherLabel(selectedTeacher.name),
       date: selectedDate,
       period: selectedTime,
     }, false);
@@ -246,14 +232,14 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       return;
     }
 
-    const teacherId = selectedTeacherId;
-    if (teacherId === null || !selectedTeacher) return;
+    if (!selectedTeacher) return;
+    const teacherId = selectedTeacher.id;
 
     const draft = {
       type: counselType,
       title,
       content,
-      teacher: selectedTeacher,
+      teacher: getConsultationTeacherLabel(selectedTeacher.name),
       date: selectedDate,
       period: selectedTime,
     };
@@ -293,14 +279,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     content,
     teachers,
     selectedTeacher,
-    selectedTeacherId,
     selectedDate,
     selectedTime,
     submitting,
     toast,
     errorTarget,
     dates,
-    times,
     setTitle,
     setContent,
     handleTabChange,
