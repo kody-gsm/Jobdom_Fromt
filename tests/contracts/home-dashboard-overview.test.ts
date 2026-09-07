@@ -34,5 +34,6 @@ assert.match(services, /상담 신청/);
 assert.match(services, /예정 상담/);
 assert.match(services, /취업 공고/);
 assert.doesNotMatch(services, /href="\/profile"/);
+assert.doesNotMatch(services, /상담 신청하기/);
 
 console.log("home dashboard overview contract passed");

@@ -80,12 +80,6 @@ export const HomeServices = () => {
             ) : consultationPreview.length === 0 ? (
               <div className="rounded-2xl bg-[#F7F8FA] px-5 py-8">
                 <p className="font-semibold text-[#4E5B6B]">예정된 상담이 없습니다.</p>
-                <Link
-                  href="/counsel"
-                  className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft"
-                >
-                  상담 신청하기
-                </Link>
               </div>
             ) : (
               <div className="space-y-3">
