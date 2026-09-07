@@ -54,12 +54,12 @@ const prTemplate = readFileSync(prTemplatePath, "utf8").replace(/\r\n?/g, "\n");
 const expectedPrTemplate = [
   "# ✨ PR 내용",
   "",
-  "## 📝 코드 변경 사항", "- ", "",
-  "## 💡 변경 이유", "- ", "",
-  "## 🛠️ 구현 방법", "- ", "",
-  "## 📌 영향 범위", "- ", "",
-  "## ✅ 테스트", "- [ ] ", "",
-  "**테스트 결과 / 참고 사항**", "- ", "",
+  "## 📝 코드 변경 사항", "-", "",
+  "## 💡 변경 이유", "-", "",
+  "## 🛠️ 구현 방법", "-", "",
+  "## 📌 영향 범위", "-", "",
+  "## ✅ 테스트", "- [ ]", "",
+  "**테스트 결과 / 참고 사항**", "-", "",
   "## 🌿 반영 브랜치", "- develop", "",
 ].join("\n");
 assert.equal(prTemplate, expectedPrTemplate, "PR template must match the approved Korean format exactly");
