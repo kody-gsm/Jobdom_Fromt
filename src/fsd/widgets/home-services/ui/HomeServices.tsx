@@ -8,7 +8,7 @@ import {
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
-import { ConsultationReservationCard, ContentCard } from "@fsd/shared/ui";
+import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
 import type { HomeConsultationItem } from "../model/overview.ts";
 import { useHomeOverview } from "../model/useHomeOverview.ts";
 
@@ -90,7 +90,16 @@ export const HomeServices = () => {
             ) : (
               <div className="space-y-3">
                 {consultationPreview.map((item) => (
-                  <ConsultationReservationCard key={item.id} type={item.type} date={item.date} period={item.period} />
+                  <SummaryActionCard
+                    key={item.id}
+                    title={item.type}
+                    detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
+                    actionLabel="예약 취소"
+                    pendingActionLabel="취소 중"
+                    actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
+                    actionPending={cancelingId === item.id}
+                    onAction={() => void cancelConsultation(item)}
+                  />
                 ))}
               </div>
             )}
@@ -185,14 +194,15 @@ export const HomeServices = () => {
                 </p>
               ) : (
                 upcomingConsultations.map((item) => (
-                  <ConsultationReservationCard
+                  <SummaryActionCard
                     key={item.id}
-                    type={item.type}
-                    date={item.date}
-                    period={item.period}
-                    canCancel={isConsultationCancelable(item.date, item.period, now)}
-                    canceling={cancelingId === item.id}
-                    onCancel={() => void cancelConsultation(item)}
+                    title={item.type}
+                    detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
+                    actionLabel="예약 취소"
+                    pendingActionLabel="취소 중"
+                    actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
+                    actionPending={cancelingId === item.id}
+                    onAction={() => void cancelConsultation(item)}
                   />
                 ))
               )}

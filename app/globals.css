@@ -10,6 +10,9 @@
   --color-muted: #8A95A3;
   --color-surface: #F4F6F8;
   --color-border: #DDE2E7;
+  --color-panel: #F7F8FA;
+  --color-secondary-text: #7A8592;
+  --color-disabled-text: #A8AFB8;
   --font-sans: "Pretendard Variable", Pretendard, Arial, Helvetica, sans-serif;
   --font-mono: "Courier New", monospace;
 }

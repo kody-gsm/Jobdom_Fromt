@@ -28,6 +28,7 @@ export const ConsultationForm = ({
     title,
     content,
     teachers,
+    teacherStatus,
     selectedTeacher,
     selectedDate,
     selectedTime,
@@ -85,23 +86,30 @@ export const ConsultationForm = ({
                   errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
                 }`}
               >
-                {displayTeachers.map((teacher) => (
-                  <button
-                    key={teacher.id}
-                    type="button"
-                    onClick={() => toggleTeacher(teacher)}
-                    className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                      selectedTeacher?.id === teacher.id
-                        ? "border-brand bg-[#EAF9F0] text-brand-hover"
-                        : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                    }`}
-                  >
-                    {getConsultationTeacherLabel(teacher.name)}
-                  </button>
-                ))}
-                {displayTeachers.length === 0 ? (
+                {teacherStatus === "loading" ? (
                   <p className="px-1 py-2 text-sm font-semibold text-muted">선생님 정보를 불러오는 중입니다.</p>
-                ) : null}
+                ) : teacherStatus === "error" ? (
+                  <p role="alert" className="px-1 py-2 text-sm font-semibold text-red-600">
+                    선생님 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.
+                  </p>
+                ) : displayTeachers.length === 0 ? (
+                  <p className="px-1 py-2 text-sm font-semibold text-muted">선택 가능한 선생님이 없습니다.</p>
+                ) : (
+                  displayTeachers.map((teacher) => (
+                    <button
+                      key={teacher.id}
+                      type="button"
+                      onClick={() => toggleTeacher(teacher)}
+                      className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                        selectedTeacher?.id === teacher.id
+                          ? "border-brand bg-[#EAF9F0] text-brand-hover"
+                          : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                      }`}
+                    >
+                      {getConsultationTeacherLabel(teacher.name)}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
 

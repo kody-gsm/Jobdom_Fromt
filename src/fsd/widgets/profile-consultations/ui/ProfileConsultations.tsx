@@ -6,7 +6,7 @@ import {
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
-import { ActionButton, ConsultationReservationCard, ContentCard } from "@fsd/shared/ui";
+import { ActionButton, ContentCard, SummaryActionCard } from "@fsd/shared/ui";
 
 interface ProfileConsultationsProps {
   reservations: ProfileConsultation[];
@@ -56,13 +56,13 @@ export const ProfileConsultations = ({
             </p>
           ) : (
             visibleReservations.map((item) => (
-              <ConsultationReservationCard
+              <SummaryActionCard
                 key={item.id}
-                type={item.type}
-                date={item.date}
-                period={item.slot}
-                canCancel={isConsultationCancelable(item.date, item.slot, now)}
-                onCancel={() => setCancelTarget(item.id)}
+                title={item.type}
+                detail={`${item.date} / ${item.slot}`}
+                actionLabel="예약 취소"
+                actionDisabled={!isConsultationCancelable(item.date, item.slot, now)}
+                onAction={() => setCancelTarget(item.id)}
               />
             ))
           )}

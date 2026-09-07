@@ -29,6 +29,8 @@ export type ConsultationErrorTarget =
   | "date"
   | "period";
 
+export type ConsultationTeacherStatus = "loading" | "ready" | "error";
+
 const getConsultationErrorTarget = (
   message: string,
 ): ConsultationErrorTarget | null => {
@@ -67,6 +69,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
+  const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -89,8 +92,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       .then((items) => {
         if (!active) return;
         setTeachers(items);
+        setTeacherStatus("ready");
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (active) setTeacherStatus("error");
+      });
 
     return () => {
       active = false;
@@ -266,6 +272,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     title,
     content,
     teachers,
+    teacherStatus,
     selectedTeacher,
     selectedDate,
     selectedTime,
