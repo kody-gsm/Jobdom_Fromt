@@ -4,9 +4,9 @@ import { resolve } from "node:path";
 import { createSyncStudents } from "../../src/fsd/features/sync-students/api/createSyncStudents.ts";
 
 const calls: Array<[string, RequestInit | undefined]> = [];
-const syncStudents = createSyncStudents(async (path, init) => {
+const syncStudents = createSyncStudents(async <T>(path: string, init?: RequestInit) => {
   calls.push([path, init]);
-  return { syncedCount: 27 };
+  return { syncedCount: 27 } as unknown as T;
 });
 
 assert.deepEqual(await syncStudents(), { syncedCount: 27 });

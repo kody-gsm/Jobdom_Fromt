@@ -15,7 +15,7 @@ const recruit = {
   updatedAt: "2026-09-01",
 };
 const forms = [
-  { id: 10, title: "(주) 잡담 지원서", description: null, status: "PUBLISHED" as const, questionCount: 2, createdAt: "2026-09-01" },
+  { id: 10, title: "(주) 잡담 지원서", description: null, status: "PUBLISHED" as const, questionCount: 2, deadline: null, createdAt: "2026-09-01" },
 ];
 
 assert.equal(findRecruitForm(recruit, forms)?.id, 10);

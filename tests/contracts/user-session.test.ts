@@ -1,3 +1,4 @@
+import type { AuthSession } from "../../src/fsd/entities/user/index.ts";
 import assert from "node:assert/strict";
 
 class MemoryStorage {
@@ -15,7 +16,7 @@ Object.defineProperty(globalThis, "sessionStorage", { value: session });
 Object.defineProperty(globalThis, "dispatchEvent", { value: () => true });
 
 const user = await import("../../src/fsd/entities/user/index.ts");
-const auth: user.AuthSession = {
+const auth: AuthSession = {
   accessToken: "access",
   refreshToken: "refresh",
   tokenType: "Bearer",

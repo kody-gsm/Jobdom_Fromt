@@ -19,6 +19,7 @@ assert.ok(existsSync("scripts/harness/readiness.ts"));
 assert.ok(packageJson.scripts["harness:contracts"]);
 assert.ok(packageJson.scripts["harness:diff"]);
 assert.ok(packageJson.scripts["harness:ready"]);
+assert.equal(packageJson.scripts.typecheck, "tsc --noEmit");
 assert.deepEqual(names, [
   "harness config",
   "preflight unit",
@@ -36,5 +37,6 @@ assert.deepEqual(names, [
   "fsd boundary check",
   "convention check",
   "diff check",
+  "typecheck",
   "build",
 ]);

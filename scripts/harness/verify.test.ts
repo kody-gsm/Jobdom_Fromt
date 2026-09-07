@@ -20,6 +20,7 @@ assert.deepEqual(
     "fsd boundary check",
     "convention check",
     "diff check",
+    "typecheck",
     "build",
   ],
 );
