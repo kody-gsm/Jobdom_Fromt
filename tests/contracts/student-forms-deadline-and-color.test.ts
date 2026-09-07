@@ -3,11 +3,9 @@ import { readFileSync } from "node:fs";
 
 const types = readFileSync("src/fsd/entities/form/model/types.ts", "utf8");
 const listPage = readFileSync("src/fsd/pages/forms/ui/FormsPage.tsx", "utf8");
-const preview = readFileSync("src/fsd/pages/forms/model/previewForms.ts", "utf8");
 const submitForm = readFileSync("src/fsd/features/submit-form/ui/SubmitForm.tsx", "utf8");
 
 assert.match(types, /deadline: string \| null/);
-assert.match(preview, /deadline:/);
 assert.match(listPage, /제한 기한/);
 assert.match(listPage, /form\.deadline/);
 assert.match(listPage, /bg-\[#02C551\]/);

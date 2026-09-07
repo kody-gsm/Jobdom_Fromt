@@ -47,15 +47,9 @@ export const FormsPage = () => {
                   <span className="text-[#8A95A3]">제한 기한</span>
                   <strong className="text-right text-[#4E5B6B]">{formatFormDeadline(form.deadline)}</strong>
                 </div>
-                {form.id < 0 ? (
-                  <span className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white opacity-80">
-                    응답하기
-                  </span>
-                ) : (
-                  <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white hover:bg-[#02A946]">
-                    응답하기
-                  </Link>
-                )}
+                <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white hover:bg-[#02A946]">
+                  응답하기
+                </Link>
               </ContentCard>
             ))
           )}

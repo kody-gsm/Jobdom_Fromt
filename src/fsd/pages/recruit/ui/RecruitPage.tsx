@@ -43,11 +43,8 @@ export const RecruitPage = () => {
   );
 };
 
-const RecruitCard = ({ item }: { item: Recruit }) => {
-  const preview = item.id < 0;
-
-  return (
-    <ContentCard className="flex min-h-[320px] flex-col p-7 sm:p-8">
+const RecruitCard = ({ item }: { item: Recruit }) => (
+  <ContentCard className="flex min-h-[320px] flex-col p-7 sm:p-8">
       <div className="flex items-center justify-between gap-4">
         <span className="text-xs font-bold text-[#02A94A]">채용 공고</span>
         <span className="text-xs font-semibold text-[#8A95A3]">
@@ -64,18 +61,11 @@ const RecruitCard = ({ item }: { item: Recruit }) => {
         <div><dt className="text-xs text-[#8A95A3]">지원 마감</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.deadline || "별도 확인"}</dd></div>
         <div><dt className="text-xs text-[#8A95A3]">면접 일정</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.interviewDate || "별도 확인"}</dd></div>
       </dl>
-      {preview ? (
-        <span className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white opacity-80">
-          공고 상세 보기
-        </span>
-      ) : (
-        <Link href={`/recruit/${item.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white hover:bg-[#02A946]">
-          공고 상세 보기
-        </Link>
-      )}
+      <Link href={`/recruit/${item.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#02C551] px-5 text-sm font-bold text-white hover:bg-[#02A946]">
+        공고 상세 보기
+      </Link>
     </ContentCard>
-  );
-};
+);
 
 const EmptyState = ({ text }: { text: string }) => (
   <ContentCard className="col-span-full px-6 py-20 text-center text-[#8A95A3]">{text}</ContentCard>
