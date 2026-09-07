@@ -1,17 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaBriefcase } from "react-icons/fa";
 import { IoMdChatbubbles } from "react-icons/io";
+import {
+  isConsultationCancelable,
+  isConsultationUpcoming,
+} from "@fsd/entities/consultation";
 import { ContentCard } from "@fsd/shared/ui";
 import type { HomeConsultationItem } from "../model/overview.ts";
 import { useHomeOverview } from "../model/useHomeOverview.ts";
 
 export const HomeServices = () => {
-  const { overview, loading, error } = useHomeOverview();
+  const { overview, loading, error, handleCancel } = useHomeOverview();
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
-  const consultationPreview = overview.upcomingConsultations.slice(0, 2);
+  const [cancelError, setCancelError] = useState("");
+  const [cancelingId, setCancelingId] = useState<number | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  const upcomingConsultations = overview.upcomingConsultations.filter((item) =>
+    isConsultationUpcoming(item.date, item.period, now),
+  );
+  const consultationPreview = upcomingConsultations.slice(0, 2);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const cancelConsultation = async (item: HomeConsultationItem) => {
+    if (!isConsultationCancelable(item.date, item.period, new Date())) return;
+    try {
+      setCancelError("");
+      setCancelingId(item.id);
+      await handleCancel(item.id);
+    } catch {
+      setCancelError("상담 예약을 취소하지 못했습니다.");
+    } finally {
+      setCancelingId(null);
+    }
+  };
 
   return (
     <section className="space-y-5" aria-label="학생 대시보드">
@@ -145,14 +173,25 @@ export const HomeServices = () => {
                 닫기
               </button>
             </div>
+            {cancelError ? (
+              <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                {cancelError}
+              </p>
+            ) : null}
             <div className="mt-5 space-y-3">
-              {overview.upcomingConsultations.length === 0 ? (
+              {upcomingConsultations.length === 0 ? (
                 <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-sm text-[#6B7787]">
                   예정된 상담이 없습니다.
                 </p>
               ) : (
-                overview.upcomingConsultations.map((item) => (
-                  <ConsultationRow key={item.id} item={item} />
+                upcomingConsultations.map((item) => (
+                  <ConsultationRow
+                    key={item.id}
+                    item={item}
+                    now={now}
+                    canceling={cancelingId === item.id}
+                    onCancel={cancelConsultation}
+                  />
                 ))
               )}
             </div>
@@ -163,14 +202,42 @@ export const HomeServices = () => {
   );
 };
 
-const ConsultationRow = ({ item }: { item: HomeConsultationItem }) => (
-  <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#F7F8FA] px-5 py-4">
-    <div>
-      <p className="font-bold text-[#13233A]">{item.type}</p>
-      <p className="mt-1 text-xs text-[#8A95A3]">예약 일정</p>
+const ConsultationRow = ({
+  item,
+  now,
+  canceling = false,
+  onCancel,
+}: {
+  item: HomeConsultationItem;
+  now?: Date;
+  canceling?: boolean;
+  onCancel?: (item: HomeConsultationItem) => void;
+}) => {
+  const canCancel = Boolean(
+    onCancel && now && isConsultationCancelable(item.date, item.period, now),
+  );
+
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#F7F8FA] px-5 py-4">
+      <div>
+        <p className="font-bold text-[#13233A]">{item.type}</p>
+        <p className="mt-1 text-xs text-[#8A95A3]">예약 일정</p>
+      </div>
+      <div className="text-right">
+        <p className="text-sm font-semibold text-[#5F6C7B]">
+          {item.date} · {item.period}
+        </p>
+        {onCancel ? (
+          <button
+            type="button"
+            disabled={!canCancel || canceling}
+            onClick={() => onCancel(item)}
+            className="mt-2 inline-flex min-h-9 items-center rounded-lg px-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-[#A8AFB8] disabled:hover:bg-transparent"
+          >
+            {canceling ? "취소 중" : "예약 취소"}
+          </button>
+        ) : null}
+      </div>
     </div>
-    <p className="text-right text-sm font-semibold text-[#5F6C7B]">
-      {item.date} · {item.period}
-    </p>
-  </div>
-);
+  );
+};

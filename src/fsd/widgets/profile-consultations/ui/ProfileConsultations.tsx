@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  isConsultationCancelable,
+  isConsultationUpcoming,
+} from "@fsd/entities/consultation";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
 import { ActionButton, ContentCard } from "@fsd/shared/ui";
 
@@ -15,9 +19,23 @@ export const ProfileConsultations = ({
 }: ProfileConsultationsProps) => {
   const [cancelTarget, setCancelTarget] = useState<number | null>(null);
   const [cancelError, setCancelError] = useState("");
+  const [now, setNow] = useState(() => new Date());
+  const visibleReservations = reservations.filter((item) =>
+    isConsultationUpcoming(item.date, item.slot, now),
+  );
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const executeCancel = async () => {
     if (cancelTarget === null) return;
+    const target = reservations.find((item) => item.id === cancelTarget);
+    if (!target || !isConsultationCancelable(target.date, target.slot, new Date())) {
+      setCancelError("상담 시작 1시간 전부터는 취소할 수 없습니다.");
+      return;
+    }
     try {
       setCancelError("");
       await onCancel(cancelTarget);
@@ -32,12 +50,12 @@ export const ProfileConsultations = ({
       <ContentCard className="p-6">
         <h2 className="text-xl font-bold text-[#13233A]">예약 현황</h2>
         <div className="mt-5 space-y-3">
-          {reservations.length === 0 ? (
+          {visibleReservations.length === 0 ? (
             <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-center text-sm text-[#8A95A3]">
               예약된 상담이 없습니다.
             </p>
           ) : (
-            reservations.map((item) => (
+            visibleReservations.map((item) => (
               <div
                 key={item.id}
                 className="flex flex-col gap-3 rounded-2xl bg-[#F7F8FA] p-5 sm:flex-row sm:items-center sm:justify-between"
@@ -50,8 +68,9 @@ export const ProfileConsultations = ({
                 </div>
                 <button
                   type="button"
+                  disabled={!isConsultationCancelable(item.date, item.slot, now)}
                   onClick={() => setCancelTarget(item.id)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:text-[#A8AFB8] disabled:hover:bg-transparent"
                 >
                   예약 취소
                 </button>

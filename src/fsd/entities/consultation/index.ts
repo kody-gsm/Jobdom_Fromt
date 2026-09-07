@@ -20,3 +20,4 @@ export { createConsultationApi } from "./api/createConsultationApi.ts";
 
 export type { ProfileConsultation } from "./model/profile.ts";
 export { decodeProfileConsultationId, toProfileConsultation } from "./model/profile.ts";
+export { isConsultationCancelable, isConsultationUpcoming } from "./model/timePolicy.ts";
