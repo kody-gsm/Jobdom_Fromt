@@ -7,7 +7,7 @@ const api = read("src/fsd/features/submit-consultation/api/consultation.ts");
 const hook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
 const form = read("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx");
 
-assert.match(api, /\/student\/teachers/);
+assert.match(api, /\/api\/teacher/);
 assert.match(api, /teacherId/);
 assert.match(api, /POST/);
 assert.match(api, /JSON\.stringify\(input\)/);
@@ -20,10 +20,12 @@ assert.match(hook, /상담 신청 요청을 보냈습니다/);
 assert.doesNotMatch(hook, /상담 신청이 완료되었습니다/);
 assert.doesNotMatch(hook, /setHasCareerReservation\(true\)/);
 assert.match(hook, /unavailableSlotKeys/);
+assert.match(hook, /value\.slice\(0, MAX_CONSULTATION_CONTENT_LENGTH\)/);
 assert.match(hook, /isUnavailableSlotError/);
 assert.match(form, /getConsultationTeacherOptions\(counselType, teachers\)/);
 assert.match(form, /displayTeachers\.map/);
 assert.match(form, /isTimeUnavailable\(row\.period\)/);
+assert.match(hook, /counselType === "general"[\s\S]*time === "4교시"/);
 assert.match(form, /예약 불가/);
 assert.doesNotMatch(form, /예약 가능|선택됨/);
 

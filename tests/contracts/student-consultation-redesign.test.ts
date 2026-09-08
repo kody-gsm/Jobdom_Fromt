@@ -6,6 +6,7 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8"
 const page = read("src/fsd/pages/counsel/ui/CounselPage.tsx");
 const form = read("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx");
 const hook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
+const segmentedTabs = read("src/fsd/shared/ui/SegmentedTabs.tsx");
 
 assert.match(page, /StudentHeader/);
 assert.match(page, /상담 신청/);
@@ -25,7 +26,10 @@ assert.match(hook, /getConsultationTeachers/);
 assert.doesNotMatch(hook, /getUpcomingConsultations|setHasCareerReservation/);
 assert.match(hook, /validateConsultationDraft/);
 assert.match(form, /진로 상담/);
-assert.match(form, /상담/);
+assert.match(form, /label: "일반 상담"/);
+assert.doesNotMatch(form, /key=\{counselType\}/);
+assert.doesNotMatch(form, /consultation-fade-in|animate/);
+assert.match(segmentedTabs, /transition-all/);
 assert.equal((form.match(/bg-brand(?!-)/g) ?? []).length, 1);
 assert.doesNotMatch(form, /hover:bg-green|hover:border-green/);
 assert.match(form, /grid-cols-5/);

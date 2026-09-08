@@ -94,8 +94,8 @@ export const StudentHeader = () => {
               <Image
                 src="/profileIcon.svg"
                 alt=""
-                width={22}
-                height={22}
+                width={18}
+                height={18}
                 aria-hidden="true"
               />
             )}

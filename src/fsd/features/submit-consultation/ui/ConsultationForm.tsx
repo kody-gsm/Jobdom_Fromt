@@ -61,8 +61,8 @@ export const ConsultationForm = ({
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-start">
-        <ContentCard className="p-6 sm:p-8 lg:min-h-[620px]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-stretch">
+        <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
           <div className="space-y-5">
             <div>
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
@@ -71,7 +71,7 @@ export const ConsultationForm = ({
                 className="[&_[aria-selected=true]]:!text-brand [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-brand"
                 items={[
                   { value: "career", label: "취업 진로 상담" },
-                  { value: "general", label: "상담" },
+                  { value: "general", label: "일반 상담" },
                 ]}
                 value={counselType}
                 onChange={handleTabChange}
@@ -82,7 +82,7 @@ export const ConsultationForm = ({
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
               <div
                 data-consultation-field="teacher"
-                className={`flex flex-wrap gap-2 rounded-xl ${
+                className={`flex min-h-11 flex-wrap gap-2 rounded-xl ${
                   errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
                 }`}
               >
@@ -140,7 +140,7 @@ export const ConsultationForm = ({
           </div>
         </ContentCard>
 
-        <ContentCard className="min-h-[720px] p-6 sm:p-8">
+        <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
           <section>
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 희망일</p>
             <div

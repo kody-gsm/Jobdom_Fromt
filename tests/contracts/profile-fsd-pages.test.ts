@@ -24,6 +24,7 @@ assert.doesNotMatch(page, /fetchUserProfile|cancelProfileConsultation/);
 assert.match(api, /getUpcoming/);
 assert.doesNotMatch(api, /getAll/);
 assert.match(api, /getSession/);
+assert.match(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
 assert.match(widget, /예약 현황/);
 assert.match(widget, /예약 취소/);
 assert.doesNotMatch(widget, /상담 기록|myMemo|TextAreaField/);

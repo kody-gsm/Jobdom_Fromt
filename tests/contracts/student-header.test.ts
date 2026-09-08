@@ -26,5 +26,6 @@ assert.match(widget, /hover:text-brand-accent/);
 assert.match(widget, /text-brand/);
 assert.doesNotMatch(widget, /#315B83|#10243E/);
 assert.equal((widget.match(/h-11 w-11/g) ?? []).length, 2);
+assert.match(widget, /src="\/profileIcon\.svg"[\s\S]{0,160}width=\{18\}[\s\S]{0,40}height=\{18\}/);
 
 console.log("student header navigation contract passed");

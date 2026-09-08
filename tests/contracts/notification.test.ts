@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { mock } from "node:test";
 
 await import("./api-contract.test.ts");
+const bell = await import("node:fs").then(({ readFileSync }) => readFileSync("src/fsd/features/notifications/ui/NotificationBell.tsx", "utf8"));
+assert.match(bell, /hover:text-brand/);
+assert.match(bell, /open \? "text-brand"/);
 const api = await import("../../src/fsd/features/notifications/api/notifications.ts");
 const { clearSession } = await import("../../src/fsd/entities/user/index.ts");
 const { subscribeNotifications } = await import("../../src/fsd/features/notifications/api/notificationStream.ts");
