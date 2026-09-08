@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { CopyRecruitLinkButton } from "@fsd/features/copy-recruit-link";
 import { ContentCard } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitDetail } from "../model/useRecruitDetail.ts";
 
 export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
-  const { item, form, error } = useRecruitDetail(recruitId);
-  const [formMessage, setFormMessage] = useState("");
+  const { item, form, error, formMessage, showMissingForm } = useRecruitDetail(recruitId);
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
@@ -55,7 +53,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
               {form ? (
                 <Link href={`/forms/${form.id}`} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</Link>
               ) : (
-                <button type="button" onClick={() => setFormMessage("해당 폼이 없습니다.")} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</button>
+                <button type="button" onClick={showMissingForm} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</button>
               )}
               <CopyRecruitLinkButton recruitId={recruitId} />
             </div>

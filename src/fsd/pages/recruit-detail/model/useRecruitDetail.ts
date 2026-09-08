@@ -9,6 +9,7 @@ export const useRecruitDetail = (recruitId: number) => {
   const [item, setItem] = useState<Recruit | null>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState<Pick<FormSummary, "id" | "title"> | null>(null);
+  const [formMessage, setFormMessage] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -31,5 +32,5 @@ export const useRecruitDetail = (recruitId: number) => {
     };
   }, [recruitId]);
 
-  return { item, form, error };
+  return { item, form, error, formMessage, showMissingForm: () => setFormMessage("해당 폼이 없습니다.") };
 };
