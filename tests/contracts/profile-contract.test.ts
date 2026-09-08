@@ -28,10 +28,11 @@ const profile = buildUserProfileData({
   upcomingCourse: [course],
   upcomingCommon: [common],
   session: { name: "배순우", email: "2401@gsm.hs.kr" },
+  profile: { name: "배순우", email: "2401@gsm.hs.kr", student_number: "2-4-11" },
 });
 
 assert.equal(profile.name, "배순우");
-assert.equal(profile.studentId, "2401");
+assert.equal(profile.studentId, "2-4-11");
 assert.deepEqual(profile.reservations.map((item) => item.id), [6, 9]);
 assert.equal("history" in profile, false);
 
