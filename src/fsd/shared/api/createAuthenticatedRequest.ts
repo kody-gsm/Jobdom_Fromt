@@ -58,7 +58,7 @@ export const createAuthenticatedRequest = ({
         }
       }
 
-      if (error instanceof ApiError && error.status === 401) clearSession();
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) clearSession();
       throw error;
     }
   };
