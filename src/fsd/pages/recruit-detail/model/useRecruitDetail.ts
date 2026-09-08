@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Recruit } from "@fsd/entities/recruit";
 import type { FormSummary } from "@fsd/entities/form";
 import { getRecruit } from "../api/recruit.ts";
-import { formsApi } from "../../forms/api/forms.ts";
+import { getStudentForms } from "@fsd/entities/form";
 import { findRecruitForm } from "./formMatching.ts";
 
 export const useRecruitDetail = (recruitId: number) => {
@@ -14,7 +14,7 @@ export const useRecruitDetail = (recruitId: number) => {
   useEffect(() => {
     let active = true;
 
-    void Promise.all([getRecruit(recruitId), formsApi.getAll()])
+    void Promise.all([getRecruit(recruitId), getStudentForms()])
       .then(([data, forms]) => {
         if (!active) return;
         setItem(data);
