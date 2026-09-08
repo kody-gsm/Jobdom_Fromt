@@ -1,5 +1,9 @@
-import { requestWithSession } from "@fsd/entities/user";
 import type { FormSummary } from "../model/types.ts";
 
-export const getStudentForms = () =>
-  requestWithSession<FormSummary[]>("/form");
+interface RequestFn {
+  <T>(path: string, init?: RequestInit): Promise<T>;
+}
+
+export const createStudentFormApi = (request: RequestFn) => ({
+  getAll: () => request<FormSummary[]>("/form"),
+});
