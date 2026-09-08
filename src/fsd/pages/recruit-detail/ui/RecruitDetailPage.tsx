@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { CopyRecruitLinkButton } from "@fsd/features/copy-recruit-link";
 import { ContentCard } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitDetail } from "../model/useRecruitDetail.ts";
 
 export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
-  const { item, error } = useRecruitDetail(recruitId);
+  const { item, form, error } = useRecruitDetail(recruitId);
+  const [formMessage, setFormMessage] = useState("");
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
@@ -50,9 +52,14 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
             </section>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-[1fr_auto]">
-              <Link href="/forms" className="inline-flex h-12 items-center justify-center rounded-xl bg-[#10243E] px-6 font-bold text-white hover:bg-[#1B3555]">신청 폼 보기</Link>
+              {form ? (
+                <Link href={`/forms/${form.id}`} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</Link>
+              ) : (
+                <button type="button" onClick={() => setFormMessage("해당 폼이 없습니다.")} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</button>
+              )}
               <CopyRecruitLinkButton recruitId={recruitId} />
             </div>
+            {formMessage ? <p role="status" className="mt-3 text-sm font-semibold text-brand-hover">{formMessage}</p> : null}
           </ContentCard>
         )}
       </main>
