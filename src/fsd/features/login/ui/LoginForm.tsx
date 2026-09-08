@@ -15,6 +15,7 @@ export const LoginForm = () => {
     setRememberLogin,
     submit,
   } = useLoginForm();
+  const firstErrorField = errors.email ? "email" : errors.password ? "password" : null;
 
   return (
     <form
@@ -35,7 +36,7 @@ export const LoginForm = () => {
         name="email"
         autoComplete="email"
         value={form.email}
-        error={errors.email}
+        error={firstErrorField === "email" ? errors.email : undefined}
         onChange={(event) => setEmail(event.target.value)}
         placeholder="학교 이메일을 입력해주세요"
         className="h-14 rounded-2xl"
@@ -46,7 +47,7 @@ export const LoginForm = () => {
         name="password"
         autoComplete="current-password"
         value={form.password}
-        error={errors.password}
+        error={firstErrorField === "password" ? errors.password : undefined}
         onChange={(event) => setPassword(event.target.value)}
         placeholder="비밀번호를 입력해주세요"
         className="h-14 rounded-2xl"
