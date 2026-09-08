@@ -61,8 +61,8 @@ export const ConsultationForm = ({
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-start">
-        <ContentCard className="min-h-[720px] p-6 sm:p-8">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-stretch">
+        <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
           <div className="space-y-5">
             <div>
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
@@ -140,7 +140,7 @@ export const ConsultationForm = ({
           </div>
         </ContentCard>
 
-        <ContentCard className="min-h-[720px] p-6 sm:p-8">
+        <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
           <section>
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 희망일</p>
             <div
