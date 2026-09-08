@@ -44,3 +44,4 @@ assert.match(listHook, /로그인 후 취업 공고를 확인할 수 있습니�
 assert.match(listPage, /href="\/forms"/);
 assert.match(detailPage, /@fsd\/features\/copy-recruit-link/);
 assert.match(detailPage, /href=\{`\/forms\/\$\{form\.id\}`\}/);
+assert.match(detailPage, /formMessage[\s\S]*text-\[#D93025\]/);

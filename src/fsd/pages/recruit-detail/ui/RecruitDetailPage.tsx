@@ -57,7 +57,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
               )}
               <CopyRecruitLinkButton recruitId={recruitId} />
             </div>
-            {formMessage ? <p role="status" className="mt-3 text-sm font-semibold text-brand-hover">{formMessage}</p> : null}
+            {formMessage ? <p role="status" className="mt-3 text-sm font-semibold text-[#D93025]">{formMessage}</p> : null}
           </ContentCard>
         )}
       </main>
