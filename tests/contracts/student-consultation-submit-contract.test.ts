@@ -20,6 +20,7 @@ assert.match(hook, /상담 신청 요청을 보냈습니다/);
 assert.doesNotMatch(hook, /상담 신청이 완료되었습니다/);
 assert.doesNotMatch(hook, /setHasCareerReservation\(true\)/);
 assert.match(hook, /unavailableSlotKeys/);
+assert.match(hook, /value\.slice\(0, MAX_CONSULTATION_CONTENT_LENGTH\)/);
 assert.match(hook, /isUnavailableSlotError/);
 assert.match(form, /getConsultationTeacherOptions\(counselType, teachers\)/);
 assert.match(form, /displayTeachers\.map/);

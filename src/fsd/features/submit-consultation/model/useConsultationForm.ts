@@ -29,6 +29,8 @@ export type ConsultationErrorTarget =
   | "date"
   | "period";
 
+const MAX_CONSULTATION_CONTENT_LENGTH = 500;
+
 export type ConsultationTeacherStatus = "loading" | "ready" | "error";
 
 const getConsultationErrorTarget = (
@@ -150,7 +152,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const setContent = (value: string) => {
-    setContentState(value);
+    setContentState(value.slice(0, MAX_CONSULTATION_CONTENT_LENGTH));
     if (errorTarget === "content") setErrorTarget(null);
   };
 
