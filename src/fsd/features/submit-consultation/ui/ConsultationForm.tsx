@@ -62,7 +62,7 @@ export const ConsultationForm = ({
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-start">
-        <ContentCard className="p-6 sm:p-8 lg:min-h-[620px]">
+        <ContentCard className="min-h-[720px] p-6 sm:p-8">
           <div className="space-y-5">
             <div>
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
@@ -81,9 +81,8 @@ export const ConsultationForm = ({
             <div>
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
               <div
-                key={counselType}
                 data-consultation-field="teacher"
-                className={`flex min-h-11 flex-wrap gap-2 rounded-xl motion-safe:animate-[consultation-fade-in_180ms_ease-out] ${
+                className={`flex min-h-11 flex-wrap gap-2 rounded-xl ${
                   errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
                 }`}
               >

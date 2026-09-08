@@ -23,6 +23,7 @@ assert.match(schedule, /1교시[\s\S]*08:40 - 09:30/);
 assert.match(schedule, /점심시간[\s\S]*12:30 - 13:30/);
 assert.match(schedule, /7교시[\s\S]*15:30 - 16:20/);
 assert.match(form, /예약 불가/);
+assert.match(form, /ContentCard className="min-h-\[720px\] p-6 sm:p-8"/);
 assert.doesNotMatch(form, /예약 가능|선택됨|상담 확정 신청/);
 assert.match(form, /grid-cols-5/);
 
