@@ -178,6 +178,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const isTimeUnavailable = (time: string) =>
+    (counselType === "general" && time === "4교시") ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&
       selectedDate !== null &&
