@@ -24,8 +24,18 @@ assert.doesNotMatch(page, /fetchUserProfile|cancelProfileConsultation/);
 assert.match(api, /getUpcoming/);
 assert.doesNotMatch(api, /getAll/);
 assert.match(api, /getSession/);
+assert.match(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
+assert.match(api, /requestWithSession[\s\S]{0,180}"\/auth\/profile\/image"/);
+assert.match(api, /new FormData\(\)/);
+assert.match(api, /formData\.append\("image", file\)/);
+assert.match(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "PATCH"/);
+assert.doesNotMatch(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "POST"/);
+assert.match(api, /profileImageUrl/);
+assert.match(api, /resolveProfileImageUrl/);
 assert.match(widget, /예약 현황/);
 assert.match(widget, /예약 취소/);
+assert.match(page, /studentId|학번/);
+assert.doesNotMatch(page, /학번\s*\{/);
 assert.doesNotMatch(widget, /상담 기록|myMemo|TextAreaField/);
 
 console.log("profile fsd page contract passed");

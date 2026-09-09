@@ -148,6 +148,10 @@ export const HomeServices = () => {
         </div>
       </ContentCard>
 
+      <ContentCard className="flex min-h-32 items-center justify-center border-dashed bg-[#F7F8FA] p-7 text-center" aria-label="배너">
+        <p className="text-sm font-semibold text-[#667281]">등록된 배너가 없습니다.</p>
+      </ContentCard>
+
       {error ? <p role="status" className="text-sm text-[#9A675E]">{error}</p> : null}
 
       {isConsultationModalOpen ? (

@@ -1,23 +1,8 @@
 import { useEffect, useState } from "react";
-import {
-  getProfileAvatarUserKey,
-  getSession,
-  readProfileAvatar,
-  saveProfileAvatar,
-  validateProfileAvatarFile,
-} from "@fsd/entities/user";
+import { validateProfileAvatarFile } from "@fsd/entities/user";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
-import { fetchUserProfile } from "../api/profile.ts";
+import { fetchUserProfile, uploadProfileImage } from "../api/profile.ts";
 import type { UserProfileData } from "./buildUserProfileData.ts";
-
-const getAvatarUserKey = (profile: UserProfileData) => {
-  const session = getSession();
-  return getProfileAvatarUserKey({
-    email: session?.email,
-    studentId: profile.studentId,
-    name: profile.name,
-  });
-};
 
 export const useProfilePage = () => {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
@@ -33,7 +18,7 @@ export const useProfilePage = () => {
       .then((data) => {
         if (!active) return;
         setProfile(data);
-        setProfileAvatar(readProfileAvatar(getAvatarUserKey(data)));
+        setProfileAvatar(data.avatarUrl || null);
       })
       .catch((caught) => {
         if (active) {
@@ -82,8 +67,9 @@ export const useProfilePage = () => {
       }
 
       try {
-        saveProfileAvatar(getAvatarUserKey(profile), reader.result);
-        setProfileAvatar(reader.result);
+        void uploadProfileImage(file)
+          .then((imageUrl) => setProfileAvatar(imageUrl || URL.createObjectURL(file)))
+          .catch(() => setAvatarError("프로필 이미지를 저장하지 못했습니다."));
         setAvatarError("");
       } catch {
         setAvatarError("프로필 이미지를 저장하지 못했습니다.");

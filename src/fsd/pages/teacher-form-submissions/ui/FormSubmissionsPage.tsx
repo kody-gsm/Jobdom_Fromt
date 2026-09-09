@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { SiteHeader } from "@fsd/widgets/site-header";
+import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type { DynamicForm, FormSubmission, FormSubmissionSummary } from "@fsd/entities/form";
 import { getFormSubmission, getFormSubmissions, getTeacherForm } from "../api/submissions";
 
@@ -35,7 +35,7 @@ export function FormSubmissionsPage() {
 
   return (
     <>
-      <SiteHeader />
+      <TeacherHeader />
       <main className="min-h-[calc(100vh-5rem)] bg-[#f5f7f6] px-4 py-10 sm:px-6">
         <div className="mx-auto w-full max-w-6xl">
           <Link href="/teacher/forms" className="text-sm font-semibold text-gray-500">← 폼 관리</Link>

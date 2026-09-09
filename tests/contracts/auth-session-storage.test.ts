@@ -23,6 +23,11 @@ Object.defineProperty(globalThis, "localStorage", { value: local });
 Object.defineProperty(globalThis, "sessionStorage", { value: session });
 
 const authSession = await import("../../src/fsd/entities/user/model/session.ts");
+
+const encodePayload = (payload: object) =>
+  `header.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.signature`;
+assert.equal(authSession.isAccessTokenExpired(encodePayload({ exp: 1 })), true);
+assert.equal(authSession.isAccessTokenExpired(encodePayload({ exp: Math.floor(Date.now() / 1000) + 3600 })), false);
 const auth = {
   accessToken: "access",
   refreshToken: "refresh",

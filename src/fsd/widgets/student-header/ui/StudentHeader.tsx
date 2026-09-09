@@ -1,5 +1,7 @@
 "use client";
 
+import { NotificationBell } from "@fsd/features/notifications";
+
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -68,7 +70,7 @@ export const StudentHeader = () => {
           aria-label="상담 대시보드로 이동"
           className="flex h-16 shrink-0 items-center sm:h-20"
         >
-          <Image src="/JobdamIcon.svg" alt="Jobdam" width={88} height={40} priority />
+          <Image src="/JobdamIcon.svg" alt="Jobdam" width={64} height={32} priority />
         </Link>
 
         <nav          aria-label="학생 주요 메뉴"
@@ -90,6 +92,7 @@ export const StudentHeader = () => {
         </nav>
 
         <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-5 text-[#6A7077] sm:col-start-3">
+          <NotificationBell />
           <Link
             href="/profile"
             aria-label="프로필"
@@ -107,8 +110,8 @@ export const StudentHeader = () => {
               <Image
                 src="/profileIcon.svg"
                 alt=""
-                width={22}
-                height={22}
+                width={18}
+                height={18}
                 aria-hidden="true"
               />
             )}

@@ -70,7 +70,7 @@ export const ProfilePage = () => {
                   {profile.name || "사용자"}
                 </h1>
                 <p className="mt-1 text-sm font-semibold text-muted">
-                  학번 {profile.studentId || "정보 없음"}
+                  {profile.studentId || "정보 없음"}
                 </p>
               </div>
             </ContentCard>

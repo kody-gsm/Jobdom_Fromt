@@ -28,6 +28,7 @@ assert.match(hook, /setTeacherStatus\("error"\)/);
 assert.match(form, /teacherStatus === "loading"/);
 assert.match(form, /teacherStatus === "error"/);
 assert.match(form, /선생님 정보를 불러오지 못했습니다/);
+assert.doesNotMatch(form, /선생님 정보를 불러오지 못했습니다[\s\S]*animate/);
 
 assert.match(globals, /--color-panel:/);
 assert.match(globals, /--color-secondary-text:/);

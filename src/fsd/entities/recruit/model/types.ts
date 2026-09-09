@@ -9,6 +9,8 @@ export interface Recruit {
   updatedAt: string;
 }
 
+export type RecruitCategory = "기업" | "공공기관";
+
 export type RecruitUpdate = Pick<
   Recruit,
   "companyName" | "interviewDate" | "deadline" | "summary"

@@ -71,6 +71,17 @@ export const readAccessToken = () => {
   return hasRememberFlag() ? localStorage.getItem(TOKEN_KEY) : null;
 };
 
+export const isAccessTokenExpired = (token: string) => {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return true;
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof decoded.exp !== "number" || decoded.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+};
+
 export const isRememberedSession = () => {
   if (typeof window === "undefined") return false;
   return readJson(sessionStorage) === null && hasRememberFlag() && readJson(localStorage) !== null;

@@ -8,6 +8,15 @@ import { useSignupForm } from "../model/useSignupForm.ts";
 
 export const SignupForm = () => {
   const signupForm = useSignupForm();
+  const firstErrorField = signupForm.errors.email
+    ? "email"
+    : signupForm.codeExpired || signupForm.errors.verificationCode
+      ? "verificationCode"
+      : signupForm.errors.password
+        ? "password"
+        : signupForm.errors.confirmPassword
+          ? "confirmPassword"
+          : null;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,7 +36,7 @@ export const SignupForm = () => {
         type="email"
         autoComplete="email"
         value={signupForm.form.email}
-        error={signupForm.errors.email}
+        error={firstErrorField === "email" ? signupForm.errors.email : undefined}
         onChange={(event) => signupForm.updateField("email", event.target.value)}
         placeholder="s123@gsm.hs.kr"
       />
@@ -49,9 +58,11 @@ export const SignupForm = () => {
         maxLength={6}
         value={signupForm.form.verificationCode}
         error={
-          signupForm.codeExpired
+          firstErrorField === "verificationCode" && signupForm.codeExpired
             ? "인증코드가 만료되었습니다. 재발송해주세요."
-            : signupForm.errors.verificationCode
+            : firstErrorField === "verificationCode"
+              ? signupForm.errors.verificationCode
+              : undefined
         }
         disabled={signupForm.codeExpired}
         onChange={(event) => signupForm.updateField("verificationCode", event.target.value)}
@@ -69,7 +80,7 @@ export const SignupForm = () => {
         label="비밀번호"
         autoComplete="new-password"
         value={signupForm.form.password}
-        error={signupForm.errors.password}
+        error={firstErrorField === "password" ? signupForm.errors.password : undefined}
         onChange={(event) => signupForm.updateField("password", event.target.value)}
         placeholder="영문, 숫자, 특수문자 포함 10자 이상"
       />
@@ -78,7 +89,7 @@ export const SignupForm = () => {
         label="비밀번호 확인"
         autoComplete="new-password"
         value={signupForm.form.confirmPassword}
-        error={signupForm.errors.confirmPassword}
+        error={firstErrorField === "confirmPassword" ? signupForm.errors.confirmPassword : undefined}
         onChange={(event) => signupForm.updateField("confirmPassword", event.target.value)}
         placeholder="비밀번호 재입력"
       />

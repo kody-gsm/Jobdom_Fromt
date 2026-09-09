@@ -28,6 +28,19 @@ export const getAuthErrorMessage = (error: unknown, fallback: string) => {
   return current.message ? messages[current.message] || fallback : fallback;
 };
 
+export const getLoginErrorMessage = (error: unknown, fallback: string) => {
+  const current = asError(error);
+  if (current.status === 0 || [502, 503, 504].includes(current.status ?? -1)) {
+    return "?쒕쾭???곌껐?????놁뒿?덈떎. ?좎떆 ???ㅼ떆 ?쒕룄?댁＜?몄슂.";
+  }
+  if (typeof current.status === "number" && current.status >= 500) {
+    return "?쒕쾭 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎. ?좎떆 ???ㅼ떆 ?쒕룄?댁＜?몄슂.";
+  }
+  return current.message === "Invalid email or password."
+    ? messages[current.message]
+    : fallback;
+};
+
 export const getSignupError = (error: unknown): AuthFieldError => {
   const raw = rawMessage(error);
   const message = getAuthErrorMessage(
