@@ -73,7 +73,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(() => {
+    const today = new Date();
+    return today.getDay() === 0 || today.getDay() === 6
+      ? null
+      : getNextWeekdays(today, 1)[0]?.value ?? null;
+  });
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [serverUnavailablePeriods, setServerUnavailablePeriods] = useState<Set<string>>(
     () => new Set(),

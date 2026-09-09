@@ -28,10 +28,9 @@ assert.deepEqual(getAvailablePeriods("general", null), [
 ]);
 
 const weekdays = getNextWeekdays(new Date("2026-09-04T09:00:00+09:00"));
-assert.equal(weekdays.length, 5);
-assert.deepEqual(weekdays.map((item) => item.value), [
-  "2026-09-04", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10",
-]);
+assert.equal(weekdays.length, 21);
+assert.equal(weekdays[0]?.value, "2026-09-04");
+assert.equal(weekdays.at(-1)?.value, "2026-10-02");
 
 const baseDraft: ConsultationDraft = {
   type: "career" as const,

@@ -41,13 +41,13 @@ const toLocalDateValue = (date: Date) =>
 
 export const getNextWeekdays = (
   start = new Date(),
-  count = 5,
+  days = 31,
 ): ConsultationDate[] => {
   const result: ConsultationDate[] = [];
   const cursor = new Date(start);
   const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
-  while (result.length < count) {
+  for (let offset = 0; offset < days; offset += 1) {
     if (cursor.getDay() !== 0 && cursor.getDay() !== 6) {
       result.push({
         day: dayLabels[cursor.getDay()] ?? "",
