@@ -30,6 +30,8 @@ assert.match(api, /new FormData\(\)/);
 assert.match(api, /formData\.append\("image", file\)/);
 assert.match(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "PATCH"/);
 assert.doesNotMatch(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "POST"/);
+assert.match(api, /profileImageUrl/);
+assert.match(api, /resolveProfileImageUrl/);
 assert.match(widget, /예약 현황/);
 assert.match(widget, /예약 취소/);
 assert.match(page, /studentId|학번/);

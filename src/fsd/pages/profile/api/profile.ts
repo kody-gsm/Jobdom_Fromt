@@ -8,12 +8,16 @@ type UserProfileResponse = {
   name: string;
   email: string;
   student_number: string;
-  profile_image?: string;
+  profileImageUrl?: string;
 };
 
-type ProfileImageUploadResponse =
-  | string
-  | { image_url?: string; imageUrl?: string; url?: string };
+type ProfileImageUploadResponse = { profileImageUrl: string };
+
+export const resolveProfileImageUrl = (imageUrl: string) => {
+  if (/^https?:\/\//.test(imageUrl)) return imageUrl;
+  const basePath = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
+  return `${basePath}/${imageUrl.replace(/^\/+/, "")}`;
+};
 
 export const uploadProfileImage = async (file: File) => {
   const formData = new FormData();
@@ -22,9 +26,7 @@ export const uploadProfileImage = async (file: File) => {
     "/auth/profile/image",
     { method: "PATCH", body: formData },
   );
-  return typeof response === "string"
-    ? response
-    : response.image_url || response.imageUrl || response.url || null;
+  return resolveProfileImageUrl(response.profileImageUrl);
 };
 
 export const fetchUserProfile = async () => {
@@ -38,6 +40,11 @@ export const fetchUserProfile = async () => {
     upcomingCourse,
     upcomingCommon,
     session: getSession(),
-    profile: identity,
+    profile: {
+      ...identity,
+      profileImageUrl: identity.profileImageUrl
+        ? resolveProfileImageUrl(identity.profileImageUrl)
+        : undefined,
+    },
   });
 };
