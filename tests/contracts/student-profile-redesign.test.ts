@@ -19,7 +19,7 @@ assert.match(page, /accept="image\/\*"/);
 assert.match(page, /사진 변경/);
 assert.match(page, /profileAvatar/);
 assert.match(hook, /handleAvatarChange/);
-assert.match(hook, /readProfileAvatar/);
+assert.match(hook, /uploadProfileImage/);
 assert.match(consultations, /예약 현황/);
 assert.match(consultations, /예약 취소/);
 assert.doesNotMatch(consultations, /상담 기록|상담 상세기록|나의 메모|myMemo|TextAreaField/);

@@ -13,12 +13,13 @@ interface BuildUserProfileInput {
   upcomingCourse: StudentReservation[];
   upcomingCommon: StudentReservation[];
   session: ProfileSession | null;
-  profile: { name: string; email: string; student_number: string };
+  profile: { name: string; email: string; student_number: string; profile_image?: string };
 }
 
 export interface UserProfileData {
   name: string;
   studentId: string;
+  avatarUrl: string;
   reservations: ProfileConsultation[];
 }
 
@@ -46,6 +47,7 @@ export const buildUserProfileData = ({
   studentId: formatStudentNumber(
     profile.student_number || session?.email?.split("@")[0] || "",
   ),
+  avatarUrl: profile.profile_image || "",
   reservations: [
     ...upcomingCourse.map((item) => toProfileConsultation("course", item)),
     ...upcomingCommon.map((item) => toProfileConsultation("common", item)),
