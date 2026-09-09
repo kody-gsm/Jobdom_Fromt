@@ -11,8 +11,8 @@ const index = readFileSync(indexPath, "utf8");
 assert.match(index, /StudentHeader/);
 assert.match(widget, /@fsd\/features\/logout/);
 assert.match(widget, /JobdamIcon\.svg/);
-assert.match(widget, /JobdamIcon\.svg" alt="Jobdam" width=\{56\} height=\{28\}/);
-assert.doesNotMatch(widget, /JobdamIcon\.svg" alt="Jobdam" width=\{88\} height=\{40\}/);
+assert.match(widget, /JobdamIcon\.svg" alt="Jobdam" width=\{64\} height=\{32\}/);
+assert.doesNotMatch(widget, /JobdamIcon\.svg" alt="Jobdam" width=\{56\} height=\{28\}/);
 assert.match(widget, /href="\/profile"/);
 assert.doesNotMatch(widget, /\/teacher|\/admin/);
 
