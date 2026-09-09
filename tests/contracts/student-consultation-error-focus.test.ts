@@ -15,6 +15,7 @@ assert.match(hook, /교시를 선택해주세요[\s\S]{0,120}period/);
 assert.match(hook, /scrollIntoView\(\{[\s\S]{0,120}behavior:\s*["']smooth["'][\s\S]{0,120}block:\s*["']center["']/);
 assert.match(hook, /\.focus\(\)/);
 assert.match(hook, /setErrorTarget\(null\)/);
+assert.match(hook, /if \(!selectedTeacher\) return "선생님을 선택해주세요";[\s\S]{0,180}if \(!title\.trim\(\)\)/);
 assert.match(form, /errorTarget === "teacher"/);
 assert.match(form, /errorTarget === "date"/);
 assert.match(form, /errorTarget === "period"/);

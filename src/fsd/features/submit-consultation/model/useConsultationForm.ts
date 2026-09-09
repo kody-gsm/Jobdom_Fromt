@@ -208,9 +208,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const getValidationMessage = () => {
+    if (!selectedTeacher) return "선생님을 선택해주세요";
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
-    if (!selectedTeacher) return "선생님을 선택해주세요";
 
     return validateConsultationDraft({
       type: counselType,
