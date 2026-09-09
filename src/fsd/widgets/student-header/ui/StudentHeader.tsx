@@ -12,6 +12,7 @@ import {
   getSession,
   PROFILE_AVATAR_CHANGED_EVENT,
   readProfileAvatar,
+  requestWithSession,
 } from "@fsd/entities/user";
 import { logout } from "@fsd/features/logout";
 import { STUDENT_NAV_ITEMS, isStudentNavActive } from "../model/navigation.ts";
@@ -27,7 +28,22 @@ export const StudentHeader = () => {
       email: session?.email,
       name: session?.name,
     });
-    const syncAvatar = () => setProfileAvatar(readProfileAvatar(userKey));
+    const syncAvatar = () => {
+      const cachedAvatar = readProfileAvatar(userKey);
+      if (cachedAvatar) setProfileAvatar(cachedAvatar);
+
+      void requestWithSession<{ profileImageUrl?: string }>("/auth/profile")
+        .then((profile) => {
+          if (!profile.profileImageUrl) return;
+          const imageUrl = /^https?:\/\//.test(profile.profileImageUrl)
+            ? profile.profileImageUrl
+            : `${(process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "")}/${profile.profileImageUrl.replace(/^\/+/, "")}`;
+          setProfileAvatar(imageUrl);
+        })
+        .catch(() => {
+          // The cached avatar, if present, remains usable when the profile request fails.
+        });
+    };
 
     syncAvatar();    window.addEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
     return () => {
