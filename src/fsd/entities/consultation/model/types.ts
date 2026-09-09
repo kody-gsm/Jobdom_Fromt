@@ -26,6 +26,10 @@ export interface StudentReservation {
 }
 
 export interface TeacherReservation {
+  student_number?: string | null;
+  title?: string | null;
+  content?: string | null;
+  category?: string | null;
   reservation_id: number;
   name: string;
   date: string;

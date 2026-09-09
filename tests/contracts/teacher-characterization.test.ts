@@ -8,15 +8,14 @@ const teacher = source(
   "app/teacher/page.tsx",
   "src/fsd/pages/teacher/ui/TeacherPage.tsx",
 );
-assert.match(teacher, /취업 공고 관리/);
+const teacherHeader = read("src/fsd/widgets/teacher-header/ui/TeacherHeader.tsx");
+assert.match(teacher, /TeacherHeader/);
 assert.match(teacher, /진로 상담/);
-assert.match(teacher, /상담 기록 작성/);
 assert.match(teacher, /상담 예약 요청 목록/);
 assert.match(teacher, /예약 확정 정보/);
-assert.match(teacher, /\/teacher\/recruit/);
 assert.match(teacher, /WEEKLY_CLASS_SCHEDULE/);
-assert.match(teacher, /getTeacherConsultations\("course"\)/);
-assert.match(teacher, /approveConsultation\("course",\s*reservationId\)/);
+assert.match(teacher, /getTeacherConsultations\(kind\)/);
+assert.match(teacher, /approveConsultation\(kind,\s*selection.reservation.reservation_id\)/);
 
 const forms = source(
   "app/teacher/forms/page.tsx",
@@ -33,6 +32,7 @@ assert.match(forms, /publishForm/);
 assert.match(forms, /closeForm/);
 assert.match(forms, /폼 제목을 입력해주세요/);
 assert.match(forms, /질문 제목을 모두 입력해주세요/);
+assert.match(forms, /TeacherHeader/);
 
 const submissions = source(
   "app/teacher/forms/[id]/submissions/page.tsx",
@@ -43,6 +43,7 @@ assert.match(submissions, /getFormSubmissions/);
 assert.match(submissions, /getFormSubmission/);
 assert.match(submissions, /\/teacher\/forms/);
 assert.match(submissions, /제출된 응답이 없습니다/);
+assert.match(submissions, /TeacherHeader/);
 
 const recruit = source(
   "app/teacher/recruit/page.tsx",
@@ -56,5 +57,12 @@ assert.match(recruit, /updateRecruit/);
 assert.match(recruit, /publishRecruit/);
 assert.match(recruit, /\/teacher\/forms/);
 assert.match(recruit, /선생님 계정으로 로그인해야 지원 현황을 볼 수 있습니다/);
+assert.match(recruit, /TeacherHeader/);
+
+assert.match(teacherHeader, /href: "\/teacher"/);
+assert.match(teacherHeader, /href: "\/teacher\/recruit"/);
+assert.match(teacherHeader, /href: "\/teacher\/forms"/);
+assert.match(teacherHeader, /pathname === item\.href/);
+assert.match(teacherHeader, /pathname\.startsWith\(item\.href\)/);
 
 console.log("teacher characterization contract passed");
