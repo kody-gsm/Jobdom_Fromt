@@ -22,7 +22,7 @@ export type SubmitConsultationInput = ReservationInput & {
 };
 
 export const getConsultationTeachers = () =>
-  requestWithSession<ConsultationTeacherOption[]>("/api/teacher");
+  requestWithSession<ConsultationTeacherOption[]>("/api/teachers");
 
 export const getConsultationSlotStatus = (
   kind: ConsultationKind,
