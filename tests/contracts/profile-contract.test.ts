@@ -5,6 +5,7 @@ import {
 } from "../../src/fsd/entities/consultation/model/profile.ts";
 import {
   buildUserProfileData,
+  formatStudentNumber,
 } from "../../src/fsd/pages/profile/model/buildUserProfileData.ts";
 
 const course = { id: 3, name: "학생", date: "2026-09-05", period: "2교시" };
@@ -34,7 +35,9 @@ const profile = buildUserProfileData({
 });
 
 assert.equal(profile.name, "배순우");
-assert.equal("studentId" in profile, false);
+assert.equal(profile.studentId, "2학년 4반 11번");
+assert.equal(formatStudentNumber("2111"), "2학년 1반 11번");
+assert.equal(formatStudentNumber("2-1-11"), "2학년 1반 11번");
 assert.deepEqual(profile.reservations.map((item) => item.id), [6, 9]);
 assert.equal("history" in profile, false);
 
