@@ -27,6 +27,7 @@ assert.match(api, /getSession/);
 assert.match(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
 assert.match(widget, /예약 현황/);
 assert.match(widget, /예약 취소/);
+assert.doesNotMatch(page, /studentId|학번/);
 assert.doesNotMatch(widget, /상담 기록|myMemo|TextAreaField/);
 
 console.log("profile fsd page contract passed");

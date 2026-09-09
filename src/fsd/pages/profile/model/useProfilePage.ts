@@ -14,7 +14,6 @@ const getAvatarUserKey = (profile: UserProfileData) => {
   const session = getSession();
   return getProfileAvatarUserKey({
     email: session?.email,
-    studentId: profile.studentId,
     name: profile.name,
   });
 };
