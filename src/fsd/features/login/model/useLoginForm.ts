@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   clearRememberLoginPreference,
-  getAuthErrorMessage,
+  getLoginErrorMessage as getAuthErrorMessage,
   getRoleHomePath,
   readRememberLoginPreference,
   restoreRememberedSession,
