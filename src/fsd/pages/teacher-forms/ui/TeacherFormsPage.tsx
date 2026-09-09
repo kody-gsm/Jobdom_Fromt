@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { SiteHeader } from "@fsd/widgets/site-header";
+import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type {
   DynamicForm,
   FormInput,
@@ -183,7 +183,7 @@ export function TeacherFormsPage() {
 
   return (
     <>
-      <SiteHeader />
+      <TeacherHeader />
       <main className="min-h-[calc(100vh-5rem)] bg-[#f5f7f6] px-4 py-10 sm:px-6">
         <div className="mx-auto w-full max-w-7xl">
           <div className="flex flex-wrap items-center justify-between gap-4">

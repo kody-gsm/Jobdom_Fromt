@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import { SiteHeader } from "@fsd/widgets/site-header";
+import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { ApiError } from "@fsd/shared/api";
 import {
   analyzeRecruit,
@@ -122,7 +122,7 @@ export function TeacherRecruitPage() {
 
   return (
     <>
-      <SiteHeader />
+      <TeacherHeader />
       <main className="min-h-[calc(100vh-5rem)] bg-white px-4 py-8 text-[#17201a] sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-[1500px]">
           <header className="flex flex-wrap items-end justify-between gap-5">
