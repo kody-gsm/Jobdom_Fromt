@@ -20,7 +20,7 @@ export const uploadProfileImage = async (file: File) => {
   formData.append("image", file);
   const response = await requestWithSession<ProfileImageUploadResponse>(
     "/auth/profile/image",
-    { method: "POST", body: formData },
+    { method: "PATCH", body: formData },
   );
   return typeof response === "string"
     ? response
