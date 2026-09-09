@@ -54,7 +54,7 @@ export const StudentHeader = () => {
           aria-label="상담 대시보드로 이동"
           className="flex h-16 shrink-0 items-center sm:h-20"
         >
-          <Image src="/JobdamIcon.svg" alt="Jobdam" width={88} height={40} priority />
+          <Image src="/JobdamIcon.svg" alt="Jobdam" width={56} height={28} priority />
         </Link>
 
         <nav          aria-label="학생 주요 메뉴"
