@@ -23,4 +23,6 @@ export const createRecruitApi = (request: RequestFn) => ({
     }),
   publishTeacher: (id: number) =>
     request<Recruit>(`/teacher/recruit/${id}/publish`, { method: "POST" }),
+  deleteTeacher: (id: number) =>
+    request<void>(`/teacher/recruit/${id}`, { method: "DELETE" }),
 });

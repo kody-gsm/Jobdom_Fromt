@@ -6,6 +6,7 @@ import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { ApiError } from "@fsd/shared/api";
 import {
   analyzeRecruit,
+  deleteRecruit,
   getRecruitDashboard,
   publishRecruit,
   updateRecruit,
@@ -120,6 +121,21 @@ export function TeacherRecruitPage() {
     }
   };
 
+  const remove = async () => {
+    if (!selected || working) return;
+    if (!window.confirm("이 공고를 삭제할까요? 삭제 후 복구할 수 없습니다.")) return;
+    try {
+      setWorking(true);
+      await deleteRecruit(selected.recruit.id);
+      await load();
+      setMessage({ text: "공고를 삭제했습니다." });
+    } catch (caught) {
+      setMessage({ text: caught instanceof Error ? caught.message : "공고를 삭제하지 못했습니다.", error: true });
+    } finally {
+      setWorking(false);
+    }
+  };
+
   return (
     <>
       <TeacherHeader />
@@ -192,7 +208,7 @@ export function TeacherRecruitPage() {
                   <>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0"><Status status={selected.recruit.status} /><h2 className="mt-3 truncate text-2xl font-bold">{selected.recruit.companyName || "회사명 미입력"}</h2><p className="mt-1 text-xs text-gray-400">공고 ID #{selected.recruit.id}</p></div>
-                      <button type="button" onClick={() => startEditing(selected)} className="shrink-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600">수정</button>
+                      <div className="flex shrink-0 gap-2"><button type="button" onClick={() => startEditing(selected)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600">수정</button><button type="button" disabled={working} onClick={() => void remove()} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-600 disabled:opacity-50">삭제</button></div>
                     </div>
                     <dl className="mt-5 grid grid-cols-2 gap-3">
                       <Info label="지원 마감" value={selected.recruit.deadline} /><Info label="면접 일정" value={selected.recruit.interviewDate} />
