@@ -18,3 +18,4 @@ export {
   getMissingRequiredQuestion,
 } from "./model/answers.ts";
 export { createFormApi } from "./api/createFormApi.ts";
+export { createStudentFormApi } from "./api/studentForms.ts";

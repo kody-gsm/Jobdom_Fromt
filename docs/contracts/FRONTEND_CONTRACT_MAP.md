@@ -135,11 +135,13 @@ Storage key는 기존 동작 호환을 위해 계약으로 취급한다.
 
 Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이다.
 
+- `/teacher`, `/teacher/recruit`, `/teacher/forms`, 폼 응답 화면은 같은 교사 헤더와 활성 메뉴 표시를 사용한다.
 - `/teacher`는 session name을 선생님 이름으로 사용한다.
-- 현재 course 상담을 조회해 날짜+교시 slot에 승인된 예약을 표시한다.
-- course 상담 승인 API를 호출할 수 있다.
-- 현재 선생님별 교시와 임경원 선생님 시간표 하드코딩을 migration 중 임의 변경하지 않는다.
-- standalone 상담 메모는 현재 Backend 저장 없이 성공 alert/state reset만 수행한다.
+- course/common 상담을 탭별로 조회해 날짜+교시 슬롯에 대기·확정 예약을 표시한다.
+- 신청 목록과 시간표에서 학번·제목·내용을 조회하고 담당 교사가 수락할 수 있다.
+- 오늘 날짜는 brand 배경으로 고정하고 선택 날짜는 독립된 사각 테두리로 표시한다.
+- 기존 임경원 수업표는 해당 선생님에게만 표시한다. 실제 교사별 수업 시간표 API는 아직 없다.
+- 학생의 교사 목록은 서버에 정의된 GET /api/teachers를 사용한다.
 - `/teacher/forms`는 폼 목록/상세 조회, 생성, 수정, 공개, 마감 기능을 유지한다.
 - 폼 공유 시 `/forms/{id}` URL을 clipboard에 복사한다.
 - `/teacher/forms/[id]/submissions`는 제출 목록과 제출 상세를 조회한다.

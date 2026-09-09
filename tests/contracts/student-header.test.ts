@@ -11,6 +11,8 @@ const index = readFileSync(indexPath, "utf8");
 assert.match(index, /StudentHeader/);
 assert.match(widget, /@fsd\/features\/logout/);
 assert.match(widget, /JobdamIcon\.svg/);
+assert.match(widget, /JobdamIcon\.svg" alt="Jobdam" width=\{64\} height=\{32\}/);
+assert.doesNotMatch(widget, /JobdamIcon\.svg" alt="Jobdam" width=\{56\} height=\{28\}/);
 assert.match(widget, /href="\/profile"/);
 assert.doesNotMatch(widget, /\/teacher|\/admin/);
 
@@ -26,5 +28,6 @@ assert.match(widget, /hover:text-brand-accent/);
 assert.match(widget, /text-brand/);
 assert.doesNotMatch(widget, /#315B83|#10243E/);
 assert.equal((widget.match(/h-11 w-11/g) ?? []).length, 2);
+assert.match(widget, /src="\/profileIcon\.svg"[\s\S]{0,160}width=\{18\}[\s\S]{0,40}height=\{18\}/);
 
 console.log("student header navigation contract passed");

@@ -29,6 +29,8 @@ export type ConsultationErrorTarget =
   | "date"
   | "period";
 
+const MAX_CONSULTATION_CONTENT_LENGTH = 500;
+
 export type ConsultationTeacherStatus = "loading" | "ready" | "error";
 
 const getConsultationErrorTarget = (
@@ -71,7 +73,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(() => {
+    const today = new Date();
+    return today.getDay() === 0 || today.getDay() === 6
+      ? null
+      : getNextWeekdays(today, 1)[0]?.value ?? null;
+  });
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [serverUnavailablePeriods, setServerUnavailablePeriods] = useState<Set<string>>(
     () => new Set(),
@@ -150,7 +157,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const setContent = (value: string) => {
-    setContentState(value);
+    setContentState(value.slice(0, MAX_CONSULTATION_CONTENT_LENGTH));
     if (errorTarget === "content") setErrorTarget(null);
   };
 
@@ -178,6 +185,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const isTimeUnavailable = (time: string) =>
+    (counselType === "general" && time === "4교시") ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&
       selectedDate !== null &&
@@ -200,9 +208,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const getValidationMessage = () => {
+    if (!selectedTeacher) return "선생님을 선택해주세요";
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
-    if (!selectedTeacher) return "선생님을 선택해주세요";
 
     return validateConsultationDraft({
       type: counselType,

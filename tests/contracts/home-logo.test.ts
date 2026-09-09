@@ -6,6 +6,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const navigateHome = read("src/fsd/features/navigate-home/ui/HomeLogoButton.tsx");
 const siteHeader = read("src/fsd/widgets/site-header/ui/SiteHeader.tsx");
+const teacherHeader = read("src/fsd/widgets/teacher-header/ui/TeacherHeader.tsx");
 
 assert.match(navigateHome, /router\.push\(["']\/["']\)/);
 assert.match(navigateHome, /w-14 sm:w-16/);
@@ -13,7 +14,9 @@ assert.match(siteHeader, /router\.push\("\/"\)/);
 assert.match(siteHeader, /JobdamIcon\.svg/);
 assert.match(siteHeader, /w-14 sm:w-16/);
 
-assert.match(read("src/fsd/pages/teacher/ui/TeacherPage.tsx"), /HomeLogoButton/);
+assert.match(teacherHeader, /href="\/teacher"/);
+assert.match(teacherHeader, /JobdamIcon\.svg/);
+assert.match(read("src/fsd/pages/teacher/ui/TeacherPage.tsx"), /TeacherHeader/);
 
 const counselRoute = read("app/counsel/page.tsx");
 const counselPage = read("src/fsd/pages/counsel/ui/CounselPage.tsx");

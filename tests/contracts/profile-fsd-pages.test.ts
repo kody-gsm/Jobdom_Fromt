@@ -24,8 +24,11 @@ assert.doesNotMatch(page, /fetchUserProfile|cancelProfileConsultation/);
 assert.match(api, /getUpcoming/);
 assert.doesNotMatch(api, /getAll/);
 assert.match(api, /getSession/);
+assert.match(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
 assert.match(widget, /예약 현황/);
 assert.match(widget, /예약 취소/);
+assert.match(page, /studentId|학번/);
+assert.doesNotMatch(page, /학번\s*\{/);
 assert.doesNotMatch(widget, /상담 기록|myMemo|TextAreaField/);
 
 console.log("profile fsd page contract passed");

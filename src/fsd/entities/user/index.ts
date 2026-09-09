@@ -7,6 +7,7 @@ export {
   isRememberedSession,
   persistSession,
   readAccessToken,
+  isAccessTokenExpired,
   readRememberedSession,
   readRememberLoginPreference,
   readSession,

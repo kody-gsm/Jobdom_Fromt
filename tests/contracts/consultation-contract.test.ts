@@ -24,14 +24,13 @@ assert.deepEqual(getAvailablePeriods("career", "임경원 선생님"), [
 assert.deepEqual(getAvailablePeriods("career", "김권예소 선생님"), ["점심시간", "저녁시간"]);
 assert.deepEqual(getAvailablePeriods("career", null), []);
 assert.deepEqual(getAvailablePeriods("general", null), [
-  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시",
+  "1교시", "2교시", "3교시", "점심시간", "5교시", "6교시", "7교시",
 ]);
 
 const weekdays = getNextWeekdays(new Date("2026-09-04T09:00:00+09:00"));
-assert.equal(weekdays.length, 5);
-assert.deepEqual(weekdays.map((item) => item.value), [
-  "2026-09-04", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10",
-]);
+assert.equal(weekdays.length, 21);
+assert.equal(weekdays[0]?.value, "2026-09-04");
+assert.equal(weekdays.at(-1)?.value, "2026-10-02");
 
 const baseDraft: ConsultationDraft = {
   type: "career" as const,

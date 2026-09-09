@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getSession } from "../../../entities/user/index.ts";
+import { clearSession, getSession, isAccessTokenExpired } from "../../../entities/user/index.ts";
 import { getAuthRedirect } from "../model/routePolicy.ts";
 
 export const AuthGate = ({ children }: { children: React.ReactNode }) => {
@@ -12,6 +12,11 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAccess = () => {
+      const session = getSession();
+      const isStudentRoute = !pathname.startsWith("/teacher") && !pathname.startsWith("/admin");
+      if (isStudentRoute && session && isAccessTokenExpired(session.accessToken)) {
+        clearSession();
+      }
       const redirect = getAuthRedirect(pathname, getSession()?.role ?? null);
       if (redirect) {
         setAllowed(false);

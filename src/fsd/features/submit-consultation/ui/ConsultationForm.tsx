@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import type { ConsultationType } from "@fsd/entities/consultation";
 import {
   ActionButton,
@@ -15,8 +16,16 @@ import {
 } from "../model/teacherOption.ts";
 import {
   CONSULTATION_SCHEDULE_ROWS,
-  getConsultationWeekdayLabel,
 } from "../model/schedulePresentation.ts";
+
+const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
+
+const toDateValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export const ConsultationForm = ({
   initialType,
@@ -47,6 +56,22 @@ export const ConsultationForm = ({
     handleSubmit,
   } = useConsultationForm(initialType);
   const displayTeachers = getConsultationTeacherOptions(counselType, teachers);
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
+  const availableDateValues = useMemo(
+    () => new Set(dates.map((item) => item.value)),
+    [dates],
+  );
+  const calendarCells = useMemo(() => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    return [
+      ...Array.from({ length: firstDay }, () => null),
+      ...Array.from({ length: lastDate }, (_, index) => new Date(year, month, index + 1)),
+    ];
+  }, [calendarDate]);
+  const isDateAvailable = (date: Date) => availableDateValues.has(toDateValue(date));
 
   return (
     <form onSubmit={handleSubmit}>
@@ -61,8 +86,8 @@ export const ConsultationForm = ({
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-start">
-        <ContentCard className="p-6 sm:p-8 lg:min-h-[620px]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-stretch">
+        <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
           <div className="space-y-5">
             <div>
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
@@ -70,7 +95,7 @@ export const ConsultationForm = ({
                 ariaLabel="상담 유형"
                 className="[&_[aria-selected=true]]:!text-brand [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-brand"
                 items={[
-                  { value: "career", label: "진로 상담" },
+                  { value: "career", label: "취업 진로 상담" },
                   { value: "general", label: "일반 상담" },
                 ]}
                 value={counselType}
@@ -82,8 +107,8 @@ export const ConsultationForm = ({
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
               <div
                 data-consultation-field="teacher"
-                className={`flex flex-wrap gap-2 rounded-xl ${
-                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+                className={`flex min-h-11 flex-wrap gap-2 rounded-xl ${
+                  errorTarget === "teacher" ? "ring-1 ring-[#E53935]" : ""
                 }`}
               >
                 {teacherStatus === "loading" ? (
@@ -140,32 +165,46 @@ export const ConsultationForm = ({
           </div>
         </ContentCard>
 
-        <ContentCard className="min-h-[720px] p-6 sm:p-8">
+        <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
           <section>
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 희망일</p>
             <div
               data-consultation-field="date"
-              className={`grid grid-cols-5 gap-2 rounded-xl ${
-                errorTarget === "date" ? "border border-[#E53935] p-2" : ""
+              className={`rounded-xl ${
+                errorTarget === "date" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
-              {dates.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => toggleDate(item.value)}
-                  className={`min-h-[68px] rounded-xl border px-2 py-2 text-center transition-colors ${
-                    selectedDate === item.value
-                      ? "border-brand bg-[#EAF9F0] text-brand-hover"
-                      : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                  }`}
-                >
-                  <span className="block text-[11px] font-medium">
-                    {getConsultationWeekdayLabel(item.value)}
-                  </span>
-                  <strong className="mt-1 block text-lg">{item.date}</strong>
-                </button>
-              ))}
+              <div className="mb-3 flex items-center justify-between">
+                <button type="button" onClick={() => setCalendarDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">이전 달</button>
+                <strong className="text-base text-[#111827]">{calendarDate.toLocaleString("ko-KR", { month: "long", year: "numeric" })}</strong>
+                <button type="button" onClick={() => setCalendarDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">다음 달</button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-muted">
+                {WEEKDAY_HEADERS.map((day, index) => <span key={`${day}-${index}`} className={`py-2 ${index === 0 ? "text-blue-600" : index === 6 ? "text-red-600" : ""}`}>{day}</span>)}
+                {calendarCells.map((date, index) => {
+                  if (!date) return <span key={`empty-${index}`} className="h-10" />;
+                  const value = toDateValue(date);
+                  const available = isDateAvailable(date);
+                  const weekendColor = date.getDay() === 0 ? "text-blue-600" : date.getDay() === 6 ? "text-red-600" : "text-[#C4C9D0]";
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={!available}
+                      onClick={() => toggleDate(value)}
+                      className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
+                        !available
+                          ? `cursor-not-allowed border-border bg-white ${weekendColor}`
+                          : selectedDate === value
+                            ? "bg-brand text-white"
+                            : "text-[#27364A] hover:bg-[#EAF9F0]"
+                      }`}
+                    >
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
@@ -174,7 +213,7 @@ export const ConsultationForm = ({
             <div
               data-consultation-field="period"
               className={`space-y-2 rounded-xl ${
-                errorTarget === "period" ? "border border-[#E53935] p-2" : ""
+                errorTarget === "period" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
               {CONSULTATION_SCHEDULE_ROWS.map((row) => {
