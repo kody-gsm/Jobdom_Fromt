@@ -28,6 +28,8 @@ assert.match(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
 assert.match(api, /requestWithSession[\s\S]{0,180}"\/auth\/profile\/image"/);
 assert.match(api, /new FormData\(\)/);
 assert.match(api, /formData\.append\("image", file\)/);
+assert.match(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "PATCH"/);
+assert.doesNotMatch(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "POST"/);
 assert.match(widget, /예약 현황/);
 assert.match(widget, /예약 취소/);
 assert.match(page, /studentId|학번/);
