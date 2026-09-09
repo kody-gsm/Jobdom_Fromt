@@ -16,6 +16,8 @@ assert.match(page, /\/recruit\/\$\{row\.recruit\.id\}/);
 assert.match(page, /analyzeRecruit/);
 assert.match(page, /updateRecruit/);
 assert.match(page, /publishRecruit/);
+assert.match(page, /deleteRecruit/);
+assert.match(page, /DELETE|삭제/);
 assert.match(page, /getRecruitDashboard/);
 assert.doesNotMatch(page, /@\/app\/utils\/api|@\/app\/components/);
 

@@ -70,6 +70,7 @@ await recruit.getTeacherAll();
 await recruit.analyze(image);
 await recruit.updateTeacher(3, update);
 await recruit.publishTeacher(3);
+await recruit.deleteTeacher(3);
 
 const recruitCalls = calls.splice(0);
 assert.equal(recruitCalls[0]?.path, "/teacher/recruit");
@@ -82,6 +83,7 @@ assert.deepEqual(recruitCalls.slice(2), [
     init: { method: "PATCH", body: JSON.stringify(update) },
   },
   { path: "/teacher/recruit/3/publish", init: { method: "POST" } },
+  { path: "/teacher/recruit/3", init: { method: "DELETE" } },
 ]);
 
 console.log("teacher domain api contract passed");

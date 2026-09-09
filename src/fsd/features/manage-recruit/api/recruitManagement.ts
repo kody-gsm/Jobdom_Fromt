@@ -9,6 +9,7 @@ const recruitApi = createRecruitApi(requestWithSession);
 export const analyzeRecruit = recruitApi.analyze;
 export const updateRecruit = recruitApi.updateTeacher;
 export const publishRecruit = recruitApi.publishTeacher;
+export const deleteRecruit = recruitApi.deleteTeacher;
 export const getRecruitDashboard = createRecruitDashboardLoader({
   getTeacherRecruits: recruitApi.getTeacherAll,
   getTeacherForms: formApi.getTeacherAll,
