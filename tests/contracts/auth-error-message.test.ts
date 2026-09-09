@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   getAuthErrorMessage,
+  getLoginErrorMessage,
   getPasswordResetError,
   getSignupError,
 } from "../../src/fsd/entities/user/index.ts";
@@ -19,5 +20,7 @@ assert.deepEqual(getSignupError(error("Student information was not found.")), { 
 assert.equal(getSignupError(error("x", 500)).field, "form");
 assert.deepEqual(getPasswordResetError(error("Verification code has expired.")), { field: "verificationCode", message: "인증코드가 만료되었습니다. 재발송해주세요." });
 assert.equal(getPasswordResetError(error("x", 500)).field, "form");
+
+assert.equal(getLoginErrorMessage(error("school-email-policy"), "fallback"), "fallback");
 
 console.log("auth error message policy passed");
