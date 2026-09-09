@@ -18,6 +18,6 @@ assert.match(hook, /setErrorTarget\(null\)/);
 assert.match(form, /errorTarget === "teacher"/);
 assert.match(form, /errorTarget === "date"/);
 assert.match(form, /errorTarget === "period"/);
-assert.match(form, /border-red-500|border-\[#E53935\]/);
+assert.match(form, /ring-1 ring-\[#E53935\]/);
 
 console.log("student consultation error focus contract passed");

@@ -36,5 +36,8 @@ assert.match(form, /lg:items-stretch/);
 assert.equal((form.match(/h-full min-h-\[720px\]/g) ?? []).length, 2);
 assert.doesNotMatch(form, /예약 가능|선택됨|상담 확정 신청/);
 assert.match(form, /grid-cols-7/);
+assert.doesNotMatch(form, /errorTarget === "date" \? "border border-\[#E53935\] p-2"/);
+assert.doesNotMatch(form, /errorTarget === "period" \? "border border-\[#E53935\] p-2"/);
+assert.match(form, /ring-1 ring-\[#E53935\]/);
 
 console.log("student consultation schedule panel contract passed");
