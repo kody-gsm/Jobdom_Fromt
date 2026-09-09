@@ -8,12 +8,10 @@ type UserProfileResponse = {
   name: string;
   email: string;
   student_number: string;
-  profile_image?: string;
+  profileImageUrl?: string;
 };
 
-type ProfileImageUploadResponse =
-  | string
-  | { image_url?: string; imageUrl?: string; url?: string };
+type ProfileImageUploadResponse = { profileImageUrl: string };
 
 export const uploadProfileImage = async (file: File) => {
   const formData = new FormData();
@@ -22,9 +20,7 @@ export const uploadProfileImage = async (file: File) => {
     "/auth/profile/image",
     { method: "PATCH", body: formData },
   );
-  return typeof response === "string"
-    ? response
-    : response.image_url || response.imageUrl || response.url || null;
+  return response.profileImageUrl;
 };
 
 export const fetchUserProfile = async () => {
