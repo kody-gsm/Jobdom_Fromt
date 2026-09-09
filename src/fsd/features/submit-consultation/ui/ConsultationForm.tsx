@@ -108,7 +108,7 @@ export const ConsultationForm = ({
               <div
                 data-consultation-field="teacher"
                 className={`flex min-h-11 flex-wrap gap-2 rounded-xl ${
-                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+                  errorTarget === "teacher" ? "ring-1 ring-[#E53935]" : ""
                 }`}
               >
                 {teacherStatus === "loading" ? (
@@ -171,7 +171,7 @@ export const ConsultationForm = ({
             <div
               data-consultation-field="date"
               className={`rounded-xl ${
-                errorTarget === "date" ? "border border-[#E53935] p-2" : ""
+                errorTarget === "date" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
               <div className="mb-3 flex items-center justify-between">
@@ -213,7 +213,7 @@ export const ConsultationForm = ({
             <div
               data-consultation-field="period"
               className={`space-y-2 rounded-xl ${
-                errorTarget === "period" ? "border border-[#E53935] p-2" : ""
+                errorTarget === "period" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
               {CONSULTATION_SCHEDULE_ROWS.map((row) => {
