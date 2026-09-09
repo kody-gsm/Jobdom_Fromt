@@ -5,15 +5,8 @@ export const getProfileAvatarUserKey = ({
   email,
   studentId,
   name,
-}: {
-  email?: string;
-  studentId?: string;
-  name?: string;
-}) =>
-  email?.trim().toLowerCase() ||
-  studentId?.trim() ||
-  name?.trim() ||
-  "student";
+}: { email?: string; studentId?: string; name?: string }) =>
+  email?.trim().toLowerCase() || studentId?.trim() || name?.trim() || "student";
 
 export const getProfileAvatarStorageKey = (userKey: string) =>
   `jobdam.profile-avatar.${userKey}`;
@@ -25,6 +18,7 @@ export const validateProfileAvatarFile = (file: { type: string; size: number }) 
   }
   return null;
 };
+
 export const readProfileAvatar = (userKey: string) => {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(getProfileAvatarStorageKey(userKey));
