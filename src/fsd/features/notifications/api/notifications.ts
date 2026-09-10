@@ -43,7 +43,7 @@ export interface SseTicketResponse {
 export const getNotificationTargetUrl = (url: string | null) => {
   if (!url) return null;
   if (/^\/teacher\/(course|common)\/\d+$/.test(url)) return "/teacher";
-  if (/^\/student\/(course|common)\/\d+$/.test(url)) return "/counsel";
+  if (/^\/student\/(course|common)\/\d+$/.test(url)) return "/";
   return url.replace(/^\/form\/(\d+)$/, "/forms/$1");
 };
 
