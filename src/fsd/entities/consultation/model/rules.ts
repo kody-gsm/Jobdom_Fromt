@@ -49,6 +49,21 @@ export const getSelectablePeriods = (
   });
 };
 
+export const getNextAvailableDate = (date: string, now = new Date()) => {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(now);
+  const time = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(now);
+  if (date !== today || time <= "16:20") return date;
+  const next = new Date(`${date}T12:00:00+09:00`);
+  do next.setDate(next.getDate() + 1);
+  while (next.getDay() === 0 || next.getDay() === 6);
+  return toLocalDateValue(next);
+};
+
 const toLocalDateValue = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
     .toISOString()

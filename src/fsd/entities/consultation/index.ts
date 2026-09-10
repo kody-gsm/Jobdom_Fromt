@@ -13,6 +13,7 @@ export {
   createReservationInput,
   getAvailablePeriods,
   getSelectablePeriods,
+  getNextAvailableDate,
   getNextWeekdays,
   toConsultationKind,
   validateConsultationDraft,

@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   createReservationInput,
+  getNextAvailableDate,
   getNextWeekdays,
   getSelectablePeriods,
   toConsultationKind,
@@ -140,6 +141,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       active = false;
     };
   }, [counselType, selectedTeacher, selectedDate]);
+
+  useEffect(() => {
+    const advanceAfterLastPeriod = () => {
+      setSelectedDate((current) => current ? getNextAvailableDate(current, new Date()) : current);
+    };
+    const timer = window.setInterval(advanceAfterLastPeriod, 30_000);
+    advanceAfterLastPeriod();
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(
     () => () => {
