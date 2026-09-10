@@ -19,6 +19,8 @@ export type ConsultationSlotStatus = {
 
 export type SubmitConsultationInput = ReservationInput & {
   teacherId: number;
+  category: string;
+  otherCategory?: string;
 };
 
 export const getConsultationTeachers = () =>
