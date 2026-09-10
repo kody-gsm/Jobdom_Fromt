@@ -3,6 +3,7 @@ import {
   TEACHERS,
   createReservationInput,
   getAvailablePeriods,
+  getSelectablePeriods,
   getNextWeekdays,
   toConsultationKind,
   validateConsultationDraft,
@@ -28,6 +29,7 @@ assert.deepEqual(getAvailablePeriods("general", null), [
 ]);
 
 const weekdays = getNextWeekdays(new Date("2026-09-04T09:00:00+09:00"));
+assert.deepEqual(getSelectablePeriods("general", null, new Date("2026-09-04T16:30:00+09:00")), []);
 assert.equal(weekdays.length, 21);
 assert.equal(weekdays[0]?.value, "2026-09-04");
 assert.equal(weekdays.at(-1)?.value, "2026-10-02");

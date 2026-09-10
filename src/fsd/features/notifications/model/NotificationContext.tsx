@@ -98,12 +98,14 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       }).catch(() => undefined);
     };
     refreshCount();
+    const polling = window.setInterval(refreshCount, 60_000);
     subscribeNotifications((item) => {
       if (!ctrl.signal.aborted) {
         if (!item.isRead) setUnreadCount((c) => c + 1);
         pushToast(item);
       }
     }, refreshCount, ctrl.signal);
+    ctrl.signal.addEventListener("abort", () => window.clearInterval(polling), { once: true });
   }, [pushToast]);
 
   // ── React to session changes ───────────────────────────────────────────────

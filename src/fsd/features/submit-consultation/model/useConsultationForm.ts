@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   createReservationInput,
   getNextWeekdays,
+  getSelectablePeriods,
   toConsultationKind,
   validateConsultationDraft,
 } from "@fsd/entities/consultation";
@@ -70,7 +71,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [counselType, setCounselType] = useState(initialType);
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
-  const [category, setCategory] = useState("학업");
+  const [category, setCategory] = useState("");
   const [otherCategory, setOtherCategory] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
@@ -193,6 +194,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const isTimeUnavailable = (time: string) =>
     (counselType === "general" && time === "4교시") ||
+    (selectedDate === new Date().toISOString().slice(0, 10) &&
+      !getSelectablePeriods(counselType, selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null).includes(time)) ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&
       selectedDate !== null &&
@@ -266,6 +269,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         ...(category === "기타" ? { otherCategory: otherCategory.trim() } : {}),
       });
       showToast("상담 신청 요청을 보냈습니다", "success");
+      window.setTimeout(() => router.push("/"), 700);
     } catch (error) {
       if (
         error instanceof ApiError &&

@@ -22,6 +22,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const [form, setForm] = useState<DynamicForm | null>(null);
   const [submission, setSubmission] = useState<FormSubmission | null>(null);
   const [values, setValues] = useState<Record<number, FormValue>>({});
+  const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,6 +36,12 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
       .then(([loadedForm, loadedSubmission]) => {
         setForm(loadedForm);
         setSubmission(loadedSubmission);
+        if (loadedSubmission) {
+          setValues(Object.fromEntries(loadedSubmission.answers.map((answer) => [
+            answer.questionId,
+            answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
+          ])));
+        }
       })
       .catch((caught) =>
         setMessage({
@@ -66,8 +73,11 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
 
     try {
       setSubmitting(true);
-      const saved = await formApi.submit(form.id, answers);
+      const saved = submission
+        ? await formApi.updateSubmission(form.id, answers)
+        : await formApi.submit(form.id, answers);
       setSubmission(saved);
+      setEditing(false);
       setMessage({ text: "응답을 제출했습니다." });
     } catch (caught) {
       setMessage({
@@ -108,7 +118,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         </div>
       </header>
       <div className="space-y-5 p-6 sm:p-9">
-        {submission ? (
+        {submission && !editing ? (
           <SubmittedAnswers submission={submission} />
         ) : (
           form.questions.map((question, index) => (
@@ -131,7 +141,11 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
             {message.text}
           </p>
         ) : null}
-        {!submission ? (
+        {submission && !editing ? (
+          <ActionButton type="button" onClick={() => setEditing(true)} className="w-full bg-brand hover:bg-brand-hover">
+            응답 재응답
+          </ActionButton>
+        ) : (
           <ActionButton
             type="submit"
             disabled={submitting}
@@ -139,7 +153,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           >
             {submitting ? "제출 중…" : "제출"}
           </ActionButton>
-        ) : null}
+        )}
       </div>
       </ContentCard>
     </form>
