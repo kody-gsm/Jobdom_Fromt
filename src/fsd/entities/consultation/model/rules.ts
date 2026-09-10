@@ -34,6 +34,21 @@ export const getAvailablePeriods = (
   return ["점심시간", "저녁시간"];
 };
 
+export const getSelectablePeriods = (
+  type: ConsultationType,
+  teacher: ConsultationTeacher | null,
+  now = new Date(),
+) => {
+  const periods = getAvailablePeriods(type, teacher);
+  if (now.getDay() === 0 || now.getDay() === 6) return periods;
+  return periods.filter((period) => {
+    const schedule = CONSULTATION_SCHEDULE.find((item) => item.period === period);
+    return schedule !== undefined &&
+      (schedule.startHour > now.getHours() ||
+        (schedule.startHour === now.getHours() && schedule.startMinute > now.getMinutes()));
+  });
+};
+
 const toLocalDateValue = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
     .toISOString()

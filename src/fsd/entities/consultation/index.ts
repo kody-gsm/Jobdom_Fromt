@@ -12,6 +12,7 @@ export {
   TEACHERS,
   createReservationInput,
   getAvailablePeriods,
+  getSelectablePeriods,
   getNextWeekdays,
   toConsultationKind,
   validateConsultationDraft,

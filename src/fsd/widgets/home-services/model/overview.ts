@@ -23,7 +23,7 @@ export const buildHomeOverview = ({
   recruits: Recruit[];
 }): HomeOverview => ({
   upcomingConsultations: [
-    ...course.map((item) => ({
+    ...course.filter((item) => !item.status || item.status === "RESERVED").map((item) => ({
       id: item.id * 2,
       type: "진로상담" as const,
       date: item.date,

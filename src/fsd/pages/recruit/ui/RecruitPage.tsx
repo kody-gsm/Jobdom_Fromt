@@ -45,9 +45,9 @@ export const RecruitPage = () => {
 
 const RecruitCard = ({ item }: { item: Recruit }) => (
   <ContentCard className="flex min-h-[320px] flex-col p-7 sm:p-8">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4">
         <span className="text-xs font-bold text-brand-accent">채용 공고</span>
-        <span className="text-xs font-semibold text-muted">
+        <span className="hidden text-xs font-semibold text-muted">
           마감 {item.deadline || "별도 확인"}
         </span>
       </div>

@@ -21,6 +21,11 @@ export const createFormApi = (request: RequestFn) => ({
       method: "POST",
       body: JSON.stringify({ answers }),
     }),
+  updateSubmission: (id: number, answers: FormAnswerInput[]) =>
+    request<FormSubmission>(`/student/form/${id}/submission`, {
+      method: "PUT",
+      body: JSON.stringify({ answers }),
+    }),
   getTeacherAll: () => request<FormSummary[]>("/teacher/form"),
   getTeacherById: (id: number) => request<DynamicForm>(`/teacher/form/${id}`),
   createTeacher: (input: FormInput) =>
