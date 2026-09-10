@@ -36,6 +36,8 @@ export const ConsultationForm = ({
     counselType,
     title,
     content,
+    category,
+    otherCategory,
     teachers,
     teacherStatus,
     selectedTeacher,
@@ -47,6 +49,8 @@ export const ConsultationForm = ({
     dates,
     setTitle,
     setContent,
+    setCategory,
+    setOtherCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
@@ -146,6 +150,35 @@ export const ConsultationForm = ({
               onChange={(event) => setTitle(event.target.value)}
               placeholder="고민거리 한 줄 요약을 적어주세요"
             />
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
+              <div className="flex flex-wrap gap-2">
+                {["학업", "취업", "진학", "생활", "기타"].map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setCategory(item)}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      category === item
+                        ? "border-brand bg-[#EAF9F0] text-brand-hover"
+                        : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              {category === "기타" ? (
+                <TextField
+                  data-consultation-field="otherCategory"
+                  label="기타 상담 내용"
+                  value={otherCategory}
+                  onChange={(event) => setOtherCategory(event.target.value)}
+                  placeholder="상담 카테고리를 입력해주세요."
+                />
+              ) : null}
+            </div>
 
             <div>
               <TextAreaField
