@@ -150,7 +150,7 @@ export function TeacherRecruitPage() {
             <div className="flex flex-wrap gap-2">
               <Link href="/teacher/forms" className="inline-flex h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700">신청 폼 관리</Link>
               <label className={`inline-flex h-11 cursor-pointer items-center rounded-xl bg-[#02C551] px-4 text-sm font-bold text-white ${working ? "pointer-events-none opacity-60" : ""}`}>
-                + 공고 이미지 등록
+                + AI로 공고 초안 생성
                 <input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" />
               </label>
             </div>
@@ -185,14 +185,25 @@ export function TeacherRecruitPage() {
                       const active = row.recruit.id === selectedId;
                       const latest = [...row.applicants].sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt))[0];
                       return (
-                        <tr key={row.recruit.id} className={`border-b border-gray-100 ${active ? "bg-[#effbf3]" : "hover:bg-gray-50"}`}>
+                        <tr
+                          key={row.recruit.id}
+                          onClick={() => select(row)}
+                          onKeyDown={(event) => {
+                            if (event.key !== "Enter" && event.key !== " ") return;
+                            event.preventDefault();
+                            select(row);
+                          }}
+                          tabIndex={0}
+                          aria-label={`${row.recruit.companyName || "회사명 미입력"} 공고 선택`}
+                          className={`cursor-pointer border-b border-gray-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#02C551] ${active ? "bg-[#effbf3]" : "hover:bg-gray-50"}`}
+                        >
                           <Td className="font-mono text-xs text-gray-400">{String(index + 1).padStart(2, "0")}</Td>
-                          <Td><button type="button" onClick={() => select(row)} className="block w-full text-left"><strong className="block max-w-52 truncate text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><span className="mt-1 block max-w-52 truncate text-xs text-gray-400">{row.recruit.summary || "공고 요약 없음"}</span></button></Td>
+                          <Td><strong className="block max-w-52 truncate text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><span className="mt-1 block max-w-52 truncate text-xs text-gray-400">{row.recruit.summary || "공고 요약 없음"}</span></Td>
                           <Td><Status status={row.recruit.status} /></Td>
                           <Td>{row.recruit.deadline || "—"}</Td>
                           <Td>{row.recruit.interviewDate || "—"}</Td>
                           <Td>{row.form ? <span className="block max-w-40 truncate font-medium text-gray-700" title={row.form.title}>{row.form.title}</span> : <span className="font-semibold text-amber-600">미연결</span>}</Td>
-                          <Td><button type="button" onClick={() => select(row)} className="rounded-lg bg-gray-100 px-2.5 py-1.5 font-bold text-gray-700">{row.applicants.length}명</button></Td>
+                          <Td><span className="rounded-lg bg-gray-100 px-2.5 py-1.5 font-bold text-gray-700">{row.applicants.length}명</span></Td>
                           <Td className="text-xs text-gray-500">{latest ? formatDate(latest.submittedAt, true) : "—"}</Td>
                         </tr>
                       );
@@ -248,7 +259,7 @@ function Info({ label, value }: { label: string; value: string | null }) {
 
 function Editor({ row, form, setForm, working, cancel, save }: { row: RecruitDashboardRow; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (publish?: boolean) => Promise<void> }) {
   const update = (key: keyof RecruitUpdate, value: string) => setForm((current) => ({ ...current, [key]: value }));
-  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">공고 수정</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><label className="block text-xs font-bold text-gray-500">공고 요약<textarea value={form.summary || ""} onChange={(event) => update("summary", event.target.value)} className="mt-2 min-h-36 w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#02C551]" /></label></div><div className="mt-5 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{row.recruit.status === "DRAFT" ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <Link href={`/recruit/${row.recruit.id}`} className="inline-flex h-11 items-center justify-center rounded-xl bg-gray-800 text-sm font-bold text-white">학생 화면</Link>}</div></div>;
+  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">공고 수정</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><label className="block text-xs font-bold text-gray-500">공고 요약<textarea value={form.summary || ""} onChange={(event) => update("summary", event.target.value)} className="mt-2 min-h-36 w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#02C551]" /></label></div>{row.recruit.status === "DRAFT" && <Link href={row.form ? `/teacher/forms?formId=${row.form.id}` : "/teacher/forms"} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{row.recruit.status === "DRAFT" ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-soft text-sm font-bold text-brand-accent">공개됨</span>}</div></div>;
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {

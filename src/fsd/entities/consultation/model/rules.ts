@@ -4,6 +4,7 @@ import type {
   ConsultationKind,
   ConsultationTeacher,
   ConsultationType,
+  CounselingCategory,
   ReservationInput,
 } from "./types.ts";
 import { CONSULTATION_SCHEDULE } from "./schedule.ts";
@@ -15,12 +16,19 @@ export const TEACHERS: ConsultationTeacher[] = [
 ];
 
 const BLOCKED_GENERAL_PERIODS = new Set(["4교시"]);
+const GENERAL_END_PERIODS = new Set(["8교시", "9교시", "저녁시간"]);
 const GENERAL_PERIODS = CONSULTATION_SCHEDULE
   .map(({ period }) => period)
-  .filter((period) => !BLOCKED_GENERAL_PERIODS.has(period));
+  .filter((period) =>
+    !BLOCKED_GENERAL_PERIODS.has(period) && !GENERAL_END_PERIODS.has(period),
+  );
 
 export const toConsultationKind = (type: ConsultationType): ConsultationKind =>
   type === "career" ? "course" : "common";
+
+export const toCounselingCategory = (
+  type: ConsultationType,
+): CounselingCategory => type === "career" ? "취업" : "기타";
 
 export const getAvailablePeriods = (
   type: ConsultationType,
@@ -31,7 +39,10 @@ export const getAvailablePeriods = (
   if (teacher === "임경원 선생님") {
     return Array.from({ length: 9 }, (_, index) => `${index + 1}교시`);
   }
-  return ["점심시간", "저녁시간"];
+  if (["김권예소 선생님", "정윤기 선생님"].includes(teacher)) {
+    return ["점심시간", "저녁시간"];
+  }
+  return [];
 };
 
 export const getSelectablePeriods = (
@@ -107,11 +118,9 @@ export const validateConsultationDraft = (
 export const createReservationInput = (
   draft: ConsultationDraft,
 ): ReservationInput => ({
-  title:
-    draft.type === "career"
-      ? `[${draft.teacher}] ${draft.title.trim()}`
-      : draft.title.trim(),
+  title: draft.title.trim(),
   content: draft.content.trim(),
+  category: toCounselingCategory(draft.type),
   date: draft.date ?? "",
   period: draft.period ?? "",
 });

@@ -20,6 +20,7 @@ assert.match(schedule, /4교시[\s\S]*11:40 - 12:30/);
 assert.match(schedule, /점심시간[\s\S]*12:30 - 13:30/);
 assert.match(schedule, /5교시[\s\S]*13:30 - 14:20/);
 assert.match(schedule, /7교시[\s\S]*15:30 - 16:20/);
+assert.match(schedule, /9교시[\s\S]*18:20 - 19:10/);
 
 assert.doesNotMatch(form, /breakTime|unavailableByTeacher|times\.includes/);
 assert.match(form, /const unavailable = isTimeUnavailable\(row\.period\)/);

@@ -29,13 +29,13 @@ Student 영역은 이 계약을 유지하면 UI, component, hook, state, 함수 
 | `/counsel` | Student | 진로/일반 상담 신청. `type=general`이면 일반상담 탭으로 시작 |
 | `/forms` | Student | 공개 신청 폼 목록 조회 |
 | `/forms/[id]` | Student | 폼 조회, 필수 응답 검증, 최초 제출, 기존 제출 결과 조회 |
-| `/profile` | Student | 사용자 정보, 상담 예약/기록 조회, 예약 취소, 기록 상세/로컬 메모 UI |
+| `/profile` | Shared | 학생·교사 프로필 정보와 학생 상담 예약 조회/취소 |
 | `/recruit` | Student | 공개 취업공고 목록 조회. 401이면 로그인 안내 |
 | `/recruit/[id]` | Student | 공고 상세 조회, 신청 폼 이동, 신청 링크 복사 |
 | `/recruit/[id]/apply` | Student | 현재 `/forms`로 redirect만 수행 |
 | `/room` | Legacy | 현재 빈 route. 신규 기능으로 간주하지 않는다 |
 | `/teacher` | Teacher | 기존 상담 일정/예약 승인 UI. 현재 course 상담 조회 중심 |
-| `/teacher/forms` | Teacher | 폼 생성/수정/공개/마감, 학생 화면/응답 목록 이동 |
+| `/teacher/forms` | Teacher | 폼 생성/수정/공개/마감, 응답 목록 이동 |
 | `/teacher/forms/[id]/submissions` | Teacher | 폼 제출 목록 및 제출 상세 조회 |
 | `/teacher/recruit` | Teacher | 공고 이미지 분석, 공고 수정/공개, 지원 폼/지원자 연결 대시보드 |
 | `/test` | Dev | 기존 UI component 확인용 화면. 제품 기능 계약이 아님 |
@@ -90,12 +90,14 @@ Storage key는 기존 동작 호환을 위해 계약으로 취급한다.
 - 상담 종류는 `course`(진로)와 `common`(일반) 두 종류다.
 - 제목, 내용, 날짜, 교시는 필수다.
 - 진로상담은 선생님 선택도 필수다.
-- 진로상담 제목은 API 요청 시 `[선생님] 제목` 형태로 전송한다.
+- 상담 제목은 입력한 제목만 전송하고 담당 교사는 `teacherId`로 구분한다.
 - 진로상담은 현재 upcoming course 예약이 하나라도 있으면 중복 신청을 막는다.
 - 날짜 선택지는 오늘부터 평일 기준 5일을 만든다.
-- 진로상담 선생님은 현재 `임경원`, `김권예소`, `정윤기` 3명을 사용한다.
+- 진로상담은 `임경원`, `김권예소`, `정윤기` 선생님만, 일반상담은 그 외 일반 교사를 표시한다.
 - 임경원 선생님은 1~9교시, 나머지 두 선생님은 점심/저녁시간 선택지를 사용한다.
-- 일반상담은 1~4교시, 점심시간, 5~7교시를 사용한다.
+- 일반상담은 잠금된 4교시를 제외한 1~3교시, 점심시간, 5~7교시를 사용한다.
+- 진로상담 화면은 학생이 공강시간을 우선 선택하도록 안내한다.
+- 진로상담은 `취업`, 일반상담은 `기타` category를 서버에 전송한다.
 - 신청 성공 후 입력값을 유지하며 성공 toast를 표시한다.
 - 취소는 입력을 초기화하고 `/`로 이동한다.
 
@@ -137,17 +139,23 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 
 - `/teacher`, `/teacher/recruit`, `/teacher/forms`, 폼 응답 화면은 같은 교사 헤더와 활성 메뉴 표시를 사용한다.
 - `/teacher`는 session name을 선생님 이름으로 사용한다.
+- `/teacher`는 임경원·김권예소·정윤기·일반 교사의 네 화면 정책을 이름에 따라 적용한다.
+- 임경원 선생님은 진로상담 1~9교시, 김권예소·정윤기 선생님은 점심·저녁시간만 표시한다.
+- 일반 교사에게만 학생 홈 배너 입력을 표시한다. 현재 배너는 브라우저 로컬 저장이므로 여러 기기 공유에는 서버 API가 필요하다.
 - course/common 상담을 탭별로 조회해 날짜+교시 슬롯에 대기·확정 예약을 표시한다.
 - 신청 목록과 시간표에서 학번·제목·내용을 조회하고 담당 교사가 수락할 수 있다.
+- 대기 중인 상담 신청은 담당 교사가 취소(거절)할 수 있다.
 - 오늘 날짜는 brand 배경으로 고정하고 선택 날짜는 독립된 사각 테두리로 표시한다.
 - 기존 임경원 수업표는 해당 선생님에게만 표시한다. 실제 교사별 수업 시간표 API는 아직 없다.
 - 학생의 교사 목록은 서버에 정의된 GET /api/teachers를 사용한다.
 - `/teacher/forms`는 폼 목록/상세 조회, 생성, 수정, 공개, 마감 기능을 유지한다.
 - 폼 공유 시 `/forms/{id}` URL을 clipboard에 복사한다.
 - `/teacher/forms/[id]/submissions`는 제출 목록과 제출 상세를 조회한다.
-- `/teacher/recruit`는 공고 이미지 분석, draft 수정, publish, 학생 공고 화면 이동을 유지한다.
-- recruit dashboard의 공고-폼 연결은 현재 회사명과 폼 제목을 normalize한 임시 문자열 매칭이다.
-- Backend에 recruitId 연결 계약이 생기기 전까지 이 임시 매칭 의미를 임의 변경하지 않는다.
+- `/teacher/recruit`는 공고 이미지 분석, draft 수정, publish를 유지한다.
+- 교사 폼·공고 화면의 `학생 화면` 바로가기 버튼은 제공하지 않는다.
+- recruit dashboard의 공고-폼 연결은 Backend의 `formId`를 우선 사용하고, 과거 데이터만 회사명과 폼 제목의 normalize 문자열 매칭을 사용한다.
+- 이미지로 공고 초안을 만들면 Backend가 연결된 기본 지원 폼도 함께 만든다.
+- 공고 직접 생성용 Backend endpoint는 아직 없다.
 
 ## API endpoint contract
 
@@ -167,6 +175,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | PATCH | `/student/{course|common}/cancel/{id}` | 학생 상담 취소 |
 | GET | `/teacher/{course|common}` | 교사 상담 조회 |
 | PATCH | `/teacher/{course|common}/allow/{id}` | 교사 상담 승인 |
+| PATCH | `/teacher/{course|common}/reject/{id}` | 교사 상담 대기 신청 취소(거절) |
 | POST | `/teacher/{course|common}/lock` | 상담 slot 잠금 |
 | GET | `/teacher` | teacher id 조회 |
 | POST | `/admin/students/sync` | 학생 정보 동기화 |
@@ -206,7 +215,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 ### Consultation
 
 ```json
-{ "title": "제목", "content": "내용", "date": "YYYY-MM-DD", "period": "4교시" }
+{ "title": "제목", "content": "내용", "category": "취업", "date": "YYYY-MM-DD", "period": "4교시", "teacherId": 1 }
 ```
 
 ### Form submission

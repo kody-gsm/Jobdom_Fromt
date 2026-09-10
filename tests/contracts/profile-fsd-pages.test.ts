@@ -24,6 +24,8 @@ assert.doesNotMatch(page, /fetchUserProfile|cancelProfileConsultation/);
 assert.match(api, /getUpcoming/);
 assert.doesNotMatch(api, /getAll/);
 assert.match(api, /getSession/);
+assert.match(api, /session\?\.role === "TEACHER"/);
+assert.match(api, /upcomingCourse: \[\]/);
 assert.match(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
 assert.match(api, /requestWithSession[\s\S]{0,180}"\/auth\/profile\/image"/);
 assert.match(api, /new FormData\(\)/);

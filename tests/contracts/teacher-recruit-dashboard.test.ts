@@ -10,6 +10,7 @@ const recruit = {
   interviewDate: "2026-09-10",
   deadline: "2026-09-08",
   summary: "프론트엔드",
+  formId: 10,
   status: "DRAFT" as const,
   createdAt: "2026-09-01",
   updatedAt: "2026-09-01",
@@ -19,7 +20,9 @@ const forms = [
 ];
 
 assert.equal(findRecruitForm(recruit, forms)?.id, 10);
-assert.equal(findRecruitForm({ ...recruit, companyName: null }, forms), null);
+assert.equal(findRecruitForm({ ...recruit, companyName: null }, forms)?.id, 10);
+assert.equal(findRecruitForm({ ...recruit, formId: null }, forms)?.id, 10);
+assert.equal(findRecruitForm({ ...recruit, formId: 11 }, forms), null);
 
 const submissionCalls: number[] = [];
 const load = createRecruitDashboardLoader({

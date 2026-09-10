@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ConsultationType } from "@fsd/entities/consultation";
+import {
+  getAvailablePeriods,
+  type ConsultationType,
+} from "@fsd/entities/consultation";
 import {
   ActionButton,
   ContentCard,
@@ -60,6 +63,13 @@ export const ConsultationForm = ({
     handleSubmit,
   } = useConsultationForm(initialType);
   const displayTeachers = getConsultationTeacherOptions(counselType, teachers);
+  const teacherLabel = selectedTeacher
+    ? getConsultationTeacherLabel(selectedTeacher.name)
+    : null;
+  const availablePeriods = getAvailablePeriods(counselType, teacherLabel);
+  const scheduleRows = CONSULTATION_SCHEDULE_ROWS.filter(({ period }) =>
+    availablePeriods.includes(period),
+  );
   const [calendarDate, setCalendarDate] = useState(() => new Date());
   const availableDateValues = useMemo(
     () => new Set(dates.map((item) => item.value)),
@@ -243,13 +253,18 @@ export const ConsultationForm = ({
 
           <section className="mt-6">
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 교시</p>
+            {counselType === "career" ? (
+              <p className="mb-3 rounded-xl bg-brand-soft px-4 py-3 text-sm font-semibold text-brand-accent">
+                수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요.
+              </p>
+            ) : null}
             <div
               data-consultation-field="period"
               className={`space-y-2 rounded-xl ${
                 errorTarget === "period" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
-              {CONSULTATION_SCHEDULE_ROWS.map((row) => {
+              {scheduleRows.map((row) => {
                 const unavailable = isTimeUnavailable(row.period);
                 return (
                   <button
@@ -275,6 +290,11 @@ export const ConsultationForm = ({
                   </button>
                 );
               })}
+              {scheduleRows.length === 0 ? (
+                <p className="rounded-xl bg-[#F5F6F7] px-4 py-5 text-center text-sm font-semibold text-muted">
+                  상담 선생님을 먼저 선택해 주세요.
+                </p>
+              ) : null}
             </div>
           </section>
 

@@ -10,9 +10,13 @@ export const useProfilePage = () => {
   const [avatarError, setAvatarError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
     let active = true;
+    queueMicrotask(() => {
+      if (active) setUserRole(getSession()?.role ?? null);
+    });
 
     fetchUserProfile()
       .then((data) => {
@@ -85,6 +89,7 @@ export const useProfilePage = () => {
     avatarError,
     loading,
     error,
+    userRole,
     handleCancel,
     handleAvatarChange,
   };
