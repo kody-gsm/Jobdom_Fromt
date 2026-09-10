@@ -1,5 +1,6 @@
 export type ConsultationType = "career" | "general";
 export type ConsultationKind = "course" | "common";
+export type CounselingCategory = "학업" | "취업" | "진학" | "생활" | "기타";
 export type ConsultationTeacher = string;
 
 export interface ConsultationDraft {
@@ -14,6 +15,7 @@ export interface ConsultationDraft {
 export interface ReservationInput {
   title: string;
   content: string;
+  category: CounselingCategory;
   date: string;
   period: string;
 }

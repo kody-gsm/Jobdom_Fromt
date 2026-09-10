@@ -53,6 +53,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const [unreadCount, setUnreadCount] = useState(0);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+  const unreadRequestVersion = useRef(0);
 
   const decrementUnread = useCallback(
     () => setUnreadCount((c) => Math.max(0, c - 1)),
@@ -79,6 +80,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const disconnect = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    unreadRequestVersion.current += 1;
     setUnreadCount(0);
     setToasts([]);
   }, []);
@@ -93,8 +95,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     if (!session) return;
 
     const refreshCount = () => {
+      const version = ++unreadRequestVersion.current;
       void getUnreadCount().then((result) => {
-        if (!ctrl.signal.aborted) setUnreadCount(result.count);
+        if (!ctrl.signal.aborted && version === unreadRequestVersion.current) {
+          setUnreadCount(result.count);
+        }
       }).catch(() => undefined);
     };
     refreshCount();
@@ -102,6 +107,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       if (!ctrl.signal.aborted) {
         if (!item.isRead) setUnreadCount((c) => c + 1);
         pushToast(item);
+        refreshCount();
       }
     }, refreshCount, ctrl.signal);
   }, [pushToast]);

@@ -3,10 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
-import { CONSULTATION_SCHEDULE } from "@fsd/entities/consultation";
 import type { ConsultationKind, TeacherReservation } from "@fsd/entities/consultation";
-import { approveConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations } from "../api/teacher";
+import { readHomeBanner, saveHomeBanner } from "@fsd/entities/banner";
+import { approveConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations, rejectConsultation } from "../api/teacher";
 import { dateKey, formatPeriod, getWeek, reservationSlot, WEEKLY_CLASS_SCHEDULE } from "../model/calendar";
+import {
+    canManageHomeBanner,
+    getTeacherAvailablePeriods,
+    getTeacherWorkspaceVariant,
+} from "../model/workspace";
 
 type SelectedRequest = { reservation: TeacherReservation; approved: boolean };
 const WEEKDAYS = ["월", "화", "수", "목", "금"];
@@ -21,9 +26,11 @@ export function TeacherPage() {
     const [approved, setApproved] = useState<TeacherReservation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [approvalError, setApprovalError] = useState<string | null>(null);
-    const [isApproving, setIsApproving] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [selection, setSelection] = useState<SelectedRequest | null>(null);
+    const [bannerMessage, setBannerMessage] = useState("");
+    const [bannerStatus, setBannerStatus] = useState("");
     const dialog = useRef<HTMLDialogElement>(null);
     const requestVersion = useRef(0);
 
@@ -49,7 +56,11 @@ export function TeacherPage() {
 
     useEffect(() => {
         queueMicrotask(() => {
-            setTeacherName(getSession()?.name || "선생님");
+            const name = getSession()?.name || "선생님";
+            setTeacherName(name);
+            if (canManageHomeBanner(name)) {
+                setBannerMessage(readHomeBanner()?.message ?? "");
+            }
             void loadReservations();
         });
         return () => { requestVersion.current += 1; };
@@ -72,23 +83,22 @@ export function TeacherPage() {
         ...Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, index) => new Date(year, month, index + 1)),
     ];
     const week = getWeek(selectedDate);
-    const isLunchTeacher = ["김권예소", "정윤기"].some((name) => teacherName.includes(name));
-    const periods = kind === "course" && isLunchTeacher
-        ? ["점심시간", "저녁시간"]
-        : [...CONSULTATION_SCHEDULE.map(({ period }) => period), "8교시", "9교시", "저녁시간"];
+    const teacherVariant = getTeacherWorkspaceVariant(teacherName);
+    const periods = getTeacherAvailablePeriods(kind, teacherName);
+    const canManageBanner = teacherName !== "선생님" && canManageHomeBanner(teacherName);
     const changeMonth = (direction: number) => {
         const next = new Date(year, month + direction, 1);
         setCurrentDate(next);
         setSelectedDate(next);
     };
     const openReservation = (reservation: TeacherReservation, isApproved: boolean) => {
-        setApprovalError(null);
+        setActionError(null);
         setSelection({ reservation, approved: isApproved });
     };
     const handleApprove = async () => {
-        if (!selection || selection.approved || isApproving) return;
-        setIsApproving(true);
-        setApprovalError(null);
+        if (!selection || selection.approved || isProcessing) return;
+        setIsProcessing(true);
+        setActionError(null);
         try {
             await approveConsultation(kind, selection.reservation.reservation_id);
             setSelection({ ...selection, approved: true });
@@ -96,10 +106,36 @@ export function TeacherPage() {
             setApproved((items) => [...items, selection.reservation]);
             await loadReservations();
         } catch (error) {
-            setApprovalError(error instanceof Error ? error.message : "상담을 수락하지 못했습니다.");
+            setActionError(error instanceof Error ? error.message : "상담을 수락하지 못했습니다.");
         } finally {
-            setIsApproving(false);
+            setIsProcessing(false);
         }
+    };
+    const handleReject = async () => {
+        if (!selection || selection.approved || isProcessing) return;
+        if (!window.confirm("이 상담 신청을 취소할까요?")) return;
+        setIsProcessing(true);
+        setActionError(null);
+        try {
+            await rejectConsultation(kind, selection.reservation.reservation_id);
+            setPending((items) => items.filter((item) => item.reservation_id !== selection.reservation.reservation_id));
+            dialog.current?.close();
+            await loadReservations();
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : "상담 신청을 취소하지 못했습니다.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+    const handleBannerSave = () => {
+        const message = bannerMessage.trim();
+        if (!canManageBanner || !message) {
+            setBannerStatus("배너 문구를 입력해 주세요.");
+            return;
+        }
+        saveHomeBanner({ message, updatedBy: teacherName.replace(/ 선생님$/, "") });
+        setBannerMessage(message);
+        setBannerStatus("학생 홈 배너를 저장했습니다.");
     };
 
     return (
@@ -132,6 +168,26 @@ export function TeacherPage() {
                     </div>
                     <p className="mt-5 text-xs text-secondary-text">초록색: 오늘 · 사각 테두리: 선택한 날짜</p>
                 </div>
+                {canManageBanner ? (
+                    <section aria-labelledby="banner-title" className="mt-6 border-t border-border pt-5">
+                        <h2 id="banner-title" className="font-bold">학생 홈 배너</h2>
+                        <p className="mt-1 text-xs leading-5 text-secondary-text">일반 교사만 학생 대시보드의 안내 문구를 등록할 수 있습니다.</p>
+                        <textarea
+                            value={bannerMessage}
+                            maxLength={160}
+                            onChange={(event) => {
+                                setBannerMessage(event.target.value);
+                                setBannerStatus("");
+                            }}
+                            placeholder="학생에게 안내할 내용을 입력하세요."
+                            className="mt-3 min-h-24 w-full resize-none rounded-xl border border-border p-3 text-sm outline-none focus:border-brand"
+                        />
+                        <button type="button" onClick={handleBannerSave} className="mt-2 min-h-11 w-full rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-hover">
+                            배너 저장
+                        </button>
+                        {bannerStatus ? <p role="status" className="mt-2 text-xs font-semibold text-brand-accent">{bannerStatus}</p> : null}
+                    </section>
+                ) : null}
                 <div className="my-6 space-y-3 border-t border-border pt-5 text-sm">
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-yellow-400" />수업</p>
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-brand" />상담 확정</p>
@@ -145,7 +201,7 @@ export function TeacherPage() {
                             <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-brand-soft">
                                 <span className="block font-semibold">{item.name}</span>
                                 <span className="block text-xs text-secondary-text">{item.date} · {formatPeriod(item.period)}</span>
-                                <span className="text-sm text-brand-accent">신청 정보 보기 · 수락</span>
+                                <span className="text-sm text-brand-accent">신청 정보 보기 · 수락/취소</span>
                             </button>
                         ))}
                     </div>
@@ -181,7 +237,7 @@ export function TeacherPage() {
                             <th scope="row" className="border border-border p-2 text-sm">{period}</th>
                             {week.map((date, index) => {
                                 const slot = `${dateKey(date)}_${period}`;
-                                const classItem = teacherName.replace(/ 선생님$/, "") === "임경원" ? WEEKLY_CLASS_SCHEDULE[WEEKDAYS[index]]?.[period] : undefined;
+                                const classItem = teacherVariant === "im-gyeongwon" ? WEEKLY_CLASS_SCHEDULE[WEEKDAYS[index]]?.[period] : undefined;
                                 const confirmed = approved.filter((item) => reservationSlot(item) === slot);
                                 const waiting = pending.filter((item) => reservationSlot(item) === slot);
                                 return <td key={slot} className="h-20 border border-border p-2 align-top">
@@ -194,7 +250,7 @@ export function TeacherPage() {
                     </table>
                 </div>
             </main>
-            <dialog ref={dialog} aria-labelledby="reservation-title" onCancel={(event) => { if (isApproving) event.preventDefault(); }} onClose={() => setSelection(null)} className="fixed inset-0 m-auto max-h-[85vh] w-[450px] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl p-6 backdrop:bg-black/30">
+            <dialog ref={dialog} aria-labelledby="reservation-title" onCancel={(event) => { if (isProcessing) event.preventDefault(); }} onClose={() => setSelection(null)} className="fixed inset-0 m-auto max-h-[85vh] w-[450px] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl p-6 backdrop:bg-black/30">
                 {selection && <>
                     <h2 id="reservation-title" className="mb-5 text-xl font-bold">{selection.approved ? "예약 확정 정보" : "학생 상담 신청 정보"}</h2>
                     <dl className="space-y-3 text-sm">
@@ -204,10 +260,11 @@ export function TeacherPage() {
                         <div><dt className="text-secondary-text">제목</dt><dd>{selection.reservation.title || "제목 정보 없음"}</dd></div>
                         <div><dt className="text-secondary-text">신청 내용</dt><dd className="whitespace-pre-wrap break-words rounded-lg bg-panel p-3">{selection.reservation.content || "상담 내용 정보 없음"}</dd></div>
                     </dl>
-                    {approvalError && <p role="alert" className="mt-4 text-sm text-red-600">{approvalError}</p>}
+                    {actionError && <p role="alert" className="mt-4 text-sm text-red-600">{actionError}</p>}
                     <div className="mt-6 flex gap-2">
-                        <button disabled={isApproving} onClick={() => dialog.current?.close()} className="flex-1 rounded-lg border border-border py-3">닫기</button>
-                        {!selection.approved && <button disabled={isApproving} onClick={() => void handleApprove()} className="flex-1 rounded-lg bg-brand py-3 font-semibold text-white hover:bg-brand-hover disabled:opacity-50">{isApproving ? "수락 중..." : "상담 수락"}</button>}
+                        <button disabled={isProcessing} onClick={() => dialog.current?.close()} className="flex-1 rounded-lg border border-border py-3">닫기</button>
+                        {!selection.approved && <button disabled={isProcessing} onClick={() => void handleReject()} className="flex-1 rounded-lg border border-red-200 py-3 font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">상담 신청 취소</button>}
+                        {!selection.approved && <button disabled={isProcessing} onClick={() => void handleApprove()} className="flex-1 rounded-lg bg-brand py-3 font-semibold text-white hover:bg-brand-hover disabled:opacity-50">{isProcessing ? "처리 중..." : "상담 수락"}</button>}
                     </div>
                 </>}
             </dialog>

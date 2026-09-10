@@ -76,11 +76,11 @@ const adminToken = `x.${btoa(JSON.stringify({ role: "ADMIN" }))}.x`;
 assert.equal(saveSession({ accessToken: adminToken, refreshToken: "", tokenType: "Bearer", userId: 1, email: "admin@gsm.hs.kr", name: "관리자" }).role, "ADMIN");
 
 assert.equal(findRecruitForm(
-  { id: 1, companyName: "(주) 잡담", interviewDate: null, deadline: null, summary: null, status: "PUBLISHED", createdAt: "", updatedAt: "" },
+  { id: 1, companyName: "(주) 잡담", interviewDate: null, deadline: null, summary: null, formId: null, status: "PUBLISHED", createdAt: "", updatedAt: "" },
   [{ id: 7, title: "잡담 백엔드 개발자 지원서", description: null, status: "PUBLISHED", questionCount: 3, deadline: null, createdAt: "" }],
 )?.id, 7);
 assert.equal(findRecruitForm(
-  { id: 2, companyName: "다른회사", interviewDate: null, deadline: null, summary: null, status: "DRAFT", createdAt: "", updatedAt: "" },
+  { id: 2, companyName: "다른회사", interviewDate: null, deadline: null, summary: null, formId: null, status: "DRAFT", createdAt: "", updatedAt: "" },
   [],
 ), null);
 

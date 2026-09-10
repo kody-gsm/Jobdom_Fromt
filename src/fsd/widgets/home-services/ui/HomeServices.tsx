@@ -8,6 +8,11 @@ import {
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
+import {
+  HOME_BANNER_CHANGED_EVENT,
+  readHomeBanner,
+} from "@fsd/entities/banner";
+import type { HomeBanner } from "@fsd/entities/banner";
 import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
 import type { HomeConsultationItem } from "../model/overview.ts";
 import { useHomeOverview } from "../model/useHomeOverview.ts";
@@ -18,6 +23,7 @@ export const HomeServices = () => {
   const [cancelError, setCancelError] = useState("");
   const [cancelingId, setCancelingId] = useState<number | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [homeBanner, setHomeBanner] = useState<HomeBanner | null>(null);
   const upcomingConsultations = overview.upcomingConsultations.filter((item) =>
     isConsultationUpcoming(item.date, item.period, now),
   );
@@ -26,6 +32,13 @@ export const HomeServices = () => {
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const syncBanner = () => setHomeBanner(readHomeBanner());
+    syncBanner();
+    window.addEventListener(HOME_BANNER_CHANGED_EVENT, syncBanner);
+    return () => window.removeEventListener(HOME_BANNER_CHANGED_EVENT, syncBanner);
   }, []);
 
   const cancelConsultation = async (item: HomeConsultationItem) => {
@@ -149,7 +162,14 @@ export const HomeServices = () => {
       </ContentCard>
 
       <ContentCard className="flex min-h-32 items-center justify-center border-dashed bg-[#F7F8FA] p-7 text-center" aria-label="배너">
-        <p className="text-sm font-semibold text-[#667281]">등록된 배너가 없습니다.</p>
+        {homeBanner ? (
+          <div>
+            <p className="whitespace-pre-wrap text-base font-bold text-ink">{homeBanner.message}</p>
+            <p className="mt-2 text-xs font-semibold text-[#667281]">{homeBanner.updatedBy} 선생님</p>
+          </div>
+        ) : (
+          <p className="text-sm font-semibold text-[#667281]">등록된 배너가 없습니다.</p>
+        )}
       </ContentCard>
 
       {error ? <p role="status" className="text-sm text-[#9A675E]">{error}</p> : null}

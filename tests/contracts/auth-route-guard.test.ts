@@ -10,7 +10,7 @@ assert.equal(getAuthRedirect("/", null), "/login");
 assert.equal(getAuthRedirect("/profile", null), "/login");
 assert.equal(getAuthRedirect("/teacher", null), "/login");
 assert.equal(getAuthRedirect("/teacher/forms", "STUDENT"), "/");
-assert.equal(getAuthRedirect("/profile", "TEACHER"), "/teacher");
+assert.equal(getAuthRedirect("/profile", "TEACHER"), null);
 assert.equal(getAuthRedirect("/admin", "STUDENT"), "/");
 assert.equal(getAuthRedirect("/admin", "TEACHER"), "/teacher");
 assert.equal(getAuthRedirect("/admin", "ADMIN"), null);

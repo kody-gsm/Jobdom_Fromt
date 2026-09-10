@@ -11,6 +11,7 @@ import {
   NotificationType,
 } from "../api/notifications.ts";
 import { useNotification } from "../model/NotificationContext.tsx";
+import { formatNotificationTime } from "../model/time.ts";
 
 // ─── Label helpers ────────────────────────────────────────────────────────────
 
@@ -31,18 +32,6 @@ const TYPE_COLORS: Record<NotificationType, string> = {
   COUNSELING_APPROVED: "bg-green-100 text-green-700",
   COUNSELING_REJECTED: "bg-red-100 text-red-700",
 };
-
-function formatRelativeTime(isoString: string): string {
-  const diff = Date.now() - new Date(isoString).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "방금";
-  if (mins < 60) return `${mins}분 전`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}시간 전`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}일 전`;
-  return new Date(isoString).toLocaleDateString("ko-KR");
-}
 
 // ─── NotificationItem row ─────────────────────────────────────────────────────
 
@@ -87,7 +76,7 @@ const NotificationRow = ({
               {TYPE_LABELS[item.type]}
             </span>
             <span className="text-[11px] text-gray-400 ml-auto shrink-0">
-              {formatRelativeTime(item.createdAt)}
+              {formatNotificationTime(item.createdAt)}
             </span>
           </div>
           <p className="mt-1 text-sm font-medium text-gray-900 leading-snug truncate">

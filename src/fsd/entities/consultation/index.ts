@@ -4,6 +4,7 @@ export type {
   ConsultationKind,
   ConsultationTeacher,
   ConsultationType,
+  CounselingCategory,
   ReservationInput,
   StudentReservation,
   TeacherReservation,
@@ -14,6 +15,7 @@ export {
   getAvailablePeriods,
   getNextWeekdays,
   toConsultationKind,
+  toCounselingCategory,
   validateConsultationDraft,
 } from "./model/rules.ts";
 export { createConsultationApi } from "./api/createConsultationApi.ts";
