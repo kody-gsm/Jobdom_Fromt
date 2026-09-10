@@ -39,6 +39,8 @@ export const ConsultationForm = ({
     counselType,
     title,
     content,
+    category,
+    otherCategory,
     teachers,
     teacherStatus,
     selectedTeacher,
@@ -50,6 +52,8 @@ export const ConsultationForm = ({
     dates,
     setTitle,
     setContent,
+    setCategory,
+    setOtherCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
@@ -118,7 +122,7 @@ export const ConsultationForm = ({
               <div
                 data-consultation-field="teacher"
                 className={`flex min-h-11 flex-wrap gap-2 rounded-xl ${
-                  errorTarget === "teacher" ? "border border-[#E53935] p-2" : ""
+                  errorTarget === "teacher" ? "ring-1 ring-[#E53935]" : ""
                 }`}
               >
                 {teacherStatus === "loading" ? (
@@ -157,6 +161,35 @@ export const ConsultationForm = ({
               placeholder="고민거리 한 줄 요약을 적어주세요"
             />
 
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
+              <div className="flex flex-wrap gap-2">
+                {["학업", "취업", "진학", "생활", "기타"].map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setCategory(item)}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      category === item
+                        ? "border-brand bg-[#EAF9F0] text-brand-hover"
+                        : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              {category === "기타" ? (
+                <TextField
+                  data-consultation-field="otherCategory"
+                  label="기타 상담 내용"
+                  value={otherCategory}
+                  onChange={(event) => setOtherCategory(event.target.value)}
+                  placeholder="상담 카테고리를 입력해주세요."
+                />
+              ) : null}
+            </div>
+
             <div>
               <TextAreaField
                 data-consultation-field="content"
@@ -181,7 +214,7 @@ export const ConsultationForm = ({
             <div
               data-consultation-field="date"
               className={`rounded-xl ${
-                errorTarget === "date" ? "border border-[#E53935] p-2" : ""
+                errorTarget === "date" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
               <div className="mb-3 flex items-center justify-between">
@@ -228,7 +261,7 @@ export const ConsultationForm = ({
             <div
               data-consultation-field="period"
               className={`space-y-2 rounded-xl ${
-                errorTarget === "period" ? "border border-[#E53935] p-2" : ""
+                errorTarget === "period" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
               {scheduleRows.map((row) => {

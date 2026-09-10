@@ -10,7 +10,7 @@ const { clearSession } = await import("../../src/fsd/entities/user/index.ts");
 const { subscribeNotifications } = await import("../../src/fsd/features/notifications/api/notificationStream.ts");
 clearSession();
 assert.equal(api.getNotificationTargetUrl("/teacher/course/7"), "/teacher");
-assert.equal(api.getNotificationTargetUrl("/student/common/7"), "/counsel");
+assert.equal(api.getNotificationTargetUrl("/student/common/7"), "/");
 assert.equal(api.getNotificationTargetUrl("/form/7"), "/forms/7");
 assert.equal(api.getNotificationTargetUrl("/recruit/7"), "/recruit/7");
 assert.equal(api.getNotificationTargetUrl(null), null);

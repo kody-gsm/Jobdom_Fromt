@@ -25,6 +25,7 @@ export interface StudentReservation {
   name: string;
   date: string;
   period: string;
+  status?: "WAITING" | "RESERVED" | "CANCELED";
 }
 
 export interface TeacherReservation {

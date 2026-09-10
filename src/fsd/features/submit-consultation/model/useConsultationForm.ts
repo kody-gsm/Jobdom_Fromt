@@ -3,7 +3,9 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   createReservationInput,
+  getNextAvailableDate,
   getNextWeekdays,
+  getSelectablePeriods,
   toConsultationKind,
   validateConsultationDraft,
 } from "@fsd/entities/consultation";
@@ -70,6 +72,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [counselType, setCounselType] = useState(initialType);
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
+  const [category, setCategory] = useState("");
+  const [otherCategory, setOtherCategory] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
@@ -138,6 +142,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     };
   }, [counselType, selectedTeacher, selectedDate]);
 
+  useEffect(() => {
+    const advanceAfterLastPeriod = () => {
+      setSelectedDate((current) => current ? getNextAvailableDate(current, new Date()) : current);
+    };
+    const timer = window.setInterval(advanceAfterLastPeriod, 30_000);
+    advanceAfterLastPeriod();
+    return () => window.clearInterval(timer);
+  }, []);
+
   useEffect(
     () => () => {
       if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
@@ -169,6 +182,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setErrorTarget(null);
   };
 
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
+    if (value !== "기타") setOtherCategory("");
+  };
+
   const toggleTeacher = (teacher: ConsultationTeacherOption) => {
     const isSelected = selectedTeacher?.id === teacher.id;
     setSelectedTeacher(isSelected ? null : teacher);
@@ -186,6 +204,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const isTimeUnavailable = (time: string) =>
     (counselType === "general" && time === "4교시") ||
+    (selectedDate === new Date().toISOString().slice(0, 10) &&
+      !getSelectablePeriods(counselType, selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null).includes(time)) ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&
       selectedDate !== null &&
@@ -208,9 +228,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const getValidationMessage = () => {
+    if (!selectedTeacher) return "선생님을 선택해주세요";
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
-    if (!selectedTeacher) return "선생님을 선택해주세요";
+    if (category === "기타" && !otherCategory.trim()) {
+      return "기타 상담 내용을 입력해주세요";
+    }
 
     return validateConsultationDraft({
       type: counselType,
@@ -252,8 +275,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       await submitConsultation(toConsultationKind(counselType), {
         ...createReservationInput(draft),
         teacherId: teacherId,
+        category,
+        ...(category === "기타" ? { otherCategory: otherCategory.trim() } : {}),
       });
       showToast("상담 신청 요청을 보냈습니다", "success");
+      window.setTimeout(() => router.push("/"), 700);
     } catch (error) {
       if (
         error instanceof ApiError &&
@@ -279,6 +305,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     counselType,
     title,
     content,
+    category,
+    otherCategory,
     teachers,
     teacherStatus,
     selectedTeacher,
@@ -290,6 +318,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     dates,
     setTitle,
     setContent,
+    setCategory: handleCategoryChange,
+    setOtherCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,

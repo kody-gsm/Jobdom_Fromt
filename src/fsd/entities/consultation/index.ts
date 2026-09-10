@@ -13,6 +13,8 @@ export {
   TEACHERS,
   createReservationInput,
   getAvailablePeriods,
+  getSelectablePeriods,
+  getNextAvailableDate,
   getNextWeekdays,
   toConsultationKind,
   toCounselingCategory,

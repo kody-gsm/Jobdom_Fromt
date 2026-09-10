@@ -21,6 +21,7 @@ export {
 export type { AuthErrorField, AuthFieldError } from "./model/auth-errors.ts";
 export {
   getAuthErrorMessage,
+  getLoginErrorMessage,
   getPasswordResetError,
   getSignupError,
 } from "./model/auth-errors.ts";
