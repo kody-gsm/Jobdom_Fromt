@@ -57,7 +57,7 @@ export const readSession = (): AuthSession | null => {
   if (typeof window === "undefined") return null;
   const sessionOnly = readJson(sessionStorage);
   if (sessionOnly) return sessionOnly;
-  return hasRememberFlag() ? readJson(localStorage) : null;
+  return readJson(localStorage);
 };
 export const readRememberedSession = (): AuthSession | null => {
   if (typeof window === "undefined" || !hasRememberFlag()) return null;
@@ -68,7 +68,7 @@ export const readAccessToken = () => {
   if (typeof window === "undefined") return null;
   const sessionToken = sessionStorage.getItem(TOKEN_KEY);
   if (sessionToken) return sessionToken;
-  return hasRememberFlag() ? localStorage.getItem(TOKEN_KEY) : null;
+  return localStorage.getItem(TOKEN_KEY);
 };
 
 export const isAccessTokenExpired = (token: string) => {
