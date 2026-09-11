@@ -14,12 +14,14 @@ assert.doesNotMatch(formsRoute, /useState|getTeacherForms|createForm/);
 assert.match(forms, /폼 관리/);
 assert.match(forms, /getTeacherForms/);
 assert.match(forms, /getTeacherForm/);
+assert.match(forms, /URLSearchParams\(window.location.search\)/);
 assert.match(forms, /createForm/);
 assert.match(forms, /updateForm/);
 assert.match(forms, /publishForm/);
 assert.match(forms, /closeForm/);
 assert.match(forms, /학생 응답 링크를 복사했습니다/);
 assert.match(forms, /폼 제목을 입력해주세요/);
+assert.doesNotMatch(forms, />학생 화면</);
 assert.doesNotMatch(forms, /@\/app\/utils\/api|@\/app\/components/);
 
 assert.match(submissionsRoute, /@fsd\/pages\/teacher-form-submissions/);

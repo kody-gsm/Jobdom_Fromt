@@ -10,6 +10,7 @@ assert.match(hook, /category/);
 assert.match(hook, /otherCategory/);
 assert.match(hook, /category[,}]/);
 assert.match(hook, /otherCategory/);
+assert.match(hook, /if \(!category\) return "상담 카테고리를 선택해주세요"/);
 assert.match(form, /학업/);
 assert.match(form, /취업/);
 assert.match(form, /진학/);

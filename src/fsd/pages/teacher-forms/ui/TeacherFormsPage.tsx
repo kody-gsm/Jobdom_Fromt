@@ -59,7 +59,7 @@ export function TeacherFormsPage() {
       .catch((caught) => setMessage({ text: caught instanceof Error ? caught.message : "폼을 불러오지 못했습니다.", error: true }));
   }, []);
 
-  const edit = (form: DynamicForm) => {
+  const edit = useCallback((form: DynamicForm) => {
     setSelectedId(form.id);
     setStatus(form.status);
     setTitle(form.title);
@@ -73,7 +73,15 @@ export function TeacherFormsPage() {
       options: question.options.map((option) => option.label),
     })));
     setMessage(null);
-  };
+  }, []);
+
+  useEffect(() => {
+    const requestedId = Number(new URLSearchParams(window.location.search).get("formId"));
+    if (!Number.isInteger(requestedId) || requestedId <= 0) return;
+    getTeacherForm(requestedId)
+      .then(edit)
+      .catch((caught) => setMessage({ text: caught instanceof Error ? caught.message : "연결된 폼을 불러오지 못했습니다.", error: true }));
+  }, [edit]);
 
   const select = async (id: number) => {
     try {
@@ -188,7 +196,7 @@ export function TeacherFormsPage() {
         <div className="mx-auto w-full max-w-7xl">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h1 className="text-3xl font-bold text-gray-950">폼 관리</h1>
-            <div className="flex gap-4 text-sm font-semibold text-[#02C551]"><Link href="/teacher/recruit">취업 공고 관리</Link><Link href="/forms">학생 화면</Link></div>
+            <Link href="/teacher/recruit" className="text-sm font-semibold text-[#02C551]">취업 공고 관리</Link>
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[300px_1fr]">

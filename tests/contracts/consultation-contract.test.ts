@@ -7,6 +7,7 @@ import {
   getNextAvailableDate,
   getNextWeekdays,
   toConsultationKind,
+  toCounselingCategory,
   validateConsultationDraft,
 } from "../../src/fsd/entities/consultation/model/rules.ts";
 import type { ConsultationDraft } from "../../src/fsd/entities/consultation/model/types.ts";
@@ -19,6 +20,8 @@ assert.deepEqual(TEACHERS, [
 ]);
 assert.equal(toConsultationKind("career"), "course");
 assert.equal(toConsultationKind("general"), "common");
+assert.equal(toCounselingCategory("career"), "취업");
+assert.equal(toCounselingCategory("general"), "기타");
 assert.deepEqual(getAvailablePeriods("career", "임경원 선생님"), [
   "1교시", "2교시", "3교시", "4교시", "5교시",
   "6교시", "7교시", "8교시", "9교시",
@@ -52,8 +55,9 @@ assert.equal(validateConsultationDraft({ ...baseDraft, period: null }, false), "
 assert.equal(validateConsultationDraft(baseDraft, true), "진로 상담은 중복 신청할 수 없습니다");
 assert.equal(validateConsultationDraft(baseDraft, false), null);
 assert.deepEqual(createReservationInput(baseDraft), {
-  title: "[임경원 선생님] 진로 고민",
+  title: "진로 고민",
   content: "상담 내용",
+  category: "취업",
   date: "2026-09-07",
   period: "3교시",
 });
@@ -67,6 +71,7 @@ await api.getUpcoming("course");
 await api.create("common", {
   title: "일반 상담",
   content: "내용",
+  category: "기타",
   date: "2026-09-08",
   period: "점심시간",
 });
@@ -75,7 +80,7 @@ assert.equal(calls[0]?.init, undefined);
 assert.equal(calls[1]?.path, "/student/common");
 assert.equal(calls[1]?.init?.method, "POST");
 assert.equal(calls[1]?.init?.body, JSON.stringify({
-  title: "일반 상담", content: "내용", date: "2026-09-08", period: "점심시간",
+  title: "일반 상담", content: "내용", category: "기타", date: "2026-09-08", period: "점심시간",
 }));
 
 import { readFileSync } from "node:fs";

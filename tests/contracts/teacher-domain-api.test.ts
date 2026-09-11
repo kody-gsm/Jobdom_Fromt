@@ -12,11 +12,13 @@ const request = async <T>(path: string, init?: RequestInit) => {
 const consultation = createConsultationApi(request);
 await consultation.getTeacher("course");
 await consultation.approve("common", 12);
+await consultation.reject("course", 13);
 await consultation.lock("course", { date: "2026-09-07", period: "4교시" });
 
 assert.deepEqual(calls.splice(0), [
   { path: "/teacher/course", init: undefined },
   { path: "/teacher/common/allow/12", init: { method: "PATCH" } },
+  { path: "/teacher/course/reject/13", init: { method: "PATCH" } },
   {
     path: "/teacher/course/lock",
     init: {

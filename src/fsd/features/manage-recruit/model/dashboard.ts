@@ -9,6 +9,9 @@ const normalizeName = (value: string) =>
     .replace(/[\s()[\]{}.,·ㆍ_-]/g, "");
 
 export const findRecruitForm = (recruit: Recruit, forms: FormSummary[]) => {
+  if (recruit.formId) {
+    return forms.find((form) => form.id === recruit.formId) || null;
+  }
   const company = normalizeName(recruit.companyName || "");
   if (!company) return null;
   return forms.find((form) => normalizeName(form.title).includes(company)) || null;

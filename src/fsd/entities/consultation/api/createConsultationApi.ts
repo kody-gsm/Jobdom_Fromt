@@ -27,6 +27,8 @@ export const createConsultationApi = (request: RequestFn) => ({
     request<TeacherReservation[]>(`/teacher/${kind}/pending`),
   approve: (kind: ConsultationKind, id: number) =>
     request<string>(`/teacher/${kind}/allow/${id}`, { method: "PATCH" }),
+  reject: (kind: ConsultationKind, id: number) =>
+    request<string>(`/teacher/${kind}/reject/${id}`, { method: "PATCH" }),
   lock: (
     kind: ConsultationKind,
     input: Pick<ReservationInput, "date" | "period">,

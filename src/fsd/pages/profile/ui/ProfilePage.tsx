@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ContentCard } from "@fsd/shared/ui";
 import { ProfileConsultations } from "@fsd/widgets/profile-consultations";
 import { StudentHeader } from "@fsd/widgets/student-header";
+import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { useProfilePage } from "../model/useProfilePage.ts";
 
 export const ProfilePage = () => {
@@ -13,6 +14,7 @@ export const ProfilePage = () => {
     avatarError,
     loading,
     error,
+    userRole,
     handleCancel,
     handleAvatarChange,
   } = useProfilePage();
@@ -22,7 +24,11 @@ export const ProfilePage = () => {
       className="min-h-dvh bg-surface text-ink"
 
     >
-      <StudentHeader />
+      {userRole === "TEACHER" ? (
+        <TeacherHeader />
+      ) : userRole === "STUDENT" ? (
+        <StudentHeader />
+      ) : null}
       <main className="mx-auto w-full max-w-[840px] px-6 py-10 lg:px-10 lg:py-12">
         {loading ? (
           <ContentCard className="py-24 text-center text-muted">프로필을 불러오는 중…</ContentCard>

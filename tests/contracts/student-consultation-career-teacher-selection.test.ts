@@ -9,10 +9,13 @@ const teachers = [
   { id: 7, name: "다른선생님" },
 ];
 
-assert.equal(getConsultationTeacherOptions("career", teachers), teachers);
+assert.deepEqual(
+  getConsultationTeacherOptions("career", teachers).map((teacher) => teacher.id),
+  [9, 3, 5],
+);
 assert.deepEqual(
   getConsultationTeacherOptions("general", teachers).map((teacher) => teacher.id),
-  [3, 5, 9],
+  [7],
 );
 
 const form = readFileSync("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx", "utf8");

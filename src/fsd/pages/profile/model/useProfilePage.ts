@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { validateProfileAvatarFile } from "@fsd/entities/user";
+import { getSession, validateProfileAvatarFile } from "@fsd/entities/user";
+import type { UserRole } from "@fsd/entities/user";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
 import { fetchUserProfile, uploadProfileImage } from "../api/profile.ts";
 import type { UserProfileData } from "./buildUserProfileData.ts";
@@ -10,9 +11,13 @@ export const useProfilePage = () => {
   const [avatarError, setAvatarError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
     let active = true;
+    queueMicrotask(() => {
+      if (active) setUserRole(getSession()?.role ?? null);
+    });
 
     fetchUserProfile()
       .then((data) => {
@@ -85,6 +90,7 @@ export const useProfilePage = () => {
     avatarError,
     loading,
     error,
+    userRole,
     handleCancel,
     handleAvatarChange,
   };

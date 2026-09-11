@@ -4,6 +4,7 @@ export interface Recruit {
   interviewDate: string | null;
   deadline: string | null;
   summary: string | null;
+  formId?: number | null;
   status: "DRAFT" | "PUBLISHED";
   createdAt: string;
   updatedAt: string;
