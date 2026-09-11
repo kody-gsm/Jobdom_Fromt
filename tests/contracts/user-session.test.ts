@@ -37,13 +37,15 @@ assert.deepEqual(user.readRememberLoginPreference(), {
   enabled: true,
   email: "s1@gsm.hs.kr",
 });
-
 user.clearStoredSession();
 assert.equal(user.readSession(), null);
 assert.deepEqual(user.readRememberLoginPreference(), {
   enabled: true,
   email: "s1@gsm.hs.kr",
 });
+user.persistSession(auth, true);
+localStorage.removeItem("jobdam_remember_login");
+assert.equal(user.readSession()?.accessToken, "access");
 
 user.clearRememberLoginPreference();
 assert.deepEqual(user.readRememberLoginPreference(), {
