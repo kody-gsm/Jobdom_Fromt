@@ -9,7 +9,10 @@ import {
   toConsultationKind,
   validateConsultationDraft,
 } from "@fsd/entities/consultation";
-import type { ConsultationType } from "@fsd/entities/consultation";
+import type {
+  CounselingCategory,
+  ConsultationType,
+} from "@fsd/entities/consultation";
 import { ApiError } from "@fsd/shared/api";
 import {
   getConsultationSlotStatus,
@@ -72,7 +75,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [counselType, setCounselType] = useState(initialType);
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<CounselingCategory | "">("");
   const [otherCategory, setOtherCategory] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
@@ -182,7 +185,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setErrorTarget(null);
   };
 
-  const handleCategoryChange = (value: string) => {
+  const handleCategoryChange = (value: CounselingCategory) => {
     setCategory(value);
     if (value !== "기타") setOtherCategory("");
   };
@@ -231,6 +234,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     if (!selectedTeacher) return "선생님을 선택해주세요";
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
+    if (!category) return "상담 카테고리를 선택해주세요";
     if (category === "기타" && !otherCategory.trim()) {
       return "기타 상담 내용을 입력해주세요";
     }
@@ -257,7 +261,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       return;
     }
 
-    if (!selectedTeacher) return;
+    if (!selectedTeacher || !category) return;
     const teacherId = selectedTeacher.id;
 
     const draft = {

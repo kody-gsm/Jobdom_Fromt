@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   getAvailablePeriods,
+  type CounselingCategory,
   type ConsultationType,
 } from "@fsd/entities/consultation";
 import {
@@ -22,6 +23,13 @@ import {
 } from "../model/schedulePresentation.ts";
 
 const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
+const CONSULTATION_CATEGORIES: CounselingCategory[] = [
+  "학업",
+  "취업",
+  "진학",
+  "생활",
+  "기타",
+];
 
 const toDateValue = (date: Date) => {
   const year = date.getFullYear();
@@ -164,7 +172,7 @@ export const ConsultationForm = ({
             <div className="space-y-2">
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
               <div className="flex flex-wrap gap-2">
-                {["학업", "취업", "진학", "생활", "기타"].map((item) => (
+                {CONSULTATION_CATEGORIES.map((item) => (
                   <button
                     key={item}
                     type="button"
