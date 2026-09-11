@@ -6,6 +6,7 @@ import {
   persistSession,
   readRememberedSession,
   readSession,
+  isAccessTokenExpired,
 } from "./session.ts";
 
 const notifySessionChanged = () => {
@@ -38,6 +39,7 @@ export const clearSession = () => {
 
 export const restoreRememberedSession = async () => {
   const remembered = readRememberedSession();
-  if (!remembered?.refreshToken) return null;
-  return remembered;
+  if (remembered?.refreshToken) return remembered;
+  const active = readSession();
+  return active && !isAccessTokenExpired(active.accessToken) ? active : null;
 };
