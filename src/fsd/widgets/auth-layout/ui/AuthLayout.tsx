@@ -18,6 +18,7 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
           height={68}
           priority
           className="h-auto w-[132px]"
+          style={{ height: 68 }}
         />
 
         <div className="mt-24 max-w-[440px]">
@@ -43,6 +44,7 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
             height={68}
             priority
             className="h-auto w-[132px]"
+            style={{ height: 68 }}
           />
         </div>
         {title ? (

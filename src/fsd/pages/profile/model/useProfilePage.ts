@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { validateProfileAvatarFile } from "@fsd/entities/user";
+import { getSession, validateProfileAvatarFile } from "@fsd/entities/user";
+import type { UserRole } from "@fsd/entities/user";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
 import { fetchUserProfile, uploadProfileImage } from "../api/profile.ts";
 import type { UserProfileData } from "./buildUserProfileData.ts";
