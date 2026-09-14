@@ -147,7 +147,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 - 대기 중인 상담 신청은 담당 교사가 취소(거절)할 수 있다.
 - 오늘 날짜는 brand 배경으로 고정하고 선택 날짜는 독립된 사각 테두리로 표시한다.
 - 기존 임경원 수업표는 해당 선생님에게만 표시한다. 실제 교사별 수업 시간표 API는 아직 없다.
-- 학생의 교사 목록은 서버에 정의된 GET /api/teachers를 사용한다.
+- 학생의 일반 상담 교사 목록은 GET /student/common/teachers(WEE_TEACHER), 진로 상담 교사 목록은 GET /student/course/teachers(TEACHER)를 사용한다.
 - `/teacher/forms`는 폼 목록/상세 조회, 생성, 수정, 공개, 마감 기능을 유지한다.
 - 폼 공유 시 `/forms/{id}` URL을 clipboard에 복사한다.
 - `/teacher/forms/[id]/submissions`는 제출 목록과 제출 상세를 조회한다.

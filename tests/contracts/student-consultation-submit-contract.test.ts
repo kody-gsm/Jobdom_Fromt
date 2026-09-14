@@ -7,12 +7,14 @@ const api = read("src/fsd/features/submit-consultation/api/consultation.ts");
 const hook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
 const form = read("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx");
 
-assert.match(api, /\/api\/teachers/);
-assert.doesNotMatch(api, /\/api\/teacher"/);
+assert.match(api, /getConsultationTeachers\s*=\s*\(kind: ConsultationKind\)/);
+assert.match(api, /`\/student\/\$\{kind\}\/teachers`/);
+assert.doesNotMatch(api, /\/api\/teachers/);
 assert.match(api, /teacherId/);
 assert.match(api, /POST/);
 assert.match(api, /JSON\.stringify\(input\)/);
-assert.match(hook, /getConsultationTeachers/);
+assert.match(hook, /getConsultationTeachers\(toConsultationKind\(counselType\)\)/);
+assert.match(hook, /\[counselType\]/);
 assert.match(hook, /useState<ConsultationTeacherOption \| null>/);
 assert.match(hook, /const teacherId = selectedTeacher\.id/);
 assert.doesNotMatch(hook, /selectedTeacherId|setSelectedTeacherId/);
