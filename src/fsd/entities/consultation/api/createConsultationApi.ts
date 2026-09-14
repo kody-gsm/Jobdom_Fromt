@@ -36,4 +36,11 @@ export const createConsultationApi = (request: RequestFn) => ({
     method: "POST",
     body: JSON.stringify(input),
   }),
+  unlock: (
+    kind: ConsultationKind,
+    input: Pick<ReservationInput, "date" | "period">,
+  ) => request<string>(`/teacher/${kind}/unlock`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  }),
 });

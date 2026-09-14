@@ -14,6 +14,7 @@ await consultation.getTeacher("course");
 await consultation.approve("common", 12);
 await consultation.reject("course", 13);
 await consultation.lock("course", { date: "2026-09-07", period: "4교시" });
+await consultation.unlock("course", { date: "2026-09-07", period: "4교시" });
 
 assert.deepEqual(calls.splice(0), [
   { path: "/teacher/course", init: undefined },
@@ -21,6 +22,13 @@ assert.deepEqual(calls.splice(0), [
   { path: "/teacher/course/reject/13", init: { method: "PATCH" } },
   {
     path: "/teacher/course/lock",
+    init: {
+      method: "POST",
+      body: JSON.stringify({ date: "2026-09-07", period: "4교시" }),
+    },
+  },
+  {
+    path: "/teacher/course/unlock",
     init: {
       method: "POST",
       body: JSON.stringify({ date: "2026-09-07", period: "4교시" }),
