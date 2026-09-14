@@ -87,6 +87,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       : getNextWeekdays(today, 1)[0]?.value ?? null;
   });
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [serverAvailablePeriods, setServerAvailablePeriods] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [serverUnavailablePeriods, setServerUnavailablePeriods] = useState<Set<string>>(
     () => new Set(),
   );
@@ -106,6 +109,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       .then((items) => {
         if (!active) return;
         setTeachers(items);
+        setSelectedTeacher(items[0] ?? null);
         setTeacherStatus("ready");
       })
       .catch(() => {
@@ -131,13 +135,20 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         const unavailable = new Set(
           items.filter((item) => !item.available).map((item) => item.period),
         );
+        const available = new Set(
+          items.filter((item) => item.available).map((item) => item.period),
+        );
         setServerUnavailablePeriods(unavailable);
+        setServerAvailablePeriods(available);
         setSelectedTime((current) =>
           current !== null && unavailable.has(current) ? null : current,
         );
       })
       .catch(() => {
-        if (active) setServerUnavailablePeriods(new Set());
+        if (active) {
+          setServerUnavailablePeriods(new Set());
+          setServerAvailablePeriods(new Set());
+        }
       });
 
     return () => {
@@ -182,6 +193,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setSelectedTeacher(null);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
+    setServerAvailablePeriods(new Set());
     setErrorTarget(null);
   };
 
@@ -195,6 +207,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setSelectedTeacher(isSelected ? null : teacher);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
+    setServerAvailablePeriods(new Set());
     if (errorTarget === "teacher") setErrorTarget(null);
   };
 
@@ -209,6 +222,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     (counselType === "general" && time === "4교시") ||
     (selectedDate === new Date().toISOString().slice(0, 10) &&
       !getSelectablePeriods(counselType, selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null).includes(time)) ||
+    (serverAvailablePeriods.size > 0 && !serverAvailablePeriods.has(time)) ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&
       selectedDate !== null &&
