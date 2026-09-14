@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type { ConsultationKind, TeacherReservation } from "@fsd/entities/consultation";
 import { readHomeBanner, saveHomeBanner } from "@fsd/entities/banner";
-import { approveConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations, rejectConsultation } from "../api/teacher";
+import { approveConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations, getTeacherSlotStatus, lockConsultation, rejectConsultation, unlockConsultation } from "../api/teacher";
 import { dateKey, formatPeriod, getWeek, reservationSlot, WEEKLY_CLASS_SCHEDULE } from "../model/calendar";
 import {
     canManageHomeBanner,
@@ -22,17 +22,23 @@ export function TeacherPage() {
     const [selectedDate, setSelectedDate] = useState(() => new Date());
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const [kind, setKind] = useState<ConsultationKind>("course");
+    const [teacherId, setTeacherId] = useState<number | null>(null);
     const [pending, setPending] = useState<TeacherReservation[]>([]);
     const [approved, setApproved] = useState<TeacherReservation[]>([]);
+    const [lockedSlots, setLockedSlots] = useState<Set<string>>(() => new Set());
     const [isLoading, setIsLoading] = useState(true);
+    const [isSlotLoading, setIsSlotLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [slotError, setSlotError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [processingSlot, setProcessingSlot] = useState<string | null>(null);
     const [selection, setSelection] = useState<SelectedRequest | null>(null);
     const [bannerMessage, setBannerMessage] = useState("");
     const [bannerStatus, setBannerStatus] = useState("");
     const dialog = useRef<HTMLDialogElement>(null);
     const requestVersion = useRef(0);
+    const slotRequestVersion = useRef(0);
 
     const loadReservations = useCallback(async () => {
         const version = ++requestVersion.current;
@@ -57,6 +63,7 @@ export function TeacherPage() {
     useEffect(() => {
         queueMicrotask(() => {
             const name = getSession()?.name || "선생님";
+            setTeacherId(getSession()?.userId ?? null);
             setTeacherName(name);
             if (canManageHomeBanner(name)) {
                 setBannerMessage(readHomeBanner()?.message ?? "");
@@ -82,10 +89,36 @@ export function TeacherPage() {
         ...Array<null>(new Date(year, month, 1).getDay()).fill(null),
         ...Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, index) => new Date(year, month, index + 1)),
     ];
-    const week = getWeek(selectedDate);
+    const week = useMemo(() => getWeek(selectedDate), [selectedDate]);
     const teacherVariant = getTeacherWorkspaceVariant(teacherName);
     const periods = getTeacherAvailablePeriods(kind, teacherName);
     const canManageBanner = teacherName !== "선생님" && canManageHomeBanner(teacherName);
+    const loadSlotStatuses = useCallback(async () => {
+        if (teacherId === null) return;
+        const version = ++slotRequestVersion.current;
+        setIsSlotLoading(true);
+        setSlotError(null);
+        const results = await Promise.allSettled(
+            week.map((date) => getTeacherSlotStatus(kind, teacherId, dateKey(date))),
+        );
+        if (version !== slotRequestVersion.current) return;
+        const successful = results.filter((result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof getTeacherSlotStatus>>> => result.status === "fulfilled");
+        const slots = successful.flatMap((result) => result.value);
+        setLockedSlots(new Set(slots.filter((slot) => slot.state === "LOCKED").map((slot) => reservationSlot(slot))));
+        if (successful.length === 0) setSlotError("시간 금지 상태를 불러오지 못했습니다.");
+        setIsSlotLoading(false);
+    }, [kind, teacherId, week]);
+
+    useEffect(() => {
+        let active = true;
+        queueMicrotask(() => {
+            if (active) void loadSlotStatuses();
+        });
+        return () => {
+            active = false;
+            slotRequestVersion.current += 1;
+        };
+    }, [loadSlotStatuses]);
     const changeMonth = (direction: number) => {
         const next = new Date(year, month + direction, 1);
         setCurrentDate(next);
@@ -125,6 +158,38 @@ export function TeacherPage() {
             setActionError(error instanceof Error ? error.message : "상담 신청을 취소하지 못했습니다.");
         } finally {
             setIsProcessing(false);
+        }
+    };
+    const handleSlotToggle = async (date: string, period: string) => {
+        if (teacherId === null || processingSlot) return;
+        const slot = `${date}_${period}`;
+        const isLocked = lockedSlots.has(slot);
+        const hasReservation = approved.some((item) => reservationSlot(item) === slot)
+            || pending.some((item) => reservationSlot(item) === slot);
+        if (!isLocked && hasReservation && !window.confirm("이 시간의 기존 상담 신청도 취소하고 예약 금지할까요?")) return;
+
+        setProcessingSlot(slot);
+        setSlotError(null);
+        try {
+            const input = { date, period };
+            if (isLocked) await unlockConsultation(kind, input);
+            else await lockConsultation(kind, input);
+            setLockedSlots((current) => {
+                const next = new Set(current);
+                if (isLocked) next.delete(slot);
+                else next.add(slot);
+                return next;
+            });
+            if (!isLocked) {
+                setApproved((items) => items.filter((item) => reservationSlot(item) !== slot));
+                setPending((items) => items.filter((item) => reservationSlot(item) !== slot));
+            }
+            await loadReservations();
+            await loadSlotStatuses();
+        } catch (error) {
+            setSlotError(error instanceof Error ? error.message : "시간 금지 상태를 변경하지 못했습니다.");
+        } finally {
+            setProcessingSlot(null);
         }
     };
     const handleBannerSave = () => {
@@ -192,6 +257,7 @@ export function TeacherPage() {
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-yellow-400" />수업</p>
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-brand" />상담 확정</p>
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full border border-brand bg-brand-soft" />상담 대기</p>
+                    <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-gray-400" />예약 금지</p>
                 </div>
                 <section aria-labelledby="pending-title" className="border-t border-border pt-5">
                     <h2 id="pending-title" className="mb-3 font-bold">상담 예약 요청 목록 <span className="text-brand-accent">{pending.length}</span></h2>
@@ -227,6 +293,8 @@ export function TeacherPage() {
                 </div>
                 {isLoading && <p role="status" className="px-6 pt-3 text-sm">상담 신청을 불러오는 중...</p>}
                 {loadError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{loadError}<button onClick={() => void loadReservations()} className="ml-3 underline">다시 불러오기</button></div>}
+                {slotError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{slotError}<button onClick={() => void loadSlotStatuses()} className="ml-3 underline">다시 불러오기</button></div>}
+                {isSlotLoading && <p role="status" className="px-6 pt-3 text-sm text-secondary-text">시간 금지 상태를 불러오는 중...</p>}
                 <div className="overflow-x-auto p-6">
                     <table className="w-full min-w-[720px] table-fixed border-collapse bg-white text-center">
                         <thead><tr>
@@ -240,10 +308,13 @@ export function TeacherPage() {
                                 const classItem = teacherVariant === "im-gyeongwon" ? WEEKLY_CLASS_SCHEDULE[WEEKDAYS[index]]?.[period] : undefined;
                                 const confirmed = approved.filter((item) => reservationSlot(item) === slot);
                                 const waiting = pending.filter((item) => reservationSlot(item) === slot);
-                                return <td key={slot} className="h-20 border border-border p-2 align-top">
+                                const isLocked = lockedSlots.has(slot);
+                                return <td key={slot} className={`h-20 border border-border p-2 align-top ${isLocked ? "bg-gray-50" : ""}`}>
+                                    {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
                                     {confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
                                     {waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
+                                    <button type="button" disabled={processingSlot !== null} onClick={() => void handleSlotToggle(dateKey(date), period)} aria-label={`${dateKey(date)} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}`} className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">{processingSlot === slot ? "처리 중..." : isLocked ? "금지 해제" : "시간 금지"}</button>
                                 </td>;
                             })}
                         </tr>)}</tbody>
