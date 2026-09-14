@@ -16,6 +16,9 @@ assert.match(page, /rejectConsultation\(kind,\s*selection.reservation.reservatio
 assert.match(page, /상담 신청 취소/);
 assert.match(page, /상담 예약 요청 목록/);
 assert.match(page, /예약 확정 정보/);
+assert.match(page, /시간 금지 모드/);
+assert.match(page, /aria-pressed={isLockMode}/);
+assert.match(page, /handleSlotToggle/);
 assert.match(page, /@fsd\/widgets\/teacher-header/);
 assert.doesNotMatch(page, /@\/app\/utils\/api|@\/app\/components/);
 assert.match(teacherHeader, /교사 주요 메뉴/);
