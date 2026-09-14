@@ -102,7 +102,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   useEffect(() => {
     let active = true;
-    void getConsultationTeachers()
+    void getConsultationTeachers(toConsultationKind(counselType))
       .then((items) => {
         if (!active) return;
         setTeachers(items);
@@ -115,7 +115,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [counselType]);
 
   useEffect(() => {
     if (selectedTeacher === null || selectedDate === null) return;

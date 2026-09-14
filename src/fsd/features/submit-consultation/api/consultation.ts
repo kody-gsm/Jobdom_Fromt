@@ -23,8 +23,8 @@ export type SubmitConsultationInput = ReservationInput & {
   otherCategory?: string;
 };
 
-export const getConsultationTeachers = () =>
-  requestWithSession<ConsultationTeacherOption[]>("/api/teachers");
+export const getConsultationTeachers = (kind: ConsultationKind) =>
+  requestWithSession<ConsultationTeacherOption[]>(`/student/${kind}/teachers`);
 
 export const getConsultationSlotStatus = (
   kind: ConsultationKind,
