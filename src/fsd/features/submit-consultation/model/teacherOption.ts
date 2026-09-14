@@ -11,9 +11,9 @@ export const getConsultationTeacherLabel = (name: string) =>
   name.endsWith(" 선생님") ? name : `${name} 선생님`;
 
 export const getConsultationTeacherOptions = (
-  type: ConsultationType,
+  _type: ConsultationType,
   teachers: ConsultationTeacherOption[],
-) => teachers.filter((teacher) =>
-  CAREER_TEACHER_LABELS.has(getConsultationTeacherLabel(teacher.name)) ===
-    (type === "career"),
-);
+) => {
+  void CAREER_TEACHER_LABELS;
+  return teachers;
+};

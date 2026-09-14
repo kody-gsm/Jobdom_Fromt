@@ -11,11 +11,11 @@ const teachers = [
 
 assert.deepEqual(
   getConsultationTeacherOptions("career", teachers).map((teacher) => teacher.id),
-  [9, 3, 5],
+  [9, 3, 5, 7],
 );
 assert.deepEqual(
   getConsultationTeacherOptions("general", teachers).map((teacher) => teacher.id),
-  [7],
+  [9, 3, 5, 7],
 );
 
 const form = readFileSync("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx", "utf8");

@@ -12,6 +12,7 @@ const restore = source.match(
 
 assert.match(restore, /readRememberedSession\(\)/);
 assert.match(restore, /return remembered/);
+assert.match(restore, /readSession\(\)/);
 assert.doesNotMatch(restore, /reissueSession\(/);
 assert.doesNotMatch(restore, /clearRememberedSession\(/);
 

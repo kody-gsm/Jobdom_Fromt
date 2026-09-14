@@ -35,4 +35,4 @@ assert.match(page, /aria-pressed={isSelected}/);
 assert.match(page, /selection.reservation.content/);
 assert.match(page, /selection.reservation.student_number/);
 assert.match(page, /disabled={isProcessing}/);
-assert.match(read("src/fsd/features/submit-consultation/api/consultation.ts"), /"\/api\/teachers"/);
+assert.match(read("src/fsd/features/submit-consultation/api/consultation.ts"), /`\/student\/\$\{kind\}\/teachers`/);
