@@ -26,6 +26,7 @@ export function TeacherPage() {
     const [pending, setPending] = useState<TeacherReservation[]>([]);
     const [approved, setApproved] = useState<TeacherReservation[]>([]);
     const [lockedSlots, setLockedSlots] = useState<Set<string>>(() => new Set());
+    const [isLockMode, setIsLockMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSlotLoading, setIsSlotLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -283,14 +284,18 @@ export function TeacherPage() {
                 <div className="flex gap-2 px-6 pt-5" aria-label="상담 종류">
                     {(["course", "common"] as const).map((value) => (
                         <button key={value} aria-pressed={kind === value} onClick={() => {
-                            if (kind === value) return;
-                            requestVersion.current += 1;
-                            setKind(value); setPending([]); setApproved([]); setSelection(null);
-                        }} className={`rounded-lg px-4 py-2 font-semibold ${kind === value ? "bg-brand text-white" : "bg-white text-secondary-text"}`}>
-                            {value === "course" ? "진로 상담" : "일반 상담"}
-                        </button>
-                    ))}
-                </div>
+                             if (kind === value) return;
+                             requestVersion.current += 1;
+                             setKind(value); setPending([]); setApproved([]); setSelection(null); setIsLockMode(false);
+                         }} className={`rounded-lg px-4 py-2 font-semibold ${kind === value ? "bg-brand text-white" : "bg-white text-secondary-text"}`}>
+                             {value === "course" ? "진로 상담" : "일반 상담"}
+                         </button>
+                     ))}
+                    <button type="button" aria-pressed={isLockMode} onClick={() => setIsLockMode((current) => !current)} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
+                        {isLockMode ? "시간 금지 모드 끄기" : "시간 금지 모드"}
+                    </button>
+                 </div>
+                {isLockMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-red-600">시간 금지 모드입니다. 금지할 셀을 클릭하세요. 금지된 셀을 클릭하면 해제됩니다.</p>}
                 {isLoading && <p role="status" className="px-6 pt-3 text-sm">상담 신청을 불러오는 중...</p>}
                 {loadError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{loadError}<button onClick={() => void loadReservations()} className="ml-3 underline">다시 불러오기</button></div>}
                 {slotError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{slotError}<button onClick={() => void loadSlotStatuses()} className="ml-3 underline">다시 불러오기</button></div>}
@@ -309,12 +314,24 @@ export function TeacherPage() {
                                 const confirmed = approved.filter((item) => reservationSlot(item) === slot);
                                 const waiting = pending.filter((item) => reservationSlot(item) === slot);
                                 const isLocked = lockedSlots.has(slot);
-                                return <td key={slot} className={`h-20 border border-border p-2 align-top ${isLocked ? "bg-gray-50" : ""}`}>
+                                return <td key={slot}
+                                    role={isLockMode ? "button" : undefined}
+                                    tabIndex={isLockMode ? 0 : undefined}
+                                    aria-label={isLockMode ? `${dateKey(date)} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : undefined}
+                                    onClick={(event) => {
+                                        if (!isLockMode || (event.target instanceof Element && event.target.closest("button"))) return;
+                                        void handleSlotToggle(dateKey(date), period);
+                                    }}
+                                    onKeyDown={(event) => {
+                                        if (!isLockMode || (event.key !== "Enter" && event.key !== " ") || (event.target instanceof Element && event.target.closest("button"))) return;
+                                        event.preventDefault();
+                                        void handleSlotToggle(dateKey(date), period);
+                                    }}
+                                    className={`h-20 border border-border p-2 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""}`}>
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
                                     {confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
                                     {waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
-                                    <button type="button" disabled={processingSlot !== null} onClick={() => void handleSlotToggle(dateKey(date), period)} aria-label={`${dateKey(date)} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}`} className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">{processingSlot === slot ? "처리 중..." : isLocked ? "금지 해제" : "시간 금지"}</button>
                                 </td>;
                             })}
                         </tr>)}</tbody>
