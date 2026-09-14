@@ -24,4 +24,6 @@ const hook = readFileSync("src/fsd/features/submit-consultation/model/useConsult
 assert.match(form, /displayTeachers\.map/);
 assert.match(form, /onClick=\{\(\) => toggleTeacher\(teacher\)\}/);
 assert.doesNotMatch(hook, /getDefaultGeneralTeacher/);
+assert.match(hook, /setSelectedTeacher\(items\[0\] \?\? null\)/);
+assert.match(hook, /serverAvailablePeriods/);
 console.log("student consultation teacher selection contract passed");
