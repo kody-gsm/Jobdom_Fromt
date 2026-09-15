@@ -107,13 +107,16 @@ export function TeacherPage() {
         const slots = successful.flatMap((result) => result.value);
         setLockedSlots(new Set(slots.filter((slot) => slot.state === "LOCKED").map((slot) => reservationSlot(slot))));
         if (successful.length === 0) setSlotError("시간 금지 상태를 불러오지 못했습니다.");
+        else if (successful.length < results.length) setSlotError("일부 날짜의 시간 금지 상태를 불러오지 못했습니다.");
         setIsSlotLoading(false);
     }, [kind, teacherId, week]);
 
     useEffect(() => {
         let active = true;
         queueMicrotask(() => {
-            if (active) void loadSlotStatuses();
+            if (!active) return;
+            setLockedSlots(new Set());
+            void loadSlotStatuses();
         });
         return () => {
             active = false;
@@ -295,7 +298,7 @@ export function TeacherPage() {
                         {isLockMode ? "시간 금지 모드 끄기" : "시간 금지 모드"}
                     </button>
                  </div>
-                {isLockMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-red-600">시간 금지 모드입니다. 금지할 셀을 클릭하세요. 금지된 셀을 클릭하면 해제됩니다.</p>}
+                {isLockMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-red-600">시간 금지 모드입니다. 금지할 셀을 클릭하세요. 금지된 셀을 클릭하면 해제됩니다. 변경 사항은 현재 선생님 계정에 즉시 저장됩니다.</p>}
                 {isLoading && <p role="status" className="px-6 pt-3 text-sm">상담 신청을 불러오는 중...</p>}
                 {loadError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{loadError}<button onClick={() => void loadReservations()} className="ml-3 underline">다시 불러오기</button></div>}
                 {slotError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{slotError}<button onClick={() => void loadSlotStatuses()} className="ml-3 underline">다시 불러오기</button></div>}
