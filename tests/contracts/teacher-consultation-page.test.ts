@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { getTeacherConsultationKinds } from "../../src/fsd/pages/teacher/model/workspace.ts";
+
+assert.deepEqual(getTeacherConsultationKinds("TEACHER"), ["course"]);
+assert.deepEqual(getTeacherConsultationKinds("WEE_TEACHER"), ["common"]);
+assert.deepEqual(getTeacherConsultationKinds("STUDENT"), []);
+assert.deepEqual(getTeacherConsultationKinds("ADMIN"), []);
 
 const read = (path: string) => readFileSync(path, "utf8");
 const route = read("app/teacher/page.tsx");
@@ -9,6 +15,8 @@ const teacherHeader = read("src/fsd/widgets/teacher-header/ui/TeacherHeader.tsx"
 assert.match(route, /@fsd\/pages\/teacher/);
 assert.doesNotMatch(route, /useState|getTeacherConsultations|approveConsultation/);
 assert.match(page, /진로 상담/);
+assert.match(page, /getTeacherConsultationKinds\(teacherRole\)/);
+assert.match(page, /teacherKinds\.map/);
 assert.match(page, /WEEKLY_CLASS_SCHEDULE/);
 assert.match(page, /getTeacherConsultations\(kind\)/);
 assert.match(page, /approveConsultation\(kind,\s*selection.reservation.reservation_id\)/);
