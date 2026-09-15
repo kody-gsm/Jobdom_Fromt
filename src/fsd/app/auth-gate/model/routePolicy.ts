@@ -9,13 +9,14 @@ export const getAuthRedirect = (
   if (PUBLIC_ROUTES.has(pathname)) return null;
   if (!role) return "/login";
 
+  const isTeacher = role === "TEACHER" || role === "WEE_TEACHER";
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   if (role === "ADMIN") return isAdminRoute ? null : "/admin";
-  if (isAdminRoute) return role === "TEACHER" ? "/teacher" : "/";
+  if (isAdminRoute) return isTeacher ? "/teacher" : "/";
 
   const isTeacherRoute = pathname === "/teacher" || pathname.startsWith("/teacher/");
-  if (isTeacherRoute && role !== "TEACHER") return "/";
-  if (!isTeacherRoute && pathname !== "/profile" && role === "TEACHER") return "/teacher";
+  if (isTeacherRoute && !isTeacher) return "/";
+  if (!isTeacherRoute && pathname !== "/profile" && isTeacher) return "/teacher";
 
   return null;
 };

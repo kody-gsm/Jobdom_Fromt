@@ -6,7 +6,8 @@ export const decodeUserRole = (token: string): UserRole => {
     const payload = raw.padEnd(Math.ceil(raw.length / 4) * 4, "=");
     const role = JSON.parse(atob(payload)).role;
     if (role === "ADMIN") return "ADMIN";
-    return role === "TEACHER" ? "TEACHER" : "STUDENT";
+    if (role === "TEACHER" || role === "WEE_TEACHER") return role;
+    return "STUDENT";
   } catch {
     return "STUDENT";
   }
@@ -14,6 +15,6 @@ export const decodeUserRole = (token: string): UserRole => {
 
 export const getRoleHomePath = (role: UserRole) => {
   if (role === "ADMIN") return "/admin";
-  if (role === "TEACHER") return "/teacher";
+  if (role === "TEACHER" || role === "WEE_TEACHER") return "/teacher";
   return "/";
 };

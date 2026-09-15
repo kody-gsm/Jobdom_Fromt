@@ -11,8 +11,10 @@ const restore = source.match(
 )?.[1] || "";
 
 assert.match(restore, /readRememberedSession\(\)/);
-assert.match(restore, /return remembered/);
-assert.match(restore, /readSession\(\)/);
+assert.match(restore, /remembered\?\.refreshToken/);
+assert.match(restore, /return \{ \.\.\.remembered, role: decodeUserRole\(remembered\.accessToken\) \}/);
+assert.match(restore, /const active = getSession\(\)/);
+assert.match(restore, /return active && !isAccessTokenExpired\(active\.accessToken\) \? active : null/);
 assert.doesNotMatch(restore, /reissueSession\(/);
 assert.doesNotMatch(restore, /clearRememberedSession\(/);
 
