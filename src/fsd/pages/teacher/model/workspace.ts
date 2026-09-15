@@ -2,6 +2,15 @@ import {
   getAvailablePeriods,
   type ConsultationKind,
 } from "../../../entities/consultation/index.ts";
+import type { UserRole } from "../../../entities/user/index.ts";
+
+export const getTeacherConsultationKinds = (
+  role: UserRole | null,
+): ConsultationKind[] => {
+  if (role === "TEACHER") return ["course"];
+  if (role === "WEE_TEACHER") return ["common"];
+  return [];
+};
 
 export type TeacherWorkspaceVariant =
   | "im-gyeongwon"
