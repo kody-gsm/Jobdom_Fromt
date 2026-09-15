@@ -28,7 +28,12 @@ export const saveSession = (
   return session;
 };
 
-export const getSession = (): AuthSession | null => readSession();
+export const getSession = (): AuthSession | null => {
+  const session = readSession();
+  return session
+    ? { ...session, role: decodeUserRole(session.accessToken) }
+    : null;
+};
 
 export const clearSession = () => {
   const session = getSession();
@@ -39,7 +44,9 @@ export const clearSession = () => {
 
 export const restoreRememberedSession = async () => {
   const remembered = readRememberedSession();
-  if (remembered?.refreshToken) return remembered;
-  const active = readSession();
+  if (remembered?.refreshToken) {
+    return { ...remembered, role: decodeUserRole(remembered.accessToken) };
+  }
+  const active = getSession();
   return active && !isAccessTokenExpired(active.accessToken) ? active : null;
 };
