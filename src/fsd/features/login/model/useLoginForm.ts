@@ -9,10 +9,11 @@ import {
   getSession,
   isAccessTokenExpired,
   saveSession,
+  clearSession,
   restoreRememberedSession,
   readRememberLoginPreference,
 } from "@fsd/entities/user";
-import { request } from "@fsd/shared/api";
+import { ApiError, request } from "@fsd/shared/api";
 import { login } from "../api/login.ts";
 import { validateLoginForm } from "./validation.ts";
 import type { LoginFormErrors, LoginFormValues } from "./validation.ts";
@@ -52,8 +53,10 @@ export const useLoginForm = () => {
         const preference = readRememberLoginPreference();
         const session = saveSession(response, preference.enabled);
         if (isActive) router.replace(getRoleHomePath(session.role));
-      } catch {
-        // refresh token까지 만료되면 로그인 화면에 남긴다.
+      } catch (error) {
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+          clearSession();
+        }
       }
     };
     void restore();
