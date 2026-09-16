@@ -36,13 +36,10 @@ export const getAvailablePeriods = (
 ) => {
   if (type === "general") return GENERAL_PERIODS;
   if (!teacher) return [];
-  if (teacher === "임경원 선생님") {
-    return Array.from({ length: 9 }, (_, index) => `${index + 1}교시`);
-  }
-  if (["김권예소 선생님", "정윤기 선생님"].includes(teacher)) {
-    return ["점심시간", "저녁시간"];
-  }
-  return [];
+  // Career teachers are supplied by the backend by role. Their per-teacher
+  // reservations/locks are applied through the slot-status API, so period
+  // availability must not depend on a frontend name allowlist.
+  return Array.from({ length: 9 }, (_, index) => `${index + 1}교시`);
 };
 
 export const getSelectablePeriods = (
