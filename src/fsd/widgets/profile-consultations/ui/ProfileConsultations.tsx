@@ -18,6 +18,7 @@ export const ProfileConsultations = ({
   onCancel,
 }: ProfileConsultationsProps) => {
   const [cancelTarget, setCancelTarget] = useState<number | null>(null);
+  const [canceling, setCanceling] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [now, setNow] = useState(() => new Date());
   const visibleReservations = reservations.filter((item) =>
@@ -30,17 +31,20 @@ export const ProfileConsultations = ({
   }, []);
 
   const executeCancel = async () => {
-    if (cancelTarget === null) return;
+    if (cancelTarget === null || canceling) return;
     const target = reservations.find((item) => item.id === cancelTarget);
     if (!target || !isConsultationCancelable(target.date, target.slot, new Date())) {
       setCancelError("상담 시작 1시간 전부터는 취소할 수 없습니다.");
       return;
     }
     try {
+      setCanceling(true);
       setCancelError("");
       await onCancel(cancelTarget);
+      setCanceling(false);
       setCancelTarget(null);
     } catch {
+      setCanceling(false);
       setCancelError("취소 중 오류가 발생했습니다.");
     }
   };
@@ -101,12 +105,14 @@ export const ProfileConsultations = ({
               <ActionButton
                 type="button"
                 variant="secondary"
+                disabled={canceling}
                 onClick={() => setCancelTarget(null)}
               >
                 아니요
               </ActionButton>
               <ActionButton
                 type="button"
+                disabled={canceling}
                 onClick={() => void executeCancel()}
                 className="bg-brand hover:bg-[#00B94C]"
               >
