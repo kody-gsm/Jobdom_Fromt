@@ -1,4 +1,5 @@
 import { RecruitDetailPage } from "@fsd/pages/recruit-detail";
+import { notFound } from "next/navigation";
 
 export default async function Page({
   params,
@@ -6,5 +7,7 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <RecruitDetailPage recruitId={Number(id)} />;
+  const recruitId = Number(id);
+  if (!Number.isSafeInteger(recruitId) || recruitId <= 0) notFound();
+  return <RecruitDetailPage recruitId={recruitId} />;
 }

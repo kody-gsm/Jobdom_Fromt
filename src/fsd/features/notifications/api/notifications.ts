@@ -32,7 +32,7 @@ export interface PageResponse<T> {
 }
 
 export interface UnreadCountResponse {
-  count: number;
+  unreadCount: number;
 }
 
 export interface SseTicketResponse {

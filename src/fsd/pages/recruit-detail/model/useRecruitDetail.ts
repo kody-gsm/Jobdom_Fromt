@@ -20,7 +20,10 @@ export const useRecruitDetail = (recruitId: number) => {
       .then(([data, forms]) => {
         if (!active) return;
         setItem(data);
-        setForm(findRecruitForm(data.companyName, forms));
+        const linkedForm = data.formId
+          ? forms.find((candidate) => candidate.id === data.formId) ?? null
+          : findRecruitForm(data.companyName, forms);
+        setForm(linkedForm);
         document.title = `${data.companyName || "취업 공고"} | 잡담`;
       })
       .catch((caught) => {

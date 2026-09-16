@@ -21,14 +21,18 @@ export const useHomeOverview = () => {
   useEffect(() => {
     let active = true;
 
-    void Promise.all([
+    void Promise.allSettled([
       consultationApi.getUpcoming("course"),
       consultationApi.getUpcoming("common"),
       recruitApi.getAll(),
     ])
-      .then(([course, common, recruits]) => {
+      .then(([courseResult, commonResult, recruitsResult]) => {
         if (!active) return;
-        setOverview(buildHomeOverview({ course, common, recruits }));
+        setOverview(buildHomeOverview({
+          course: courseResult.status === "fulfilled" ? courseResult.value : [],
+          common: commonResult.status === "fulfilled" ? commonResult.value : [],
+          recruits: recruitsResult.status === "fulfilled" ? recruitsResult.value : [],
+        }));
       })
       .catch(() => {
         if (active) setError("대시보드 정보를 불러오지 못했습니다.");

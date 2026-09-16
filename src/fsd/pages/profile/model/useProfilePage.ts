@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { getSession, validateProfileAvatarFile } from "@fsd/entities/user";
+import {
+  getProfileAvatarUserKey,
+  getSession,
+  saveProfileAvatar,
+  validateProfileAvatarFile,
+} from "@fsd/entities/user";
 import type { UserRole } from "@fsd/entities/user";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
 import { fetchUserProfile, uploadProfileImage } from "../api/profile.ts";
@@ -64,24 +69,17 @@ export const useProfilePage = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result !== "string") {
-        setAvatarError("프로필 이미지를 읽지 못했습니다.");
-        return;
-      }
-
-      try {
-        void uploadProfileImage(file)
-          .then((imageUrl) => setProfileAvatar(imageUrl || URL.createObjectURL(file)))
-          .catch(() => setAvatarError("프로필 이미지를 저장하지 못했습니다."));
+    void uploadProfileImage(file)
+      .then((imageUrl) => {
+        setProfileAvatar(imageUrl || URL.createObjectURL(file));
+        const session = getSession();
+        saveProfileAvatar(
+          getProfileAvatarUserKey({ email: session?.email, name: session?.name }),
+          imageUrl,
+        );
         setAvatarError("");
-      } catch {
-        setAvatarError("프로필 이미지를 저장하지 못했습니다.");
-      }
-    };
-    reader.onerror = () => setAvatarError("프로필 이미지를 읽지 못했습니다.");
-    reader.readAsDataURL(file);
+      })
+      .catch(() => setAvatarError("프로필 이미지를 저장하지 못했습니다."));
   };
 
   return {

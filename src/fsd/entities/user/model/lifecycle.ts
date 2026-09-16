@@ -4,7 +4,6 @@ import {
   backfillRememberLoginEmail,
   clearStoredSession,
   persistSession,
-  readRememberedSession,
   readSession,
   isAccessTokenExpired,
 } from "./session.ts";
@@ -43,10 +42,6 @@ export const clearSession = () => {
 };
 
 export const restoreRememberedSession = async () => {
-  const remembered = readRememberedSession();
-  if (remembered?.refreshToken) {
-    return { ...remembered, role: decodeUserRole(remembered.accessToken) };
-  }
   const active = getSession();
   return active && !isAccessTokenExpired(active.accessToken) ? active : null;
 };

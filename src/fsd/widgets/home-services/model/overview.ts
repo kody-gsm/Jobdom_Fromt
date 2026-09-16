@@ -29,7 +29,7 @@ export const buildHomeOverview = ({
       date: item.date,
       period: item.period,
     })),
-    ...common.map((item) => ({
+    ...common.filter((item) => !item.status || item.status === "RESERVED").map((item) => ({
       id: item.id * 2 + 1,
       type: "일반상담" as const,
       date: item.date,
