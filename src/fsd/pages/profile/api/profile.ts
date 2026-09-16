@@ -31,7 +31,7 @@ export const uploadProfileImage = async (file: File) => {
 
 export const fetchUserProfile = async () => {
   const session = getSession();
-  if (session?.role === "TEACHER") {
+  if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") {
     const identity = await requestWithSession<UserProfileResponse>("/auth/profile");
     return buildUserProfileData({
       upcomingCourse: [],
