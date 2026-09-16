@@ -65,6 +65,12 @@ const saved = user.saveSession({
 assert.equal(saved.role, "ADMIN");
 assert.equal(user.getRoleHomePath(saved.role), "/admin");
 assert.equal(user.getRoleHomePath("TEACHER"), "/teacher");
+const weeTeacherToken = `x.${btoa(JSON.stringify({ role: "WEE_TEACHER" }))}.x`;
+user.persistSession({ ...auth, accessToken: weeTeacherToken, role: "STUDENT" }, false);
+assert.equal(user.getSession()?.role, "WEE_TEACHER");
+assert.equal(user.getRoleHomePath(user.getSession()!.role), "/teacher");
+user.persistSession({ ...auth, accessToken: weeTeacherToken, role: "STUDENT" }, true);
+assert.equal((await user.restoreRememberedSession())?.role, "WEE_TEACHER");
 assert.equal(user.getRoleHomePath("STUDENT"), "/");
 user.clearSession();
 assert.equal(user.getSession(), null);

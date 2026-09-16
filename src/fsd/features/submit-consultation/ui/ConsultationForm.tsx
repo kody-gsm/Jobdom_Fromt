@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import {
   getAvailablePeriods,
-  type CounselingCategory,
   type ConsultationType,
 } from "@fsd/entities/consultation";
 import {
@@ -23,14 +22,6 @@ import {
 } from "../model/schedulePresentation.ts";
 
 const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
-const CONSULTATION_CATEGORIES: CounselingCategory[] = [
-  "학업",
-  "취업",
-  "진학",
-  "생활",
-  "기타",
-];
-
 const toDateValue = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -47,8 +38,6 @@ export const ConsultationForm = ({
     counselType,
     title,
     content,
-    category,
-    otherCategory,
     teachers,
     teacherStatus,
     selectedTeacher,
@@ -60,8 +49,6 @@ export const ConsultationForm = ({
     dates,
     setTitle,
     setContent,
-    setCategory,
-    setOtherCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
@@ -101,7 +88,7 @@ export const ConsultationForm = ({
         <div
           role={toast.type === "error" ? "alert" : "status"}
           className={`fixed right-6 top-6 z-[60] rounded-2xl px-5 py-4 text-sm font-semibold text-white shadow-lg ${
-            toast.type === "success" ? "bg-brand" : "bg-red-600"
+            toast.type === "success" ? "bg-brand" : toast.type === "info" ? "bg-blue-600" : "bg-red-600"
           }`}
         >
           {toast.message}
@@ -172,30 +159,16 @@ export const ConsultationForm = ({
             <div className="space-y-2">
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
               <div className="flex flex-wrap gap-2">
-                {CONSULTATION_CATEGORIES.map((item) => (
-                  <button
+                {[counselType === "career" ? "취업" : "기타"].map((item) => (
+                  <span
+                    aria-label={`고정된 상담 카테고리: ${item}`}
                     key={item}
-                    type="button"
-                    onClick={() => setCategory(item)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                      category === item
-                        ? "border-brand bg-[#EAF9F0] text-brand-hover"
-                        : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                    }`}
+                    className="rounded-xl border border-brand bg-[#EAF9F0] px-3 py-2 text-sm font-semibold text-brand-hover"
                   >
                     {item}
-                  </button>
+                  </span>
                 ))}
               </div>
-              {category === "기타" ? (
-                <TextField
-                  data-consultation-field="otherCategory"
-                  label="기타 상담 내용"
-                  value={otherCategory}
-                  onChange={(event) => setOtherCategory(event.target.value)}
-                  placeholder="상담 카테고리를 입력해주세요."
-                />
-              ) : null}
             </div>
 
             <div>
@@ -261,7 +234,8 @@ export const ConsultationForm = ({
 
           <section className="mt-6">
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 교시</p>
-            {counselType === "career" ? (
+            {counselType === "career" && selectedTime !== null &&
+            selectedTime !== "점심시간" && selectedTime !== "저녁시간" ? (
               <p className="mb-3 rounded-xl bg-brand-soft px-4 py-3 text-sm font-semibold text-brand-accent">
                 수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요.
               </p>
@@ -280,7 +254,7 @@ export const ConsultationForm = ({
                     type="button"
                     disabled={unavailable}
                     onClick={() => toggleTime(row.period)}
-                    className={`flex min-h-[48px] w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
+                    className={`flex h-12 w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
                       unavailable
                         ? "cursor-not-allowed border-[#E3E6EA] bg-[#F5F6F7] text-[#A0A8B2]"
                         : selectedTime === row.period
@@ -292,9 +266,9 @@ export const ConsultationForm = ({
                       <strong className="shrink-0 text-base">{row.period}</strong>
                       <span className="truncate font-normal text-[#596579]">{row.time}</span>
                     </span>
-                    {unavailable ? (
-                      <span className="shrink-0 text-xs font-semibold">예약 불가</span>
-                    ) : null}
+                    <span className={`shrink-0 text-xs font-semibold ${unavailable ? "visible" : "invisible"}`}>
+                      예약 불가
+                    </span>
                   </button>
                 );
               })}

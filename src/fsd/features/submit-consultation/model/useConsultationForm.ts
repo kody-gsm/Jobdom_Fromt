@@ -6,6 +6,8 @@ import {
   getNextAvailableDate,
   getNextWeekdays,
   getSelectablePeriods,
+  getConsultationScheduleItem,
+  toCounselingCategory,
   toConsultationKind,
   validateConsultationDraft,
 } from "@fsd/entities/consultation";
@@ -21,10 +23,11 @@ import {
 } from "../api/consultation.ts";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
 import { getConsultationTeacherLabel } from "./teacherOption.ts";
+import { getUnavailablePeriods } from "./slotAvailability.ts";
 
 export type ConsultationToast = {
   message: string;
-  type: "error" | "success";
+  type: "error" | "success" | "info";
 };
 
 export type ConsultationErrorTarget =
@@ -38,12 +41,16 @@ const MAX_CONSULTATION_CONTENT_LENGTH = 500;
 
 export type ConsultationTeacherStatus = "loading" | "ready" | "error";
 
+const getKoreaDate = () => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Seoul",
+}).format(new Date());
+
 const getConsultationErrorTarget = (
   message: string,
 ): ConsultationErrorTarget | null => {
   if (message === "제목을 입력해주세요") return "title";
   if (message === "내용을 입력해주세요") return "content";
-  if (message === "선생님을 선택해주세요") return "teacher";
+    if (message === "선생님을 선택해주세요") return "teacher";
   if (message === "날짜를 선택해주세요") return "date";
   if (message === "교시를 선택해주세요") return "period";
   return null;
@@ -68,15 +75,13 @@ const getSlotKey = (teacherId: number, date: string, period: string) =>
   `${teacherId}:${date}:${period}`;
 
 const isUnavailableSlotError = (error: ApiError) =>
-  error.status === 409 || /예약한 시간|누군가 예약|잠긴 날짜|잠긴 시간/.test(error.message);
+  /예약한 시간|누군가 예약|이미 예약|잠긴 날짜|잠긴 시간/.test(error.message);
 
 export const useConsultationForm = (initialType: ConsultationType) => {
   const router = useRouter();
   const [counselType, setCounselType] = useState(initialType);
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
-  const [category, setCategory] = useState<CounselingCategory | "">("");
-  const [otherCategory, setOtherCategory] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
@@ -128,16 +133,16 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     )
       .then((items) => {
         if (!active) return;
-        const unavailable = new Set(
-          items.filter((item) => !item.available).map((item) => item.period),
-        );
+        const unavailable = getUnavailablePeriods(items);
         setServerUnavailablePeriods(unavailable);
         setSelectedTime((current) =>
           current !== null && unavailable.has(current) ? null : current,
         );
       })
       .catch(() => {
-        if (active) setServerUnavailablePeriods(new Set());
+        if (active) {
+          setServerUnavailablePeriods(new Set());
+        }
       });
 
     return () => {
@@ -185,11 +190,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setErrorTarget(null);
   };
 
-  const handleCategoryChange = (value: CounselingCategory) => {
-    setCategory(value);
-    if (value !== "기타") setOtherCategory("");
-  };
-
   const toggleTeacher = (teacher: ConsultationTeacherOption) => {
     const isSelected = selectedTeacher?.id === teacher.id;
     setSelectedTeacher(isSelected ? null : teacher);
@@ -207,7 +207,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const isTimeUnavailable = (time: string) =>
     (counselType === "general" && time === "4교시") ||
-    (selectedDate === new Date().toISOString().slice(0, 10) &&
+    (selectedDate === getKoreaDate() &&
       !getSelectablePeriods(counselType, selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null).includes(time)) ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&
@@ -216,6 +216,17 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const toggleTime = (time: string) => {
     if (isTimeUnavailable(time)) return;
+    const scheduleItem = getConsultationScheduleItem(time);
+    if (
+      counselType === "career" &&
+      scheduleItem !== null &&
+      scheduleItem.startHour !== 12 &&
+      scheduleItem.startHour !== 17
+    ) {
+      if (selectedTime !== time) {
+        showToast("수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요.", "info");
+      }
+    }
     setSelectedTime((current) => current === time ? null : time);
     if (errorTarget === "period") setErrorTarget(null);
   };
@@ -231,14 +242,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const getValidationMessage = () => {
-    if (!selectedTeacher) return "선생님을 선택해주세요";
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
-    if (!category) return "상담 카테고리를 선택해주세요";
-    if (category === "기타" && !otherCategory.trim()) {
-      return "기타 상담 내용을 입력해주세요";
-    }
-
+    if (!selectedTeacher) return "선생님을 선택해주세요";
     return validateConsultationDraft({
       type: counselType,
       title,
@@ -261,7 +267,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       return;
     }
 
-    if (!selectedTeacher || !category) return;
+    if (!selectedTeacher) return;
     const teacherId = selectedTeacher.id;
 
     const draft = {
@@ -279,8 +285,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       await submitConsultation(toConsultationKind(counselType), {
         ...createReservationInput(draft),
         teacherId: teacherId,
-        category,
-        ...(category === "기타" ? { otherCategory: otherCategory.trim() } : {}),
+        category: toCounselingCategory(counselType),
       });
       showToast("상담 신청 요청을 보냈습니다", "success");
       window.setTimeout(() => router.push("/"), 700);
@@ -309,8 +314,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     counselType,
     title,
     content,
-    category,
-    otherCategory,
     teachers,
     teacherStatus,
     selectedTeacher,
@@ -322,8 +325,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     dates,
     setTitle,
     setContent,
-    setCategory: handleCategoryChange,
-    setOtherCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,

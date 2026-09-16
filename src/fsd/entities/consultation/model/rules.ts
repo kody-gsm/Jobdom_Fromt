@@ -33,16 +33,12 @@ export const toCounselingCategory = (
 export const getAvailablePeriods = (
   type: ConsultationType,
   teacher: ConsultationTeacher | null,
-) => {
+): string[] => {
   if (type === "general") return GENERAL_PERIODS;
   if (!teacher) return [];
-  if (teacher === "임경원 선생님") {
-    return Array.from({ length: 9 }, (_, index) => `${index + 1}교시`);
-  }
-  if (["김권예소 선생님", "정윤기 선생님"].includes(teacher)) {
-    return ["점심시간", "저녁시간"];
-  }
-  return [];
+  // Career teachers are supplied by the backend by role. Keep every slot in
+  // the shared schedule; reservations/locks are applied through the status API.
+  return CONSULTATION_SCHEDULE.map(({ period }) => period);
 };
 
 export const getSelectablePeriods = (

@@ -26,7 +26,12 @@ assert.deepEqual(getAvailablePeriods("career", "임경원 선생님"), [
   "1교시", "2교시", "3교시", "4교시", "5교시",
   "6교시", "7교시", "8교시", "9교시",
 ]);
-assert.deepEqual(getAvailablePeriods("career", "김권예소 선생님"), ["점심시간", "저녁시간"]);
+assert.deepEqual(getAvailablePeriods("career", "김권예소 선생님"), [
+  "1교시", "2교시", "3교시", "4교시", "5교시", "6교시", "7교시", "8교시", "9교시",
+]);
+assert.deepEqual(getAvailablePeriods("career", "새로 추가된 선생님"), [
+  "1교시", "2교시", "3교시", "4교시", "5교시", "6교시", "7교시", "8교시", "9교시",
+]);
 assert.deepEqual(getAvailablePeriods("career", null), []);
 assert.deepEqual(getAvailablePeriods("general", null), [
   "1교시", "2교시", "3교시", "점심시간", "5교시", "6교시", "7교시",
@@ -75,6 +80,9 @@ await api.create("common", {
   date: "2026-09-08",
   period: "점심시간",
 });
+await api.getTeacherSlotStatus("course", 42, "2026-09-09");
+await api.lock("course", { date: "2026-09-09", period: "3교시" });
+await api.unlock("common", { date: "2026-09-09", period: "점심시간" });
 assert.equal(calls[0]?.path, "/student/course");
 assert.equal(calls[0]?.init, undefined);
 assert.equal(calls[1]?.path, "/student/common");
@@ -82,6 +90,13 @@ assert.equal(calls[1]?.init?.method, "POST");
 assert.equal(calls[1]?.init?.body, JSON.stringify({
   title: "일반 상담", content: "내용", category: "기타", date: "2026-09-08", period: "점심시간",
 }));
+assert.equal(calls[2]?.path, "/teacher/course/status?teacherId=42&date=2026-09-09");
+assert.equal(calls[3]?.path, "/teacher/course/lock");
+assert.equal(calls[3]?.init?.method, "POST");
+assert.equal(calls[3]?.init?.body, JSON.stringify({ date: "2026-09-09", period: "3교시" }));
+assert.equal(calls[4]?.path, "/teacher/common/unlock");
+assert.equal(calls[4]?.init?.method, "POST");
+assert.equal(calls[4]?.init?.body, JSON.stringify({ date: "2026-09-09", period: "점심시간" }));
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

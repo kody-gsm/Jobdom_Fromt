@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type { ConsultationKind, TeacherReservation } from "@fsd/entities/consultation";
+import type { UserRole } from "@fsd/entities/user";
 import { readHomeBanner, saveHomeBanner } from "@fsd/entities/banner";
 import { approveConsultation, forceCreateConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations, getTeacherSlotStatus, getTeacherStudents, lockConsultation, rejectConsultation, unlockConsultation } from "../api/teacher";
 import type { SimpleStudent } from "../api/teacher";
 import { dateKey, formatPeriod, getWeek, reservationSlot, WEEKLY_CLASS_SCHEDULE } from "../model/calendar";
 import {
     canManageHomeBanner,
+    getTeacherConsultationKinds,
     getTeacherAvailablePeriods,
     getTeacherWorkspaceVariant,
 } from "../model/workspace";
@@ -19,6 +21,7 @@ const WEEKDAYS = ["월", "화", "수", "목", "금"];
 
 export function TeacherPage() {
     const [teacherName, setTeacherName] = useState("선생님");
+    const [teacherRole, setTeacherRole] = useState<UserRole | null>(null);
     const [today, setToday] = useState(() => new Date());
     const [selectedDate, setSelectedDate] = useState(() => new Date());
     const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -53,6 +56,14 @@ export function TeacherPage() {
     const slotRequestVersion = useRef(0);
 
     const loadReservations = useCallback(async () => {
+        const allowedKinds = getTeacherConsultationKinds(teacherRole);
+        if (!allowedKinds.includes(kind)) {
+            if (allowedKinds[0]) setKind(allowedKinds[0]);
+            setApproved([]);
+            setPending([]);
+            setIsLoading(false);
+            return;
+        }
         const version = ++requestVersion.current;
         setIsLoading(true);
         setLoadError(null);
@@ -70,19 +81,30 @@ export function TeacherPage() {
         } finally {
             if (version === requestVersion.current) setIsLoading(false);
         }
-    }, [kind]);
+    }, [kind, teacherRole]);
 
     useEffect(() => {
         queueMicrotask(() => {
-            const name = getSession()?.name || "선생님";
-            setTeacherId(getSession()?.userId ?? null);
+            const session = getSession();
+            const name = session?.name || "선생님";
+            const role = session?.role ?? null;
+            setTeacherId(session?.userId ?? null);
             setTeacherName(name);
+            setTeacherRole(role);
+            const [authorizedKind] = getTeacherConsultationKinds(role);
+            if (authorizedKind) setKind(authorizedKind);
             if (canManageHomeBanner(name)) {
                 setBannerMessage(readHomeBanner()?.message ?? "");
             }
-            void loadReservations();
         });
-        return () => { requestVersion.current += 1; };
+    }, []);
+
+    useEffect(() => {
+        let active = true;
+        queueMicrotask(() => {
+            if (active) void loadReservations();
+        });
+        return () => { active = false; requestVersion.current += 1; };
     }, [loadReservations]);
 
     useEffect(() => {
@@ -104,9 +126,15 @@ export function TeacherPage() {
     const week = useMemo(() => getWeek(selectedDate), [selectedDate]);
     const teacherVariant = getTeacherWorkspaceVariant(teacherName);
     const periods = getTeacherAvailablePeriods(kind, teacherName);
+    const teacherKinds = getTeacherConsultationKinds(teacherRole);
     const canManageBanner = teacherName !== "선생님" && canManageHomeBanner(teacherName);
     const loadSlotStatuses = useCallback(async () => {
-        if (teacherId === null) return;
+        const allowedKinds = getTeacherConsultationKinds(teacherRole);
+        if (teacherId === null || !allowedKinds.includes(kind)) {
+            setLockedSlots(new Set());
+            setIsSlotLoading(false);
+            return;
+        }
         const version = ++slotRequestVersion.current;
         setIsSlotLoading(true);
         setSlotError(null);
@@ -120,7 +148,7 @@ export function TeacherPage() {
         if (successful.length === 0) setSlotError("시간 금지 상태를 불러오지 못했습니다.");
         else if (successful.length < results.length) setSlotError("일부 날짜의 시간 금지 상태를 불러오지 못했습니다.");
         setIsSlotLoading(false);
-    }, [kind, teacherId, week]);
+    }, [kind, teacherId, teacherRole, week]);
 
     useEffect(() => {
         let active = true;
@@ -345,7 +373,7 @@ export function TeacherPage() {
                     </div>
                 </div>
                 <div className="flex gap-2 px-6 pt-5" aria-label="상담 종류">
-                    {(["course", "common"] as const).map((value) => (
+                    {teacherKinds.map((value) => (
                         <button key={value} aria-pressed={kind === value} onClick={() => {
                              if (kind === value) return;
                              requestVersion.current += 1;

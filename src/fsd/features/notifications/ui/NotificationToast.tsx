@@ -23,11 +23,21 @@ const Toast = ({ toast }: { toast: ToastNotification }) => {
     if (toast.targetUrl) router.push(toast.targetUrl);
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (toast.targetUrl && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <div
       role="alert"
       aria-live="polite"
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={toast.targetUrl ? 0 : undefined}
+      aria-label={toast.targetUrl ? `${toast.title} 알림 열기` : undefined}
       className={`flex w-80 cursor-pointer flex-col gap-1 rounded-2xl bg-white px-4 py-3 shadow-lg ring-1 ring-black/5 transition-all duration-300 hover:shadow-xl`}
     >
       <div className="flex items-start justify-between gap-2">

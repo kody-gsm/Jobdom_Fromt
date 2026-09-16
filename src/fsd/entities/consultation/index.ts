@@ -8,6 +8,7 @@ export type {
   ReservationInput,
   StudentReservation,
   TeacherReservation,
+  TeacherSlotStatus,
 } from "./model/types.ts";
 export {
   TEACHERS,

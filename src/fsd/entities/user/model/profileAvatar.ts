@@ -14,7 +14,7 @@ export const getProfileAvatarStorageKey = (userKey: string) =>
 export const validateProfileAvatarFile = (file: { type: string; size: number }) => {
   if (!file.type.startsWith("image/")) return "이미지 파일만 선택할 수 있습니다.";
   if (file.size > MAX_PROFILE_AVATAR_BYTES) {
-    return "프로필 이미지는 2MB 이하만 사용할 수 있습니다.";
+    return "프로필 이미지는 5MB 이하만 사용할 수 있습니다.";
   }
   return null;
 };

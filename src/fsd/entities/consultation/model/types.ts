@@ -38,6 +38,15 @@ export interface TeacherReservation {
   date: string;
   period: string;
 }
+
+export interface TeacherSlotStatus {
+  teacherId: number;
+  date: string;
+  period: string;
+  state: "CANCEL" | "WAITING" | "RESERVED" | "LOCKED" | "AUTO";
+  available: boolean;
+}
+
 export interface ConsultationDate {
   day: string;
   date: number;
