@@ -330,11 +330,13 @@ export function TeacherPage() {
                                         event.preventDefault();
                                         void handleSlotToggle(dateKey(date), period);
                                     }}
-                                    className={`h-20 border border-border p-2 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""}`}>
+                                    className={`h-20 border border-border p-0 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""}`}>
+                                    <div className="max-h-20 overflow-y-auto p-2">
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
                                     {confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
                                     {waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
+                                    </div>
                                 </td>;
                             })}
                         </tr>)}</tbody>
