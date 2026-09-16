@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import {
   getAvailablePeriods,
-  type CounselingCategory,
   type ConsultationType,
 } from "@fsd/entities/consultation";
 import {
@@ -23,14 +22,6 @@ import {
 } from "../model/schedulePresentation.ts";
 
 const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
-const CONSULTATION_CATEGORIES: CounselingCategory[] = [
-  "학업",
-  "취업",
-  "진학",
-  "생활",
-  "기타",
-];
-
 const toDateValue = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -47,8 +38,6 @@ export const ConsultationForm = ({
     counselType,
     title,
     content,
-    category,
-    otherCategory,
     teachers,
     teacherStatus,
     selectedTeacher,
@@ -60,8 +49,6 @@ export const ConsultationForm = ({
     dates,
     setTitle,
     setContent,
-    setCategory,
-    setOtherCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
@@ -101,7 +88,7 @@ export const ConsultationForm = ({
         <div
           role={toast.type === "error" ? "alert" : "status"}
           className={`fixed right-6 top-6 z-[60] rounded-2xl px-5 py-4 text-sm font-semibold text-white shadow-lg ${
-            toast.type === "success" ? "bg-brand" : "bg-red-600"
+            toast.type === "success" ? "bg-brand" : toast.type === "info" ? "bg-blue-600" : "bg-red-600"
           }`}
         >
           {toast.message}
@@ -172,9 +159,9 @@ export const ConsultationForm = ({
             <div className="space-y-2">
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
               <div className="flex flex-wrap gap-2">
-                {(category ? [category] : []).map((item) => (
+                {[counselType === "career" ? "취업" : "기타"].map((item) => (
                   <span
-                    aria-label="고정된 상담 카테고리"
+                    aria-label={`고정된 상담 카테고리: ${item}`}
                     key={item}
                     className="rounded-xl border border-brand bg-[#EAF9F0] px-3 py-2 text-sm font-semibold text-brand-hover"
                   >
@@ -182,15 +169,6 @@ export const ConsultationForm = ({
                   </span>
                 ))}
               </div>
-              {category === "기타" ? (
-                <TextField
-                  data-consultation-field="otherCategory"
-                  label="기타 상담 내용"
-                  value={otherCategory}
-                  onChange={(event) => setOtherCategory(event.target.value)}
-                  placeholder="상담 카테고리를 입력해주세요."
-                />
-              ) : null}
             </div>
 
             <div>
