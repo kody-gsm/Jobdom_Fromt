@@ -6,6 +6,8 @@ import {
   getNextAvailableDate,
   getNextWeekdays,
   getSelectablePeriods,
+  getConsultationScheduleItem,
+  toCounselingCategory,
   toConsultationKind,
   validateConsultationDraft,
 } from "@fsd/entities/consultation";
@@ -49,6 +51,9 @@ const getConsultationErrorTarget = (
   if (message === "제목을 입력해주세요") return "title";
   if (message === "내용을 입력해주세요") return "content";
   if (message === "선생님을 선택해주세요") return "teacher";
+  if (message === "제목을 입력해주세요") return "title";
+  if (message === "내용을 입력해주세요") return "content";
+  if (message === "선생님을 선택해주세요") return "teacher";
   if (message === "날짜를 선택해주세요") return "date";
   if (message === "교시를 선택해주세요") return "period";
   return null;
@@ -80,7 +85,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [counselType, setCounselType] = useState(initialType);
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
-  const [category, setCategory] = useState<CounselingCategory | "">("");
+  const [category, setCategory] = useState<CounselingCategory | "">(
+    toCounselingCategory(initialType),
+  );
   const [otherCategory, setOtherCategory] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
@@ -184,6 +191,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const handleTabChange = (type: ConsultationType) => {
     setCounselType(type);
+    setCategory(toCounselingCategory(type));
+    setOtherCategory("");
     setSelectedTeacher(null);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
@@ -221,6 +230,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const toggleTime = (time: string) => {
     if (isTimeUnavailable(time)) return;
+    const scheduleItem = getConsultationScheduleItem(time);
+    if (
+      counselType === "career" &&
+      scheduleItem !== null &&
+      scheduleItem.startHour !== 12 &&
+      scheduleItem.startHour !== 17
+    ) {
+      showToast("수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요.");
+    }
     setSelectedTime((current) => current === time ? null : time);
     if (errorTarget === "period") setErrorTarget(null);
   };
@@ -236,6 +254,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const getValidationMessage = () => {
+    if (!title.trim()) return "제목을 입력해주세요";
+    if (!content.trim()) return "내용을 입력해주세요";
     if (!selectedTeacher) return "선생님을 선택해주세요";
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";

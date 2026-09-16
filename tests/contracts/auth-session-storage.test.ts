@@ -41,8 +41,8 @@ const auth = {
 authSession.persistSession(auth, false);
 assert.equal(authSession.readSession()?.accessToken, "access");
 assert.equal(authSession.readRememberedSession(), null);
-assert.equal(session.getItem("jobdam_access_token"), "access");
-assert.equal(local.getItem("jobdam_access_token"), null);
+assert.equal(session.getItem("jobdam_access_token"), null);
+assert.equal(local.getItem("jobdam_access_token"), "access");
 
 authSession.persistSession(auth, true);
 assert.equal(authSession.readRememberedSession()?.refreshToken, "refresh");

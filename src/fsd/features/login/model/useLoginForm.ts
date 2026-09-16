@@ -6,9 +6,13 @@ import {
   clearRememberLoginPreference,
   getLoginErrorMessage as getAuthErrorMessage,
   getRoleHomePath,
-  readRememberLoginPreference,
+  getSession,
+  isAccessTokenExpired,
+  saveSession,
   restoreRememberedSession,
+  readRememberLoginPreference,
 } from "@fsd/entities/user";
+import { request } from "@fsd/shared/api";
 import { login } from "../api/login.ts";
 import { validateLoginForm } from "./validation.ts";
 import type { LoginFormErrors, LoginFormValues } from "./validation.ts";
@@ -28,9 +32,30 @@ export const useLoginForm = () => {
 
   useEffect(() => {
     let isActive = true;
-    void restoreRememberedSession().then((session) => {
-      if (isActive && session) router.replace(getRoleHomePath(session.role));
-    });
+    const restore = async () => {
+      const remembered = await restoreRememberedSession();
+      if (remembered) {
+        if (isActive) router.replace(getRoleHomePath(remembered.role));
+        return;
+      }
+      const current = getSession();
+      if (!current) return;
+      if (!isAccessTokenExpired(current.accessToken)) {
+        if (isActive) router.replace(getRoleHomePath(current.role));
+        return;
+      }
+      try {
+        const response = await request<Omit<typeof current, "role">>("/auth/reissue", {
+          method: "POST",
+          body: JSON.stringify({ refreshToken: current.refreshToken }),
+        });
+        const session = saveSession(response, true);
+        if (isActive) router.replace(getRoleHomePath(session.role));
+      } catch {
+        // refresh token까지 만료되면 로그인 화면에 남긴다.
+      }
+    };
+    void restore();
     return () => {
       isActive = false;
     };

@@ -40,9 +40,11 @@ export const backfillRememberLoginEmail = (email: string) => {
   localStorage.setItem(REMEMBER_EMAIL_KEY, email);
 };
 export const persistSession = (session: AuthSession, rememberLogin: boolean) => {
-  const target = rememberLogin ? localStorage : sessionStorage;
-  const other = rememberLogin ? sessionStorage : localStorage;
-  clearStorage(other);
+  // 인증 세션은 브라우저를 다시 열어도 access token 만료 전까지 복원한다.
+  // 로그인 유지 옵션은 이메일 기억 여부만 제어한다.
+  const target = localStorage;
+  clearStorage(sessionStorage);
+  clearStorage(localStorage);
   target.setItem(TOKEN_KEY, session.accessToken);
   target.setItem(SESSION_KEY, JSON.stringify(session));
   if (rememberLogin) {

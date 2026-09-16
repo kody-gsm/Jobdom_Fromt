@@ -172,7 +172,7 @@ export const ConsultationForm = ({
             <div className="space-y-2">
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
               <div className="flex flex-wrap gap-2">
-                {CONSULTATION_CATEGORIES.map((item) => (
+                {(category ? [category] : []).map((item) => (
                   <button
                     key={item}
                     type="button"
