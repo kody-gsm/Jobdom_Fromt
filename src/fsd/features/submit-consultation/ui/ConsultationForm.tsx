@@ -20,6 +20,7 @@ import {
 import {
   CONSULTATION_SCHEDULE_ROWS,
 } from "../model/schedulePresentation.ts";
+import { getTimetableSubject } from "../model/timetablePresentation.ts";
 
 const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
 const toDateValue = (date: Date) => {
@@ -39,6 +40,7 @@ export const ConsultationForm = ({
     title,
     content,
     teachers,
+    timetable,
     teacherStatus,
     selectedTeacher,
     selectedDate,
@@ -265,6 +267,9 @@ export const ConsultationForm = ({
                     <span className="flex min-w-0 items-center gap-3">
                       <strong className="shrink-0 text-base">{row.period}</strong>
                       <span className="truncate font-normal text-[#596579]">{row.time}</span>
+                    </span>
+                    <span className="ml-3 min-w-0 truncate text-xs font-semibold text-[#596579]">
+                      {counselType === "general" ? getTimetableSubject(timetable, selectedDate, row.period) : null}
                     </span>
                     <span className={`shrink-0 text-xs font-semibold ${unavailable ? "visible" : "invisible"}`}>
                       예약 불가

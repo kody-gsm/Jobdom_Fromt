@@ -3,6 +3,7 @@ import type {
   ReservationInput,
 } from "@fsd/entities/consultation";
 import { requestWithSession } from "@fsd/entities/user";
+import type { StudentTimetableItem } from "../model/timetablePresentation.ts";
 
 export type ConsultationTeacherOption = {
   id: number;
@@ -25,6 +26,9 @@ export type SubmitConsultationInput = ReservationInput & {
 
 export const getConsultationTeachers = (kind: ConsultationKind) =>
   requestWithSession<ConsultationTeacherOption[]>(`/student/${kind}/teachers`);
+
+export const getStudentTimetable = () =>
+  requestWithSession<StudentTimetableItem[]>("/student/timetable");
 
 export const getConsultationSlotStatus = (
   kind: ConsultationKind,
