@@ -33,7 +33,7 @@ export const toCounselingCategory = (
 export const getAvailablePeriods = (
   type: ConsultationType,
   teacher: ConsultationTeacher | null,
-) => {
+): string[] => {
   if (type === "general") return GENERAL_PERIODS;
   if (!teacher) return [];
   // Career teachers are supplied by the backend by role. Keep every slot in
