@@ -39,6 +39,10 @@ const MAX_CONSULTATION_CONTENT_LENGTH = 500;
 
 export type ConsultationTeacherStatus = "loading" | "ready" | "error";
 
+const getKoreaDate = () => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Seoul",
+}).format(new Date());
+
 const getConsultationErrorTarget = (
   message: string,
 ): ConsultationErrorTarget | null => {
@@ -208,7 +212,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const isTimeUnavailable = (time: string) =>
     (counselType === "general" && time === "4교시") ||
-    (selectedDate === new Date().toISOString().slice(0, 10) &&
+    (selectedDate === getKoreaDate() &&
       !getSelectablePeriods(counselType, selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null).includes(time)) ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&

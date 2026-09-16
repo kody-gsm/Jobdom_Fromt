@@ -33,13 +33,12 @@ export const toCounselingCategory = (
 export const getAvailablePeriods = (
   type: ConsultationType,
   teacher: ConsultationTeacher | null,
-) => {
+): string[] => {
   if (type === "general") return GENERAL_PERIODS;
   if (!teacher) return [];
-  // Career teachers are supplied by the backend by role. Their per-teacher
-  // reservations/locks are applied through the slot-status API, so period
-  // availability must not depend on a frontend name allowlist.
-  return Array.from({ length: 9 }, (_, index) => `${index + 1}교시`);
+  // Career teachers are supplied by the backend by role. Keep every slot in
+  // the shared schedule; reservations/locks are applied through the status API.
+  return CONSULTATION_SCHEDULE.map(({ period }) => period);
 };
 
 export const getSelectablePeriods = (
