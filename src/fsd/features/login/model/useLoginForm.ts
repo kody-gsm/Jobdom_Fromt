@@ -49,7 +49,8 @@ export const useLoginForm = () => {
           method: "POST",
           body: JSON.stringify({ refreshToken: current.refreshToken }),
         });
-        const session = saveSession(response, true);
+        const preference = readRememberLoginPreference();
+        const session = saveSession(response, preference.enabled);
         if (isActive) router.replace(getRoleHomePath(session.role));
       } catch {
         // refresh token까지 만료되면 로그인 화면에 남긴다.
