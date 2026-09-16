@@ -261,7 +261,8 @@ export const ConsultationForm = ({
 
           <section className="mt-6">
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 교시</p>
-            {counselType === "career" ? (
+            {counselType === "career" && selectedTime !== null &&
+            selectedTime !== "점심시간" && selectedTime !== "저녁시간" ? (
               <p className="mb-3 rounded-xl bg-brand-soft px-4 py-3 text-sm font-semibold text-brand-accent">
                 수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요.
               </p>
