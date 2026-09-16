@@ -1,5 +1,5 @@
 import { createConsultationApi } from "@fsd/entities/consultation";
-import type { ConsultationKind } from "@fsd/entities/consultation";
+import type { ConsultationKind, CounselingCategory } from "@fsd/entities/consultation";
 import { getSession, requestWithSession } from "@fsd/entities/user";
 
 const consultationApi = createConsultationApi(requestWithSession);
@@ -23,4 +23,29 @@ export const getTeacherSlotStatus = (kind: ConsultationKind, teacherId: number, 
     const query = new URLSearchParams({ teacherId: String(teacherId), date });
     return requestWithSession<TeacherSlotStatus[]>(`/teacher/${kind}/status?${query.toString()}`);
 };
+
+export type SimpleStudent = {
+    id: number;
+    name: string;
+    student_number: string;
+};
+
+export const getTeacherStudents = () =>
+    requestWithSession<SimpleStudent[]>("/teacher/students");
+
+export type ForceReservationInput = {
+    studentId: number;
+    title: string;
+    content: string;
+    category: CounselingCategory;
+    date: string;
+    period: string;
+};
+
+export const forceCreateConsultation = (kind: ConsultationKind, input: ForceReservationInput) =>
+    requestWithSession<string>(`/teacher/${kind}/force`, {
+        method: "POST",
+        body: JSON.stringify(input),
+    });
+
 export { getSession };
