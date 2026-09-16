@@ -173,18 +173,13 @@ export const ConsultationForm = ({
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
               <div className="flex flex-wrap gap-2">
                 {(category ? [category] : []).map((item) => (
-                  <button
+                  <span
+                    aria-label="고정된 상담 카테고리"
                     key={item}
-                    type="button"
-                    onClick={() => setCategory(item)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                      category === item
-                        ? "border-brand bg-[#EAF9F0] text-brand-hover"
-                        : "border-border bg-white text-[#4E5B6B] hover:border-[#B8C1CC]"
-                    }`}
+                    className="rounded-xl border border-brand bg-[#EAF9F0] px-3 py-2 text-sm font-semibold text-brand-hover"
                   >
                     {item}
-                  </button>
+                  </span>
                 ))}
               </div>
               {category === "기타" ? (
