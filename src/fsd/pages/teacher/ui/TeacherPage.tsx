@@ -6,7 +6,8 @@ import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type { ConsultationKind, TeacherReservation } from "@fsd/entities/consultation";
 import type { UserRole } from "@fsd/entities/user";
 import { readHomeBanner, saveHomeBanner } from "@fsd/entities/banner";
-import { approveConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations, getTeacherSlotStatus, lockConsultation, rejectConsultation, unlockConsultation } from "../api/teacher";
+import { approveConsultation, forceCreateConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations, getTeacherSlotStatus, getTeacherStudents, lockConsultation, rejectConsultation, unlockConsultation } from "../api/teacher";
+import type { SimpleStudent } from "../api/teacher";
 import { dateKey, formatPeriod, getWeek, reservationSlot, WEEKLY_CLASS_SCHEDULE } from "../model/calendar";
 import {
     canManageHomeBanner,
@@ -30,6 +31,15 @@ export function TeacherPage() {
     const [approved, setApproved] = useState<TeacherReservation[]>([]);
     const [lockedSlots, setLockedSlots] = useState<Set<string>>(() => new Set());
     const [isLockMode, setIsLockMode] = useState(false);
+    const [isForceMode, setIsForceMode] = useState(false);
+    const [forceSlotTarget, setForceSlotTarget] = useState<{ date: string; period: string } | null>(null);
+    const [students, setStudents] = useState<SimpleStudent[]>([]);
+    const [isStudentsLoading, setIsStudentsLoading] = useState(false);
+    const [studentsLoadError, setStudentsLoadError] = useState<string | null>(null);
+    const [studentSearchQuery, setStudentSearchQuery] = useState("");
+    const [isForceSubmitting, setIsForceSubmitting] = useState(false);
+    const [submittingStudentId, setSubmittingStudentId] = useState<number | null>(null);
+    const [forceSubmitError, setForceSubmitError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSlotLoading, setIsSlotLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -41,6 +51,7 @@ export function TeacherPage() {
     const [bannerMessage, setBannerMessage] = useState("");
     const [bannerStatus, setBannerStatus] = useState("");
     const dialog = useRef<HTMLDialogElement>(null);
+    const forceDialog = useRef<HTMLDialogElement>(null);
     const requestVersion = useRef(0);
     const slotRequestVersion = useRef(0);
 
@@ -235,6 +246,55 @@ export function TeacherPage() {
         setBannerStatus("학생 홈 배너를 저장했습니다.");
     };
 
+    const loadStudents = useCallback(async () => {
+        setIsStudentsLoading(true);
+        setStudentsLoadError(null);
+        try {
+            const list = await getTeacherStudents();
+            setStudents(list);
+        } catch (error) {
+            setStudentsLoadError(error instanceof Error ? error.message : "학생 목록을 불러오지 못했습니다.");
+        } finally {
+            setIsStudentsLoading(false);
+        }
+    }, []);
+
+    const filteredStudents = useMemo(() => {
+        const query = studentSearchQuery.trim().toLowerCase();
+        if (!query) return students;
+        return students.filter(
+            (s) =>
+                (s.name && s.name.toLowerCase().includes(query)) ||
+                (s.student_number && s.student_number.toLowerCase().includes(query))
+        );
+    }, [students, studentSearchQuery]);
+
+    const handleForceCreate = async (student: SimpleStudent) => {
+        if (!forceSlotTarget || isForceSubmitting) return;
+        setIsForceSubmitting(true);
+        setSubmittingStudentId(student.id);
+        setForceSubmitError(null);
+        try {
+            const category = kind === "course" ? "취업" : "기타";
+            await forceCreateConsultation(kind, {
+                studentId: student.id,
+                title: "선생님 배정 상담",
+                content: `${teacherName.replace(/ 선생님$/, "")} 선생님이 직접 등록한 상담입니다.`,
+                category,
+                date: forceSlotTarget.date,
+                period: forceSlotTarget.period,
+            });
+            forceDialog.current?.close();
+            setForceSlotTarget(null);
+            await loadReservations();
+        } catch (error) {
+            setForceSubmitError(error instanceof Error ? error.message : "상담 신청을 등록하지 못했습니다.");
+        } finally {
+            setIsForceSubmitting(false);
+            setSubmittingStudentId(null);
+        }
+    };
+
     return (
         <>
         <TeacherHeader />
@@ -317,7 +377,7 @@ export function TeacherPage() {
                         <button key={value} aria-pressed={kind === value} onClick={() => {
                              if (kind === value) return;
                              requestVersion.current += 1;
-                             setKind(value); setPending([]); setApproved([]); setSelection(null); setIsLockMode(false);
+                             setKind(value); setPending([]); setApproved([]); setSelection(null); setIsLockMode(false); setIsForceMode(false);
                          }} className={`rounded-lg px-4 py-2 font-semibold ${kind === value ? "bg-brand text-white" : "bg-white text-secondary-text"}`}>
                              {value === "course" ? "진로 상담" : "일반 상담"}
                          </button>
@@ -327,6 +387,7 @@ export function TeacherPage() {
                     </button>
                  </div>
                 {isLockMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-red-600">시간 금지 모드입니다. 금지할 셀을 클릭하세요. 금지된 셀을 클릭하면 해제됩니다. 변경 사항은 현재 선생님 계정에 즉시 저장됩니다.</p>}
+                {isForceMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-blue-600">강제 추가 모드입니다. 상담을 추가할 셀을 클릭하세요. 학생을 검색하여 즉시 상담을 예약할 수 있습니다.</p>}
                 {isLoading && <p role="status" className="px-6 pt-3 text-sm">상담 신청을 불러오는 중...</p>}
                 {loadError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{loadError}<button onClick={() => void loadReservations()} className="ml-3 underline">다시 불러오기</button></div>}
                 {slotError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{slotError}<button onClick={() => void loadSlotStatuses()} className="ml-3 underline">다시 불러오기</button></div>}
@@ -346,19 +407,46 @@ export function TeacherPage() {
                                 const waiting = pending.filter((item) => reservationSlot(item) === slot);
                                 const isLocked = lockedSlots.has(slot);
                                 return <td key={slot}
-                                    role={isLockMode ? "button" : undefined}
-                                    tabIndex={isLockMode ? 0 : undefined}
-                                    aria-label={isLockMode ? `${dateKey(date)} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : undefined}
+                                    role={isLockMode || isForceMode ? "button" : undefined}
+                                    tabIndex={isLockMode || isForceMode ? 0 : undefined}
+                                    aria-label={isLockMode ? `${dateKey(date)} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : isForceMode ? `${dateKey(date)} ${period} 상담 강제 추가` : undefined}
                                     onClick={(event) => {
-                                        if (!isLockMode || (event.target instanceof Element && event.target.closest("button"))) return;
-                                        void handleSlotToggle(dateKey(date), period);
+                                        if (event.target instanceof Element && event.target.closest("button")) return;
+                                        if (isLockMode) {
+                                            void handleSlotToggle(dateKey(date), period);
+                                            return;
+                                        }
+                                        if (isForceMode) {
+                                            if (isLocked) {
+                                                alert("예약 금지된 시간입니다. 먼저 잠금을 해제해 주세요.");
+                                                return;
+                                            }
+                                            setForceSlotTarget({ date: dateKey(date), period });
+                                            setStudentSearchQuery("");
+                                            setForceSubmitError(null);
+                                            void loadStudents();
+                                        }
                                     }}
                                     onKeyDown={(event) => {
-                                        if (!isLockMode || (event.key !== "Enter" && event.key !== " ") || (event.target instanceof Element && event.target.closest("button"))) return;
-                                        event.preventDefault();
-                                        void handleSlotToggle(dateKey(date), period);
+                                        if ((event.key !== "Enter" && event.key !== " ") || (event.target instanceof Element && event.target.closest("button"))) return;
+                                        if (isLockMode) {
+                                            event.preventDefault();
+                                            void handleSlotToggle(dateKey(date), period);
+                                            return;
+                                        }
+                                        if (isForceMode) {
+                                            event.preventDefault();
+                                            if (isLocked) {
+                                                alert("예약 금지된 시간입니다. 먼저 잠금을 해제해 주세요.");
+                                                return;
+                                            }
+                                            setForceSlotTarget({ date: dateKey(date), period });
+                                            setStudentSearchQuery("");
+                                            setForceSubmitError(null);
+                                            void loadStudents();
+                                        }
                                     }}
-                                    className={`h-20 border border-border p-0 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""}`}>
+                                    className={`h-20 border border-border p-0 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""} ${isForceMode ? "cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-inset" : ""}`}>
                                     <div className="max-h-20 overflow-y-auto p-2">
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
@@ -388,6 +476,107 @@ export function TeacherPage() {
                         {!selection.approved && <button disabled={isProcessing} onClick={() => void handleApprove()} className="flex-1 rounded-lg bg-brand py-3 font-semibold text-white hover:bg-brand-hover disabled:opacity-50">{isProcessing ? "처리 중..." : "상담 수락"}</button>}
                     </div>
                 </>}
+            </dialog>
+            <dialog ref={forceDialog} aria-labelledby="force-dialog-title" onCancel={(event) => { if (isForceSubmitting) event.preventDefault(); }} onClose={() => setForceSlotTarget(null)} className="fixed inset-0 m-auto max-h-[85vh] w-[460px] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl p-6 backdrop:bg-black/30">
+                {forceSlotTarget && (
+                    <div>
+                        <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+                            <div>
+                                <h2 id="force-dialog-title" className="text-lg font-bold text-ink">상담 강제 추가</h2>
+                                <p className="text-xs text-secondary-text">
+                                    {forceSlotTarget.date} · {formatPeriod(forceSlotTarget.period)} ({kind === "course" ? "진로 상담" : "일반 상담"})
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                disabled={isForceSubmitting}
+                                onClick={() => forceDialog.current?.close()}
+                                className="text-sm p-1 text-secondary-text hover:text-ink"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="mb-4">
+                            <input
+                                type="text"
+                                value={studentSearchQuery}
+                                onChange={(e) => setStudentSearchQuery(e.target.value)}
+                                placeholder="학생 이름 또는 학번 검색..."
+                                className="w-full rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus:border-brand"
+                                autoFocus
+                            />
+                        </div>
+
+                        {isStudentsLoading && (
+                            <p role="status" className="py-8 text-center text-sm text-secondary-text">
+                                학생 목록을 불러오는 중...
+                            </p>
+                        )}
+
+                        {studentsLoadError && (
+                            <div role="alert" className="py-4 text-center text-sm text-red-600">
+                                {studentsLoadError}
+                                <button
+                                    type="button"
+                                    onClick={() => void loadStudents()}
+                                    className="ml-2 font-semibold underline"
+                                >
+                                    다시 불러오기
+                                </button>
+                            </div>
+                        )}
+
+                        {!isStudentsLoading && !studentsLoadError && (
+                            <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                                {filteredStudents.length === 0 ? (
+                                    <p className="py-8 text-center text-sm text-secondary-text">
+                                        {studentSearchQuery ? "일치하는 학생이 없습니다." : "등록된 학생이 없습니다."}
+                                    </p>
+                                ) : (
+                                    filteredStudents.map((student) => (
+                                        <div
+                                            key={student.id}
+                                            className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-brand-soft"
+                                        >
+                                            <div>
+                                                <span className="font-semibold text-ink">{student.name}</span>
+                                                <span className="ml-2 rounded bg-panel px-2 py-0.5 text-xs text-secondary-text">
+                                                    {student.student_number || "학번 없음"}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                disabled={isForceSubmitting}
+                                                onClick={() => void handleForceCreate(student)}
+                                                className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-hover disabled:opacity-50"
+                                            >
+                                                {isForceSubmitting && submittingStudentId === student.id ? "추가 중..." : "추가"}
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+
+                        {forceSubmitError && (
+                            <p role="alert" className="mt-3 text-sm font-semibold text-red-600">
+                                {forceSubmitError}
+                            </p>
+                        )}
+
+                        <div className="mt-5 border-t border-border pt-4 text-right">
+                            <button
+                                type="button"
+                                disabled={isForceSubmitting}
+                                onClick={() => forceDialog.current?.close()}
+                                className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-secondary-text hover:bg-panel"
+                            >
+                                닫기
+                            </button>
+                        </div>
+                    </div>
+                )}
             </dialog>
         </div>
         </>
