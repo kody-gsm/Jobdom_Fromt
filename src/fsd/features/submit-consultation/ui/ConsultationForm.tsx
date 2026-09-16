@@ -280,7 +280,7 @@ export const ConsultationForm = ({
                     type="button"
                     disabled={unavailable}
                     onClick={() => toggleTime(row.period)}
-                    className={`flex min-h-[48px] w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
+                    className={`flex h-12 w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
                       unavailable
                         ? "cursor-not-allowed border-[#E3E6EA] bg-[#F5F6F7] text-[#A0A8B2]"
                         : selectedTime === row.period
@@ -292,9 +292,9 @@ export const ConsultationForm = ({
                       <strong className="shrink-0 text-base">{row.period}</strong>
                       <span className="truncate font-normal text-[#596579]">{row.time}</span>
                     </span>
-                    {unavailable ? (
-                      <span className="shrink-0 text-xs font-semibold">예약 불가</span>
-                    ) : null}
+                    <span className={`shrink-0 text-xs font-semibold ${unavailable ? "visible" : "invisible"}`}>
+                      예약 불가
+                    </span>
                   </button>
                 );
               })}
