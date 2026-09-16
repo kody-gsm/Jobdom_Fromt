@@ -22,7 +22,7 @@ export const ProfileConsultations = ({
   const [cancelError, setCancelError] = useState("");
   const [now, setNow] = useState(() => new Date());
   const visibleReservations = reservations.filter((item) =>
-    item.status !== "WAITING" && isConsultationUpcoming(item.date, item.slot, now),
+    item.status === "RESERVED" && isConsultationUpcoming(item.date, item.slot, now),
   );
 
   useEffect(() => {

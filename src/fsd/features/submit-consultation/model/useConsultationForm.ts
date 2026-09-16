@@ -75,7 +75,7 @@ const getSlotKey = (teacherId: number, date: string, period: string) =>
   `${teacherId}:${date}:${period}`;
 
 const isUnavailableSlotError = (error: ApiError) =>
-  error.status === 409 || /예약한 시간|누군가 예약|잠긴 날짜|잠긴 시간/.test(error.message);
+  /예약한 시간|누군가 예약|이미 예약|잠긴 날짜|잠긴 시간/.test(error.message);
 
 export const useConsultationForm = (initialType: ConsultationType) => {
   const router = useRouter();
