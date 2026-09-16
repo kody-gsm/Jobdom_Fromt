@@ -50,10 +50,7 @@ const getConsultationErrorTarget = (
 ): ConsultationErrorTarget | null => {
   if (message === "제목을 입력해주세요") return "title";
   if (message === "내용을 입력해주세요") return "content";
-  if (message === "선생님을 선택해주세요") return "teacher";
-  if (message === "제목을 입력해주세요") return "title";
-  if (message === "내용을 입력해주세요") return "content";
-  if (message === "선생님을 선택해주세요") return "teacher";
+    if (message === "선생님을 선택해주세요") return "teacher";
   if (message === "날짜를 선택해주세요") return "date";
   if (message === "교시를 선택해주세요") return "period";
   return null;
@@ -257,8 +254,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
     if (!selectedTeacher) return "선생님을 선택해주세요";
-    if (!title.trim()) return "제목을 입력해주세요";
-    if (!content.trim()) return "내용을 입력해주세요";
     if (!category) return "상담 카테고리를 선택해주세요";
     if (category === "기타" && !otherCategory.trim()) {
       return "기타 상담 내용을 입력해주세요";
