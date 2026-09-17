@@ -460,8 +460,8 @@ export function TeacherPage() {
                                     <div className={`max-h-20 overflow-y-auto p-2 ${isForceMode || isLockMode ? "cursor-pointer" : ""}`}>
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
-                                    {confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
-                                    {waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
+                                    {!isLockMode && !isForceMode && confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
+                                    {!isLockMode && !isForceMode && waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
                                     </div>
                                 </td>;
                             })}
