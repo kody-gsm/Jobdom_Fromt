@@ -89,8 +89,10 @@ export const ConsultationForm = ({
       {toast ? (
         <div
           role={toast.type === "error" ? "alert" : "status"}
-          className={`fixed right-6 top-6 z-[60] rounded-2xl px-5 py-4 text-sm font-semibold text-white shadow-lg ${
-            toast.type === "success" ? "bg-brand" : toast.type === "info" ? "bg-blue-600" : "bg-red-600"
+          className={`fixed right-6 top-6 z-[60] rounded-2xl px-5 py-4 text-sm font-semibold shadow-lg ${
+            toast.type === "error"
+              ? "border border-red-200 bg-red-50 text-red-700"
+              : "border border-brand bg-brand-soft text-brand-accent"
           }`}
         >
           {toast.message}
@@ -236,12 +238,6 @@ export const ConsultationForm = ({
 
           <section className="mt-6">
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 교시</p>
-            {counselType === "career" && selectedTime !== null &&
-            selectedTime !== "점심시간" && selectedTime !== "저녁시간" ? (
-              <p className="mb-3 rounded-xl bg-brand-soft px-4 py-3 text-sm font-semibold text-brand-accent">
-                수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요.
-              </p>
-            ) : null}
             <div
               data-consultation-field="period"
               className={`space-y-2 rounded-xl ${
