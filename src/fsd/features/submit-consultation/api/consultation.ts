@@ -3,6 +3,7 @@ import type {
   ReservationInput,
 } from "@fsd/entities/consultation";
 import { requestWithSession } from "@fsd/entities/user";
+import { createTimetablePath } from "../model/timetablePath.ts";
 
 export type StudentTimetableItem = {
   date: string;
@@ -32,11 +33,6 @@ export type SubmitConsultationInput = ReservationInput & {
 
 export const getConsultationTeachers = (kind: ConsultationKind) =>
   requestWithSession<ConsultationTeacherOption[]>(`/student/${kind}/teachers`);
-
-export const createTimetablePath = (from: string, to: string) => {
-  const query = new URLSearchParams({ from, to });
-  return `/student/timetable?${query.toString()}`;
-};
 
 export const getStudentTimetable = (from: string, to: string) => {
   return requestWithSession<StudentTimetableItem[]>(createTimetablePath(from, to));

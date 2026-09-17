@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { createTimetablePath } from "../../api/consultation.ts";
 import { getTimetableSubject } from "../../model/timetablePresentation.ts";
+import { createTimetablePath } from "../../model/timetablePath.ts";
 
 assert.equal(
   createTimetablePath("2026-09-21", "2026-09-25"),
