@@ -33,9 +33,13 @@ export type SubmitConsultationInput = ReservationInput & {
 export const getConsultationTeachers = (kind: ConsultationKind) =>
   requestWithSession<ConsultationTeacherOption[]>(`/student/${kind}/teachers`);
 
-export const getStudentTimetable = (from: string, to: string) => {
+export const createTimetablePath = (from: string, to: string) => {
   const query = new URLSearchParams({ from, to });
-  return requestWithSession<StudentTimetableItem[]>(`/student/timetable?${query.toString()}`);
+  return `/student/timetable?${query.toString()}`;
+};
+
+export const getStudentTimetable = (from: string, to: string) => {
+  return requestWithSession<StudentTimetableItem[]>(createTimetablePath(from, to));
 };
 
 export const getConsultationSlotStatus = (

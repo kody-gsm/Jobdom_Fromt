@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
+import { createTimetablePath } from "../../api/consultation.ts";
 import { getTimetableSubject } from "../../model/timetablePresentation.ts";
+
+assert.equal(
+  createTimetablePath("2026-09-21", "2026-09-25"),
+  "/student/timetable?from=2026-09-21&to=2026-09-25",
+);
 
 const timetable = [
   { date: "2026-09-21", period: "1교시", subject: "수학", classroom: "" },
