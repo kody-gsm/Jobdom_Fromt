@@ -5,12 +5,10 @@ import type {
 import { requestWithSession } from "@fsd/entities/user";
 
 export type StudentTimetableItem = {
-  dayOfWeek?: string | number;
-  day?: string | number;
-  period?: string | number;
-  subjectName?: string | null;
-  subject?: string | null;
-  name?: string | null;
+  date: string;
+  period: string;
+  subject: string | null;
+  classroom: string | null;
 };
 
 export type ConsultationTeacherOption = {
@@ -35,8 +33,10 @@ export type SubmitConsultationInput = ReservationInput & {
 export const getConsultationTeachers = (kind: ConsultationKind) =>
   requestWithSession<ConsultationTeacherOption[]>(`/student/${kind}/teachers`);
 
-export const getStudentTimetable = () =>
-  requestWithSession<StudentTimetableItem[]>("/student/timetable");
+export const getStudentTimetable = (from: string, to: string) => {
+  const query = new URLSearchParams({ from, to });
+  return requestWithSession<StudentTimetableItem[]>(`/student/timetable?${query.toString()}`);
+};
 
 export const getConsultationSlotStatus = (
   kind: ConsultationKind,
