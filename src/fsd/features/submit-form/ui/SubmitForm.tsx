@@ -19,6 +19,14 @@ import { formApi } from "../api/form";
 
 type Message = { text: string; error?: boolean };
 
+const valuesFromSubmission = (submission: FormSubmission): Record<number, FormValue> =>
+  Object.fromEntries(submission.answers.map((answer) => [
+    answer.questionId,
+    answer.fileId
+      ? { fileId: answer.fileId, fileName: answer.fileName ?? "첨부 파일" }
+      : answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
+  ]));
+
 export const SubmitForm = ({ formId }: { formId: number }) => {
   const [form, setForm] = useState<DynamicForm | null>(null);
   const [submission, setSubmission] = useState<FormSubmission | null>(null);
@@ -76,7 +84,9 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         const value = preparedValues[question.id];
         if (isFormFileValue(value) && value.file && !value.fileId) {
           const uploaded = await formApi.uploadFile(form.id, value.file);
-          preparedValues[question.id] = { fileId: uploaded.id, fileName: uploaded.originalName };
+          const uploadedValue = { fileId: uploaded.id, fileName: uploaded.originalName };
+          preparedValues[question.id] = uploadedValue;
+          setValues((current) => ({ ...current, [question.id]: uploadedValue }));
         }
       }
     } catch (caught) {
@@ -97,6 +107,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         ? await formApi.updateSubmission(form.id, answers)
         : await formApi.submit(form.id, answers);
       setSubmission(saved);
+      setValues(valuesFromSubmission(saved));
       setEditing(false);
       setMessage({ text: "응답을 제출했습니다." });
     } catch (caught) {

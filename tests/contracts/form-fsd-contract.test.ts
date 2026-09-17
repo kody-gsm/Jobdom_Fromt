@@ -38,6 +38,22 @@ assert.deepEqual(
   ],
 );
 
+const fileQuestion = [{
+  id: 12,
+  orderIndex: 2,
+  title: "자소서",
+  description: null,
+  required: true,
+  type: "FILE",
+  options: [],
+}] satisfies FormQuestion[];
+assert.deepEqual(
+  buildFormAnswers(fileQuestion, {
+    12: { fileId: 55, fileName: "resume.pdf" },
+  }),
+  [{ questionId: 12, fileId: 55 }],
+);
+
 const calls: Array<{ path: string; init?: RequestInit }> = [];
 const api = createFormApi(async <T>(path: string, init?: RequestInit) => {
   calls.push({ path, init });
