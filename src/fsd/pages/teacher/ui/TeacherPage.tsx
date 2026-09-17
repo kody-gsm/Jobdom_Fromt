@@ -117,6 +117,11 @@ export function TeacherPage() {
         else dialog.current?.close();
     }, [selection]);
 
+    useEffect(() => {
+        if (forceSlotTarget) forceDialog.current?.showModal();
+        else forceDialog.current?.close();
+    }, [forceSlotTarget]);
+
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const dates = [
@@ -382,8 +387,11 @@ export function TeacherPage() {
                              {value === "course" ? "진로 상담" : "일반 상담"}
                          </button>
                      ))}
-                    <button type="button" aria-pressed={isLockMode} onClick={() => setIsLockMode((current) => !current)} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
+                    <button type="button" aria-pressed={isLockMode} onClick={() => { setIsLockMode((current) => !current); setIsForceMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
                         {isLockMode ? "시간 금지 모드 끄기" : "시간 금지 모드"}
+                    </button>
+                    <button type="button" aria-pressed={isForceMode} onClick={() => { setIsForceMode((current) => !current); setIsLockMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isForceMode ? "border-blue-500 bg-blue-50 text-blue-600" : "border-border bg-white text-secondary-text"}`}>
+                        {isForceMode ? "강제 추가 모드 끄기" : "강제 추가 모드"}
                     </button>
                  </div>
                 {isLockMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-red-600">시간 금지 모드입니다. 금지할 셀을 클릭하세요. 금지된 셀을 클릭하면 해제됩니다. 변경 사항은 현재 선생님 계정에 즉시 저장됩니다.</p>}
@@ -425,6 +433,7 @@ export function TeacherPage() {
                                             setStudentSearchQuery("");
                                             setForceSubmitError(null);
                                             void loadStudents();
+                                            forceDialog.current?.showModal();
                                         }
                                     }}
                                     onKeyDown={(event) => {
@@ -444,14 +453,15 @@ export function TeacherPage() {
                                             setStudentSearchQuery("");
                                             setForceSubmitError(null);
                                             void loadStudents();
+                                            forceDialog.current?.showModal();
                                         }
                                     }}
                                     className={`h-20 border border-border p-0 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""} ${isForceMode ? "cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-inset" : ""}`}>
-                                    <div className="max-h-20 overflow-y-auto p-2">
+                                    <div className={`max-h-20 overflow-y-auto p-2 ${isForceMode || isLockMode ? "cursor-pointer" : ""}`}>
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
-                                    {confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
-                                    {waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
+                                    {!isLockMode && !isForceMode && confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
+                                    {!isLockMode && !isForceMode && waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
                                     </div>
                                 </td>;
                             })}

@@ -39,6 +39,7 @@ const NODE_CHECKS: VerificationStep[] = [
 
 export const getVerificationSteps = (): VerificationStep[] => [
   ...NODE_CHECKS,
+  { name: "unit tests", kind: "npm", target: "check:unit" },
   { name: "contracts", kind: "npm", target: "harness:contracts" },
   { name: "lint", kind: "npm", target: "harness:lint" },
   { name: "fsd boundary check", kind: "npm", target: "harness:fsd" },
