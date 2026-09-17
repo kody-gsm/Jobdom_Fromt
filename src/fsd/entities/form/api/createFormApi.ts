@@ -23,7 +23,7 @@ export const createFormApi = (request: RequestFn) => ({
     }),
   updateSubmission: (id: number, answers: FormAnswerInput[]) =>
     request<FormSubmission>(`/student/form/${id}/submission`, {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify({ answers }),
     }),
   getTeacherAll: () => request<FormSummary[]>("/teacher/form"),
