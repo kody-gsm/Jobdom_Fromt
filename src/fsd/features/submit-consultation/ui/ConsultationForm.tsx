@@ -89,7 +89,7 @@ export const ConsultationForm = ({
       {toast ? (
         <div
           role={toast.type === "error" ? "alert" : "status"}
-          className={`fixed right-6 top-6 z-[60] rounded-2xl px-5 py-4 text-sm font-semibold text-white shadow-lg ${
+          className={`fixed right-6 top-6 z-[60] rounded-2xl px-5 py-4 text-sm font-semibold shadow-lg ${
             toast.type === "error"
               ? "border border-red-200 bg-red-50 text-red-700"
               : "border border-brand bg-brand-soft text-brand-accent"
