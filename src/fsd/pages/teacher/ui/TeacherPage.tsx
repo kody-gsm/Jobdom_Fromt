@@ -382,8 +382,11 @@ export function TeacherPage() {
                              {value === "course" ? "진로 상담" : "일반 상담"}
                          </button>
                      ))}
-                    <button type="button" aria-pressed={isLockMode} onClick={() => setIsLockMode((current) => !current)} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
+                    <button type="button" aria-pressed={isLockMode} onClick={() => { setIsLockMode((current) => !current); setIsForceMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
                         {isLockMode ? "시간 금지 모드 끄기" : "시간 금지 모드"}
+                    </button>
+                    <button type="button" aria-pressed={isForceMode} onClick={() => { setIsForceMode((current) => !current); setIsLockMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isForceMode ? "border-blue-500 bg-blue-50 text-blue-600" : "border-border bg-white text-secondary-text"}`}>
+                        {isForceMode ? "강제 추가 모드 끄기" : "강제 추가 모드"}
                     </button>
                  </div>
                 {isLockMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-red-600">시간 금지 모드입니다. 금지할 셀을 클릭하세요. 금지된 셀을 클릭하면 해제됩니다. 변경 사항은 현재 선생님 계정에 즉시 저장됩니다.</p>}
