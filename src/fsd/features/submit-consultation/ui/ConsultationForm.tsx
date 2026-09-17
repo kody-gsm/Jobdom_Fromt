@@ -53,7 +53,7 @@ export const ConsultationForm = ({
     dates,
     setTitle,
     setContent,
-    setCategory,
+    selectCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
@@ -170,7 +170,7 @@ export const ConsultationForm = ({
                   <button
                     type="button"
                     key={item}
-                    onClick={() => setCategory(item)}
+                    onClick={() => selectCategory(item)}
                     aria-pressed={category === item}
                     className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
                       category === item
@@ -274,7 +274,7 @@ export const ConsultationForm = ({
                       <span className="truncate font-normal text-[#596579]">{row.time}</span>
                     </span>
                     <span className="ml-3 min-w-0 truncate text-xs font-semibold text-[#596579]">
-                      {counselType === "general" ? getTimetableSubject(timetable, selectedDate, row.period) : null}
+                      {getTimetableSubject(timetable, selectedDate, row.period)}
                     </span>
                     <span className={`shrink-0 text-xs font-semibold ${unavailable ? "visible" : "invisible"}`}>
                       예약 불가

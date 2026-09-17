@@ -17,4 +17,7 @@ assert.match(form, /기타/);
 assert.match(form, /CATEGORY_OPTIONS/);
 assert.match(form, /aria-pressed=\{category === item\}/);
 
+assert.match(hook, /\| "category"/);
+assert.match(hook, /return "category"/);
+
 console.log("student consultation category contract passed");

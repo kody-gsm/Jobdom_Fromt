@@ -18,6 +18,8 @@ assert.doesNotMatch(form, /상담 희망일과 교시를 선택해 주세요\./)
 assert.match(form, />상담 희망일</);
 assert.match(form, />상담 교시</);
 assert.match(form, /scheduleRows\.map/);
+assert.match(form, /\{getTimetableSubject\(timetable, selectedDate, row\.period\)\}/);
+assert.doesNotMatch(form, /counselType === "general" \? getTimetableSubject/);
 assert.match(form, /row\.time/);
 assert.match(form, /calendarDate/);
 assert.match(form, /disabled=\{!available\}/);

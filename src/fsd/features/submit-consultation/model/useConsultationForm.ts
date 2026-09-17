@@ -34,6 +34,7 @@ export type ConsultationToast = {
 export type ConsultationErrorTarget =
   | "title"
   | "content"
+  | "category"
   | "teacher"
   | "date"
   | "period";
@@ -51,6 +52,7 @@ const getConsultationErrorTarget = (
 ): ConsultationErrorTarget | null => {
   if (message === "제목을 입력해주세요") return "title";
   if (message === "내용을 입력해주세요") return "content";
+  if (message === "상담 카테고리를 선택해주세요") return "category";
     if (message === "선생님을 선택해주세요") return "teacher";
   if (message === "날짜를 선택해주세요") return "date";
   if (message === "교시를 선택해주세요") return "period";
@@ -113,7 +115,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     const to = dates.at(-1)?.value;
     if (!from || !to) return;
     void getStudentTimetable(from, to).then(setTimetable).catch(() => setTimetable([]));
-  }, [counselType, dates]);
+  }, [dates]);
 
   useEffect(() => {
     let active = true;
@@ -190,6 +192,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const setContent = (value: string) => {
     setContentState(value.slice(0, MAX_CONSULTATION_CONTENT_LENGTH));
     if (errorTarget === "content") setErrorTarget(null);
+  };
+
+  const selectCategory = (value: CounselingCategory) => {
+    setCategory(value);
+    if (errorTarget === "category") setErrorTarget(null);
   };
 
   const handleTabChange = (type: ConsultationType) => {
@@ -344,7 +351,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     dates,
     setTitle,
     setContent,
-    setCategory,
+    selectCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
