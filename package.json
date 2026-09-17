@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check:unit": "node --no-warnings --experimental-strip-types src/fsd/features/submit-consultation/tests/unit/timetablePresentation.test.ts",
+    "check:unit": "node --no-warnings --experimental-strip-types scripts/unit-check.ts",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "check:forms": "node --no-warnings --experimental-strip-types tests/contracts/form-answers.test.ts",
     "check:api": "node --no-warnings --experimental-strip-types tests/contracts/api-contract.test.ts",
