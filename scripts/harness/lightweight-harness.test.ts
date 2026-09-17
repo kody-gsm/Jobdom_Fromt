@@ -32,6 +32,7 @@ assert.deepEqual(names, [
   "readiness unit",
   "lightweight harness unit",
   "verify unit",
+  "unit tests",
   "contracts",
   "lint",
   "fsd boundary check",

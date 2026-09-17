@@ -110,8 +110,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   useEffect(() => {
     if (counselType !== "general") return;
-    void getStudentTimetable().then(setTimetable).catch(() => setTimetable([]));
-  }, [counselType]);
+    const from = dates[0]?.value;
+    const to = dates.at(-1)?.value;
+    if (!from || !to) return;
+    void getStudentTimetable(from, to).then(setTimetable).catch(() => setTimetable([]));
+  }, [counselType, dates]);
 
   useEffect(() => {
     let active = true;
