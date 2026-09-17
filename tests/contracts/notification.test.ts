@@ -17,11 +17,12 @@ assert.equal(api.getNotificationTargetUrl(null), null);
 const calls: { url: string; method: string; authorization: string | null }[] = [];
 globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
   calls.push({ url: String(url), method: init?.method || "GET", authorization: new Headers(init?.headers).get("Authorization") });
-  return new Response("{}", { headers: { "Content-Type": "application/json" } });
+  const body = String(url).includes("unread-count") ? JSON.stringify({ unreadCount: 3 }) : "{}";
+  return new Response(body, { headers: { "Content-Type": "application/json" } });
 }) as typeof fetch;
 sessionStorage.setItem("jobdam_access_token", "notification-test-token");
 await api.getNotifications();
-await api.getUnreadCount();
+assert.equal((await api.getUnreadCount()).unreadCount, 3);
 await api.markNotificationRead(7);
 await api.markAllNotificationsRead();
 await api.issueNotificationSubscribeTicket();

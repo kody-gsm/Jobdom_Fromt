@@ -98,7 +98,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       const version = ++unreadRequestVersion.current;
       void getUnreadCount().then((result) => {
         if (!ctrl.signal.aborted && version === unreadRequestVersion.current) {
-          setUnreadCount(result.count);
+          setUnreadCount(result.unreadCount);
         }
       }).catch(() => undefined);
     };
