@@ -307,10 +307,14 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         teacherId: teacherId,
         category,
       });
-      window.sessionStorage.setItem(
-        "jobdam:consultation-toast",
-        JSON.stringify({ message: "상담 신청 요청을 보냈습니다", type: "success", expiresAt: Date.now() + 2500 }),
-      );
+      try {
+        window.sessionStorage.setItem(
+          "jobdam:consultation-toast",
+          JSON.stringify({ message: "상담 신청 요청을 보냈습니다", type: "success", expiresAt: Date.now() + 2500 }),
+        );
+      } catch {
+        // Toast persistence failure must not turn a successful reservation into an error.
+      }
       showToast("상담 신청 요청을 보냈습니다", "success");
       window.setTimeout(() => router.push("/"), 700);
     } catch (error) {

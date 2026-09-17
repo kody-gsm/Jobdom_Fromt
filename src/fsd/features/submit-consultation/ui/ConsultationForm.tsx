@@ -165,7 +165,12 @@ export const ConsultationForm = ({
 
             <div className="space-y-2">
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
-              <div data-consultation-field="category" className="flex flex-wrap gap-2">
+              <div
+                data-consultation-field="category"
+                className={`flex flex-wrap gap-2 rounded-xl ${
+                  errorTarget === "category" ? "ring-1 ring-[#E53935]" : ""
+                }`}
+              >
                 {CATEGORY_OPTIONS.map((item) => (
                   <button
                     type="button"

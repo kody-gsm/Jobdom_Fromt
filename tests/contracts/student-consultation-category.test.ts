@@ -19,5 +19,7 @@ assert.match(form, /aria-pressed=\{category === item\}/);
 
 assert.match(hook, /\| "category"/);
 assert.match(hook, /return "category"/);
+assert.match(hook, /sessionStorage\.setItem/);
+assert.match(form, /errorTarget === "category" \? "ring-1 ring-\[#E53935\]"/);
 
 console.log("student consultation category contract passed");
