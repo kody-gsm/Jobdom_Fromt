@@ -2,6 +2,7 @@ export type {
   DynamicForm,
   FormAnswer,
   FormAnswerInput,
+  FormFileUpload,
   FormQuestion,
   FormQuestionInput,
   FormQuestionOption,
@@ -12,7 +13,7 @@ export type {
   FormSummary,
   QuestionType,
 } from "./model/types.ts";
-export type { FormValue } from "./model/answers.ts";
+export type { FormFileValue, FormValue } from "./model/answers.ts";
 export {
   buildFormAnswers,
   getMissingRequiredQuestion,

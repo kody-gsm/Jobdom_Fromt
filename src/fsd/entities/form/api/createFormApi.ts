@@ -1,6 +1,7 @@
 import type {
   DynamicForm,
   FormAnswerInput,
+  FormFileUpload,
   FormInput,
   FormSubmission,
   FormSubmissionSummary,
@@ -26,6 +27,14 @@ export const createFormApi = (request: RequestFn) => ({
       method: "PATCH",
       body: JSON.stringify({ answers }),
     }),
+  uploadFile: (id: number, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return request<FormFileUpload>(`/student/form/${id}/file`, {
+      method: "POST",
+      body,
+    });
+  },
   getTeacherAll: () => request<FormSummary[]>("/teacher/form"),
   getTeacherById: (id: number) => request<DynamicForm>(`/teacher/form/${id}`),
   createTeacher: (input: FormInput) =>
