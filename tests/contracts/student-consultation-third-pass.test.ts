@@ -23,4 +23,8 @@ assert.match(form, /bg-brand/);
 assert.doesNotMatch(form, /bg-\[#10243E\]|hover:bg-\[#1B3555\]/);
 assert.doesNotMatch(form, /수업 담당 선생님의 허가를 먼저 받아주세요|예약 가능|선택됨/);
 
+assert.doesNotMatch(form, /수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요\.<\/p>/);
+assert.doesNotMatch(form, /bg-blue-600/);
+assert.match(form, /bg-brand-soft text-brand-accent/);
+
 console.log("student consultation third-pass contract passed");
