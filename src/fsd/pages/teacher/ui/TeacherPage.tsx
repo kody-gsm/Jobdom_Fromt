@@ -117,6 +117,11 @@ export function TeacherPage() {
         else dialog.current?.close();
     }, [selection]);
 
+    useEffect(() => {
+        if (forceSlotTarget) forceDialog.current?.showModal();
+        else forceDialog.current?.close();
+    }, [forceSlotTarget]);
+
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const dates = [
@@ -428,6 +433,7 @@ export function TeacherPage() {
                                             setStudentSearchQuery("");
                                             setForceSubmitError(null);
                                             void loadStudents();
+                                            forceDialog.current?.showModal();
                                         }
                                     }}
                                     onKeyDown={(event) => {
@@ -447,10 +453,11 @@ export function TeacherPage() {
                                             setStudentSearchQuery("");
                                             setForceSubmitError(null);
                                             void loadStudents();
+                                            forceDialog.current?.showModal();
                                         }
                                     }}
                                     className={`h-20 border border-border p-0 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""} ${isForceMode ? "cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-inset" : ""}`}>
-                                    <div className="max-h-20 overflow-y-auto p-2">
+                                    <div className={`max-h-20 overflow-y-auto p-2 ${isForceMode || isLockMode ? "cursor-pointer" : ""}`}>
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
                                     {confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
