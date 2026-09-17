@@ -7,7 +7,6 @@ import {
   getNextWeekdays,
   getSelectablePeriods,
   getConsultationScheduleItem,
-  toCounselingCategory,
   toConsultationKind,
   validateConsultationDraft,
 } from "@fsd/entities/consultation";
@@ -84,6 +83,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [counselType, setCounselType] = useState(initialType);
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
+  const [category, setCategory] = useState<CounselingCategory | null>(null);
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
   const [timetable, setTimetable] = useState<StudentTimetableItem[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
@@ -109,7 +109,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const dates = useMemo(() => getNextWeekdays(), []);
 
   useEffect(() => {
-    if (counselType !== "general") return;
     const from = dates[0]?.value;
     const to = dates.at(-1)?.value;
     if (!from || !to) return;
@@ -199,6 +198,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
     setErrorTarget(null);
+    setCategory(null);
   };
 
   const toggleTeacher = (teacher: ConsultationTeacherOption) => {
@@ -255,6 +255,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const getValidationMessage = () => {
     if (!title.trim()) return "제목을 입력해주세요";
     if (!content.trim()) return "내용을 입력해주세요";
+    if (!category) return "상담 카테고리를 선택해주세요";
     if (!selectedTeacher) return "선생님을 선택해주세요";
     return validateConsultationDraft({
       type: counselType,
@@ -278,6 +279,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       return;
     }
 
+    if (!category) return;
     if (!selectedTeacher) return;
     const teacherId = selectedTeacher.id;
 
@@ -296,8 +298,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       await submitConsultation(toConsultationKind(counselType), {
         ...createReservationInput(draft),
         teacherId: teacherId,
-        category: toCounselingCategory(counselType),
+        category,
       });
+      window.sessionStorage.setItem(
+        "jobdam:consultation-toast",
+        JSON.stringify({ message: "상담 신청 요청을 보냈습니다", type: "success", expiresAt: Date.now() + 2500 }),
+      );
       showToast("상담 신청 요청을 보냈습니다", "success");
       window.setTimeout(() => router.push("/"), 700);
     } catch (error) {
@@ -325,6 +331,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     counselType,
     title,
     content,
+    category,
     teachers,
     timetable,
     teacherStatus,
@@ -337,6 +344,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     dates,
     setTitle,
     setContent,
+    setCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
