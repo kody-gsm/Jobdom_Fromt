@@ -7,15 +7,19 @@ const hook = read("src/fsd/features/submit-consultation/model/useConsultationFor
 const form = read("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx");
 
 assert.match(hook, /category/);
-assert.match(hook, /otherCategory/);
 assert.match(hook, /category[,}]/);
-assert.match(hook, /otherCategory/);
 assert.match(hook, /if \(!category\) return "상담 카테고리를 선택해주세요"/);
 assert.match(form, /학업/);
 assert.match(form, /취업/);
 assert.match(form, /진학/);
 assert.match(form, /생활/);
 assert.match(form, /기타/);
-assert.match(form, /otherCategory/);
+assert.match(form, /CATEGORY_OPTIONS/);
+assert.match(form, /aria-pressed=\{category === item\}/);
+
+assert.match(hook, /\| "category"/);
+assert.match(hook, /return "category"/);
+assert.match(hook, /sessionStorage\.setItem/);
+assert.match(form, /errorTarget === "category" \? "ring-1 ring-\[#E53935\]"/);
 
 console.log("student consultation category contract passed");

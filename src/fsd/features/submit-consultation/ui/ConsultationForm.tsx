@@ -23,6 +23,7 @@ import {
 import { getTimetableSubject } from "../model/timetablePresentation.ts";
 
 const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
+const CATEGORY_OPTIONS = ["학업", "취업", "진학", "생활", "기타"] as const;
 const toDateValue = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -39,6 +40,7 @@ export const ConsultationForm = ({
     counselType,
     title,
     content,
+    category,
     teachers,
     timetable,
     teacherStatus,
@@ -51,6 +53,7 @@ export const ConsultationForm = ({
     dates,
     setTitle,
     setContent,
+    selectCategory,
     handleTabChange,
     toggleTeacher,
     toggleDate,
@@ -162,15 +165,26 @@ export const ConsultationForm = ({
 
             <div className="space-y-2">
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
-              <div className="flex flex-wrap gap-2">
-                {[counselType === "career" ? "취업" : "기타"].map((item) => (
-                  <span
-                    aria-label={`고정된 상담 카테고리: ${item}`}
+              <div
+                data-consultation-field="category"
+                className={`flex flex-wrap gap-2 rounded-xl ${
+                  errorTarget === "category" ? "ring-1 ring-[#E53935]" : ""
+                }`}
+              >
+                {CATEGORY_OPTIONS.map((item) => (
+                  <button
+                    type="button"
                     key={item}
-                    className="rounded-xl border border-brand bg-[#EAF9F0] px-3 py-2 text-sm font-semibold text-brand-hover"
+                    onClick={() => selectCategory(item)}
+                    aria-pressed={category === item}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+                      category === item
+                        ? "border-brand bg-brand-soft text-brand-accent"
+                        : "border-border bg-white text-secondary-text hover:border-brand"
+                    }`}
                   >
                     {item}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -265,7 +279,7 @@ export const ConsultationForm = ({
                       <span className="truncate font-normal text-[#596579]">{row.time}</span>
                     </span>
                     <span className="ml-3 min-w-0 truncate text-xs font-semibold text-[#596579]">
-                      {counselType === "general" ? getTimetableSubject(timetable, selectedDate, row.period) : null}
+                      {getTimetableSubject(timetable, selectedDate, row.period)}
                     </span>
                     <span className={`shrink-0 text-xs font-semibold ${unavailable ? "visible" : "invisible"}`}>
                       예약 불가
