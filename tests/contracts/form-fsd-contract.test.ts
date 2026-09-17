@@ -53,4 +53,4 @@ assert.equal(calls[1]?.path, "/form/3");
 assert.equal(calls[2]?.path, "/student/form/3/submission");
 assert.equal(calls[3]?.path, "/student/form/3/submission");
 assert.equal(calls[3]?.init?.method, "POST");
-assert.equal(calls[4]?.init?.method, "PUT");
+assert.equal(calls[4]?.init?.method, "PATCH");

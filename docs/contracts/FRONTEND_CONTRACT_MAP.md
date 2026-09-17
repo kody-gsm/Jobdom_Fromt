@@ -194,6 +194,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | POST | `/teacher/form/{id}/publish` | 폼 공개 |
 | POST | `/teacher/form/{id}/close` | 폼 마감 |
 | POST | `/student/form/{id}/submission` | 학생 폼 제출 |
+| PATCH | `/student/form/{id}/submission` | 학생 폼 답변 수정 |
 | GET | `/student/form/{id}/submission` | 내 제출 조회 |
 | GET | `/teacher/form/{id}/submission` | 폼 제출 목록 |
 | GET | `/teacher/form/{formId}/submission/{submissionId}` | 폼 제출 상세 |
