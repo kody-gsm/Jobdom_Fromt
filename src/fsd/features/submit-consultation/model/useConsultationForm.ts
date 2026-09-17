@@ -19,11 +19,13 @@ import { ApiError } from "@fsd/shared/api";
 import {
   getConsultationSlotStatus,
   getConsultationTeachers,
+  getStudentTimetable,
   submitConsultation,
 } from "../api/consultation.ts";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
 import { getConsultationTeacherLabel } from "./teacherOption.ts";
 import { getUnavailablePeriods } from "./slotAvailability.ts";
+import type { StudentTimetableItem } from "./timetablePresentation.ts";
 
 export type ConsultationToast = {
   message: string;
@@ -83,6 +85,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [title, setTitleState] = useState("");
   const [content, setContentState] = useState("");
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
+  const [timetable, setTimetable] = useState<StudentTimetableItem[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(() => {
@@ -104,6 +107,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const toastTimer = useRef<number | null>(null);
 
   const dates = useMemo(() => getNextWeekdays(), []);
+
+  useEffect(() => {
+    if (counselType !== "general") return;
+    void getStudentTimetable().then(setTimetable).catch(() => setTimetable([]));
+  }, [counselType]);
 
   useEffect(() => {
     let active = true;
@@ -315,6 +323,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     title,
     content,
     teachers,
+    timetable,
     teacherStatus,
     selectedTeacher,
     selectedDate,
