@@ -3,7 +3,15 @@ import type {
   ReservationInput,
 } from "@fsd/entities/consultation";
 import { requestWithSession } from "@fsd/entities/user";
-import type { StudentTimetableItem } from "../model/timetablePresentation.ts";
+
+export type StudentTimetableItem = {
+  dayOfWeek?: string | number;
+  day?: string | number;
+  period?: string | number;
+  subjectName?: string | null;
+  subject?: string | null;
+  name?: string | null;
+};
 
 export type ConsultationTeacherOption = {
   id: number;

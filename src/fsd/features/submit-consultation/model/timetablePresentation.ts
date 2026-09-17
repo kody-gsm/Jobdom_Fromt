@@ -1,11 +1,6 @@
-export type StudentTimetableItem = {
-  dayOfWeek?: string | number;
-  day?: string | number;
-  period?: string | number;
-  subjectName?: string | null;
-  subject?: string | null;
-  name?: string | null;
-};
+import type { StudentTimetableItem } from "../api/consultation.ts";
+
+export type { StudentTimetableItem } from "../api/consultation.ts";
 
 const WEEKDAY_NAMES = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 const KOREAN_WEEKDAY_NAMES = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
@@ -19,8 +14,11 @@ const normalizeDay = (value: string | number | undefined) => {
   return index;
 };
 
-const normalizePeriod = (value: string | number | undefined) =>
-  typeof value === "number" ? `${value}교시` : value?.trim() ?? "";
+const normalizePeriod = (value: string | number | undefined) => {
+  if (typeof value === "number") return `${value}교시`;
+  const normalized = value?.trim() ?? "";
+  return /^\d+$/.test(normalized) ? `${normalized}교시` : normalized;
+};
 
 export const getTimetableSubject = (
   timetable: StudentTimetableItem[],
