@@ -1,9 +1,14 @@
 import type { FormAnswerInput, FormQuestion } from "./types.ts";
 
-export type FormValue = string | number[];
+export type FormFileValue = { file?: File; fileId?: number; fileName: string };
+export type FormValue = string | number[] | FormFileValue;
 
 const hasValue = (value: FormValue | undefined) =>
-  Array.isArray(value) ? value.length > 0 : Boolean(value?.trim());
+  Array.isArray(value)
+    ? value.length > 0
+    : typeof value === "string"
+      ? Boolean(value.trim())
+      : Boolean(value?.file || value?.fileId);
 
 export const getMissingRequiredQuestion = (
   questions: FormQuestion[],
@@ -18,6 +23,10 @@ export const buildFormAnswers = (
   if (!hasValue(value)) return [];
   return [{
     questionId: question.id,
-    ...(Array.isArray(value) ? { optionIds: value } : { textValue: value.trim() }),
+    ...(Array.isArray(value)
+      ? { optionIds: value }
+      : typeof value === "string"
+        ? { textValue: value.trim() }
+        : { fileId: value.fileId }),
   }];
 });

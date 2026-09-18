@@ -38,6 +38,22 @@ assert.deepEqual(
   ],
 );
 
+const fileQuestion = [{
+  id: 12,
+  orderIndex: 2,
+  title: "자소서",
+  description: null,
+  required: true,
+  type: "FILE",
+  options: [],
+}] satisfies FormQuestion[];
+assert.deepEqual(
+  buildFormAnswers(fileQuestion, {
+    12: { fileId: 55, fileName: "resume.pdf" },
+  }),
+  [{ questionId: 12, fileId: 55 }],
+);
+
 const calls: Array<{ path: string; init?: RequestInit }> = [];
 const api = createFormApi(async <T>(path: string, init?: RequestInit) => {
   calls.push({ path, init });
@@ -48,9 +64,13 @@ await api.getById(3);
 await api.getMySubmission(3);
 await api.submit(3, [{ questionId: 10, textValue: "김철수" }]);
 await api.updateSubmission(3, [{ questionId: 10, textValue: "updated" }]);
+await api.uploadFile(3, new File(["resume"], "resume.pdf", { type: "application/pdf" }));
 assert.equal(calls[0]?.path, "/form");
 assert.equal(calls[1]?.path, "/form/3");
 assert.equal(calls[2]?.path, "/student/form/3/submission");
 assert.equal(calls[3]?.path, "/student/form/3/submission");
 assert.equal(calls[3]?.init?.method, "POST");
 assert.equal(calls[4]?.init?.method, "PATCH");
+assert.equal(calls[5]?.path, "/student/form/3/file");
+assert.equal(calls[5]?.init?.method, "POST");
+assert.ok(calls[5]?.init?.body instanceof FormData);
