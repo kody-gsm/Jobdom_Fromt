@@ -30,6 +30,7 @@ const questionTypes: { value: QuestionType; label: string }[] = [
   { value: "DROPDOWN", label: "드롭다운" },
   { value: "NUMBER", label: "숫자" },
   { value: "DATE", label: "날짜" },
+  { value: "FILE", label: "파일 첨부" },
 ];
 
 const hasOptions = (type: QuestionType) => ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "DROPDOWN"].includes(type);

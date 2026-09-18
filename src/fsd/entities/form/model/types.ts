@@ -5,7 +5,8 @@ export type QuestionType =
   | "MULTIPLE_CHOICE"
   | "DROPDOWN"
   | "NUMBER"
-  | "DATE";
+  | "DATE"
+  | "FILE";
 
 export type FormStatus = "DRAFT" | "PUBLISHED" | "CLOSED";
 
@@ -57,6 +58,16 @@ export interface FormAnswerInput {
   questionId: number;
   textValue?: string;
   optionIds?: number[];
+  fileId?: number;
+}
+
+export interface FormFileUpload {
+  id: number;
+  originalName: string;
+  contentType: string;
+  size: number;
+  downloadUrl: string;
+  uploadedAt: string;
 }
 
 export interface FormSubmissionSummary {
@@ -74,6 +85,10 @@ export interface FormAnswer {
   textValue: string | null;
   selectedOptionIds: number[];
   selectedOptionLabels: string[];
+  fileId: number | null;
+  fileName: string | null;
+  fileSize: number | null;
+  fileDownloadUrl: string | null;
 }
 
 export interface FormSubmission extends FormSubmissionSummary {
