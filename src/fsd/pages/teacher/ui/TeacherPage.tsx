@@ -274,6 +274,35 @@ export function TeacherPage() {
         );
     }, [students, studentSearchQuery]);
 
+    const handleSlotModeAction = (date: string, period: string, isLocked: boolean) => {
+        if (isLockMode) {
+            void handleSlotToggle(date, period);
+            return true;
+        }
+        if (!isForceMode) return false;
+        if (isLocked) {
+            alert("예약 금지된 시간입니다. 먼저 잠금을 해제해 주세요.");
+            return true;
+        }
+        setForceSlotTarget({ date, period });
+        setStudentSearchQuery("");
+        setForceSubmitError(null);
+        void loadStudents();
+        forceDialog.current?.showModal();
+        return true;
+    };
+
+    const handleReservationClick = (
+        reservation: TeacherReservation,
+        isApproved: boolean,
+        date: string,
+        period: string,
+        isLocked: boolean,
+    ) => {
+        if (handleSlotModeAction(date, period, isLocked)) return;
+        openReservation(reservation, isApproved);
+    };
+
     const handleForceCreate = async (student: SimpleStudent) => {
         if (!forceSlotTarget || isForceSubmitting) return;
         setIsForceSubmitting(true);
@@ -420,48 +449,19 @@ export function TeacherPage() {
                                     aria-label={isLockMode ? `${dateKey(date)} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : isForceMode ? `${dateKey(date)} ${period} 상담 강제 추가` : undefined}
                                     onClick={(event) => {
                                         if (event.target instanceof Element && event.target.closest("button")) return;
-                                        if (isLockMode) {
-                                            void handleSlotToggle(dateKey(date), period);
-                                            return;
-                                        }
-                                        if (isForceMode) {
-                                            if (isLocked) {
-                                                alert("예약 금지된 시간입니다. 먼저 잠금을 해제해 주세요.");
-                                                return;
-                                            }
-                                            setForceSlotTarget({ date: dateKey(date), period });
-                                            setStudentSearchQuery("");
-                                            setForceSubmitError(null);
-                                            void loadStudents();
-                                            forceDialog.current?.showModal();
-                                        }
+                                        handleSlotModeAction(dateKey(date), period, isLocked);
                                     }}
                                     onKeyDown={(event) => {
                                         if ((event.key !== "Enter" && event.key !== " ") || (event.target instanceof Element && event.target.closest("button"))) return;
-                                        if (isLockMode) {
-                                            event.preventDefault();
-                                            void handleSlotToggle(dateKey(date), period);
-                                            return;
-                                        }
-                                        if (isForceMode) {
-                                            event.preventDefault();
-                                            if (isLocked) {
-                                                alert("예약 금지된 시간입니다. 먼저 잠금을 해제해 주세요.");
-                                                return;
-                                            }
-                                            setForceSlotTarget({ date: dateKey(date), period });
-                                            setStudentSearchQuery("");
-                                            setForceSubmitError(null);
-                                            void loadStudents();
-                                            forceDialog.current?.showModal();
-                                        }
+                                        event.preventDefault();
+                                        handleSlotModeAction(dateKey(date), period, isLocked);
                                     }}
                                     className={`h-20 border border-border p-0 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""} ${isForceMode ? "cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-inset" : ""}`}>
                                     <div className={`max-h-20 overflow-y-auto p-2 ${isForceMode || isLockMode ? "cursor-pointer" : ""}`}>
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
-                                    {!isLockMode && !isForceMode && confirmed.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, true)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
-                                    {!isLockMode && !isForceMode && waiting.map((item) => <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
+                                    {confirmed.map((item) => <button key={item.reservation_id} onClick={() => handleReservationClick(item, true, dateKey(date), period, isLocked)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
+                                    {waiting.map((item) => <button key={item.reservation_id} onClick={() => handleReservationClick(item, false, dateKey(date), period, isLocked)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
                                     </div>
                                 </td>;
                             })}

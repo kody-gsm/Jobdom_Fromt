@@ -38,7 +38,12 @@ export const getTeacherAvailablePeriods = (
   name: string,
 ) => {
   if (kind === "common" || canManageHomeBanner(name)) {
-    return getAvailablePeriods("general", null);
+    const periods = getAvailablePeriods("general", null);
+    if (periods.includes("4교시")) return periods;
+
+    const lunchIndex = periods.indexOf("점심시간");
+    if (lunchIndex === -1) return [...periods, "4교시"];
+    return [...periods.slice(0, lunchIndex), "4교시", ...periods.slice(lunchIndex)];
   }
   return getAvailablePeriods("career", `${normalizeTeacherName(name)} 선생님`);
 };
