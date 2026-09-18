@@ -9,6 +9,7 @@ import {
 import type {
   DynamicForm,
   FormQuestion,
+  FormFileValue,
   FormSubmission,
   FormValue,
 } from "@fsd/entities/form";
@@ -17,6 +18,14 @@ import { ActionButton, ContentCard } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
 type Message = { text: string; error?: boolean };
+
+const valuesFromSubmission = (submission: FormSubmission): Record<number, FormValue> =>
+  Object.fromEntries(submission.answers.map((answer) => [
+    answer.questionId,
+    answer.fileId
+      ? { fileId: answer.fileId, fileName: answer.fileName ?? "첨부 파일" }
+      : answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
+  ]));
 
 export const SubmitForm = ({ formId }: { formId: number }) => {
   const [form, setForm] = useState<DynamicForm | null>(null);
@@ -39,7 +48,9 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         if (loadedSubmission) {
           setValues(Object.fromEntries(loadedSubmission.answers.map((answer) => [
             answer.questionId,
-            answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
+            answer.fileId
+              ? { fileId: answer.fileId, fileName: answer.fileName ?? "첨부 파일" }
+              : answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
           ])));
         }
       })
@@ -65,18 +76,38 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
       return;
     }
 
-    const answers = buildFormAnswers(form.questions, values);
+    const preparedValues = { ...values };
+    try {
+      setSubmitting(true);
+      for (const question of form.questions) {
+        if (question.type !== "FILE") continue;
+        const value = preparedValues[question.id];
+        if (isFormFileValue(value) && value.file && !value.fileId) {
+          const uploaded = await formApi.uploadFile(form.id, value.file);
+          const uploadedValue = { fileId: uploaded.id, fileName: uploaded.originalName };
+          preparedValues[question.id] = uploadedValue;
+          setValues((current) => ({ ...current, [question.id]: uploadedValue }));
+        }
+      }
+    } catch (caught) {
+      setMessage({ text: caught instanceof Error ? caught.message : "파일 업로드에 실패했습니다.", error: true });
+      setSubmitting(false);
+      return;
+    }
+
+    const answers = buildFormAnswers(form.questions, preparedValues);
     if (answers.length === 0) {
       setMessage({ text: "응답을 입력해주세요.", error: true });
+      setSubmitting(false);
       return;
     }
 
     try {
-      setSubmitting(true);
       const saved = submission
         ? await formApi.updateSubmission(form.id, answers)
         : await formApi.submit(form.id, answers);
       setSubmission(saved);
+      setValues(valuesFromSubmission(saved));
       setEditing(false);
       setMessage({ text: "응답을 제출했습니다." });
     } catch (caught) {
@@ -197,6 +228,26 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
     );
   }
 
+  if (question.type === "FILE") {
+    const fileValue = isFormFileValue(value) ? value : undefined;
+    return (
+      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+        {label}
+        {description}
+        <input
+          required={question.required && !fileValue}
+          type="file"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) onChange({ file, fileName: file.name });
+          }}
+          className={`${inputClass} file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-2 file:font-semibold file:text-white`}
+        />
+        {fileValue ? <p className="mt-2 text-sm font-normal text-gray-500">{fileValue.fileName}</p> : null}
+      </label>
+    );
+  }
+
   if (["SHORT_TEXT", "NUMBER", "DATE"].includes(question.type)) {
     const inputType = question.type === "NUMBER" ? "number" : question.type === "DATE" ? "date" : "text";
     return (
@@ -290,7 +341,9 @@ const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
         <div key={answer.questionId} className="rounded-2xl bg-gray-50 p-5">
           <h3 className="text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
           <p className="mt-2 whitespace-pre-line text-gray-900">
-            {answer.selectedOptionLabels.length
+            {answer.fileName
+              ? `첨부 파일: ${answer.fileName}`
+              : answer.selectedOptionLabels.length
               ? answer.selectedOptionLabels.join(", ")
               : answer.textValue}
           </p>
@@ -299,3 +352,6 @@ const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
     </div>
   </section>
 );
+
+const isFormFileValue = (value: FormValue | undefined): value is FormFileValue =>
+  Boolean(value && !Array.isArray(value) && typeof value !== "string");

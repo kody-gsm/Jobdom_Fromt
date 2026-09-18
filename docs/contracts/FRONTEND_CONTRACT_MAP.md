@@ -195,7 +195,9 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | POST | `/teacher/form/{id}/close` | 폼 마감 |
 | POST | `/student/form/{id}/submission` | 학생 폼 제출 |
 | PATCH | `/student/form/{id}/submission` | 학생 폼 답변 수정 |
+| POST | `/student/form/{id}/file` | 학생 폼 답변 파일 업로드 |
 | GET | `/student/form/{id}/submission` | 내 제출 조회 |
+| GET | `/form/file/{fileId}` | 폼 첨부 파일 다운로드 |
 | GET | `/teacher/form/{id}/submission` | 폼 제출 목록 |
 | GET | `/teacher/form/{formId}/submission/{submissionId}` | 폼 제출 상세 |
 
@@ -222,7 +224,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 ### Form submission
 
 ```json
-{ "answers": [{ "questionId": 1, "textValue": "답변" }, { "questionId": 2, "optionIds": [3] }] }
+{ "answers": [{ "questionId": 1, "textValue": "답변" }, { "questionId": 2, "optionIds": [3] }, { "questionId": 3, "fileId": 12 }] }
 ```
 ## Existing executable regression coverage
 
