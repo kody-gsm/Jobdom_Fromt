@@ -1,5 +1,6 @@
 import type {
   ConsultationKind,
+  ReservationStatus,
   StudentReservation,
 } from "./types.ts";
 
@@ -8,7 +9,7 @@ export interface ProfileConsultation {
   type: string;
   date: string;
   slot: string;
-  status?: "WAITING" | "RESERVED" | "CANCELED";
+  status: ReservationStatus;
   counselor?: string;
   counselorComment?: string;
   myMemo?: string;
@@ -22,7 +23,7 @@ export const toProfileConsultation = (
   type: kind === "course" ? "진로상담" : "일반상담",
   date: item.date.replaceAll("-", "."),
   slot: item.period,
-  ...(item.status ? { status: item.status } : {}),
+  status: item.status,
 });
 
 export const decodeProfileConsultationId = (profileId: number) => ({
