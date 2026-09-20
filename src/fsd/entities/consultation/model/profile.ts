@@ -1,5 +1,6 @@
 import type {
   ConsultationKind,
+  ReservationStatus,
   StudentReservation,
 } from "./types.ts";
 
@@ -8,7 +9,7 @@ export interface ProfileConsultation {
   type: string;
   date: string;
   slot: string;
-  status?: "WAITING" | "RESERVED" | "CANCELED";
+  status?: ReservationStatus;
   counselor?: string;
   counselorComment?: string;
   myMemo?: string;

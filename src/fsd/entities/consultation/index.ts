@@ -6,6 +6,7 @@ export type {
   ConsultationType,
   CounselingCategory,
   ReservationInput,
+  ReservationStatus,
   StudentReservation,
   TeacherReservation,
   TeacherSlotStatus,
@@ -22,6 +23,7 @@ export {
   validateConsultationDraft,
 } from "./model/rules.ts";
 export { createConsultationApi } from "./api/createConsultationApi.ts";
+export { getReservationPresentation, isActiveReservation } from "./model/status.ts";
 
 export type { ProfileConsultation } from "./model/profile.ts";
 export { decodeProfileConsultationId, toProfileConsultation } from "./model/profile.ts";
