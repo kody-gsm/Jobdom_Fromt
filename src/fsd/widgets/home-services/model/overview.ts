@@ -1,6 +1,7 @@
 import type { Recruit } from "@fsd/entities/recruit";
 import {
   getReservationPresentation,
+  isActiveReservation,
   type ReservationStatus,
   type StudentReservation,
 } from "@fsd/entities/consultation";
@@ -42,10 +43,10 @@ export const buildHomeOverview = ({
 }): HomeOverview => ({
   upcomingConsultations: [
     ...course
-      .filter((item) => item.status !== "CANCELED")
+      .filter((item) => isActiveReservation(item.status))
       .map((item) => toHomeConsultationItem("course", item)),
     ...common
-      .filter((item) => item.status !== "CANCELED")
+      .filter((item) => isActiveReservation(item.status))
       .map((item) => toHomeConsultationItem("common", item)),
   ].sort((a, b) => `${a.date} ${a.period}`.localeCompare(`${b.date} ${b.period}`)),
   recentRecruits: recruits

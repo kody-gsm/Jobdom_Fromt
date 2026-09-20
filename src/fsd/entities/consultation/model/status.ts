@@ -7,16 +7,19 @@ export type ReservationPresentation = {
 };
 
 export const getReservationPresentation = (
-  status?: ReservationStatus,
+  status: ReservationStatus,
 ): ReservationPresentation => {
   if (status === "WAITING") {
     return { status, statusLabel: "신청 대기", actionLabel: "신청 취소" };
   }
+  if (status === "RESERVED") {
+    return { status, statusLabel: "예약 확정", actionLabel: "예약 취소" };
+  }
   if (status === "CANCELED") {
     return { status, statusLabel: "취소", actionLabel: "" };
   }
-  return { status: "RESERVED", statusLabel: "예약 확정", actionLabel: "예약 취소" };
+  return { status: "CANCELED", statusLabel: "취소", actionLabel: "" };
 };
 
-export const isActiveReservation = (status?: ReservationStatus) =>
-  status !== "CANCELED";
+export const isActiveReservation = (status: ReservationStatus) =>
+  status === "WAITING" || status === "RESERVED";

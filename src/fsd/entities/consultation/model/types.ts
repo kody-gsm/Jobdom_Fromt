@@ -26,7 +26,7 @@ export interface StudentReservation {
   name: string;
   date: string;
   period: string;
-  status?: ReservationStatus;
+  status: ReservationStatus;
 }
 
 export interface TeacherReservation {
