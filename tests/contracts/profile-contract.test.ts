@@ -8,20 +8,22 @@ import {
   formatStudentNumber,
 } from "../../src/fsd/pages/profile/model/buildUserProfileData.ts";
 
-const course = { id: 3, name: "학생", date: "2026-09-05", period: "2교시" };
-const common = { id: 4, name: "학생", date: "2026-09-08", period: "점심시간" };
+const course = { id: 3, name: "학생", date: "2026-09-05", period: "2교시", status: "WAITING" as const };
+const common = { id: 4, name: "학생", date: "2026-09-08", period: "점심시간", status: "RESERVED" as const };
 
 assert.deepEqual(toProfileConsultation("course", course), {
   id: 6,
   type: "진로상담",
   date: "2026.09.05",
   slot: "2교시",
+  status: "WAITING",
 });
 assert.deepEqual(toProfileConsultation("common", common), {
   id: 9,
   type: "일반상담",
   date: "2026.09.08",
   slot: "점심시간",
+  status: "RESERVED",
 });
 
 assert.deepEqual(decodeProfileConsultationId(6), { kind: "course", reservationId: 3 });

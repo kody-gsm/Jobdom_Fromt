@@ -12,11 +12,11 @@ assert.ok(existsSync(hookPath));
 const services = read("src/fsd/widgets/home-services/ui/HomeServices.tsx");
 const overview = buildHomeOverview({
   course: [
-    { id: 2, name: "A", date: "2026-09-08", period: "3교시" },
-    { id: 1, name: "B", date: "2026-09-06", period: "2교시" },
-    { id: 4, name: "D", date: "2026-09-09", period: "4교시" },
+    { id: 2, name: "A", date: "2026-09-08", period: "3교시", status: "RESERVED" },
+    { id: 1, name: "B", date: "2026-09-06", period: "2교시", status: "WAITING" },
+    { id: 4, name: "D", date: "2026-09-09", period: "4교시", status: "CANCELED" },
   ],
-  common: [{ id: 3, name: "C", date: "2026-09-07", period: "1교시" }],
+  common: [{ id: 3, name: "C", date: "2026-09-07", period: "1교시", status: "RESERVED" }],
   recruits: [
     { id: 1, companyName: "old", interviewDate: null, deadline: null, summary: null, status: "PUBLISHED", createdAt: "2026-09-01", updatedAt: "2026-09-01" },
     { id: 2, companyName: "draft", interviewDate: null, deadline: null, summary: null, status: "DRAFT", createdAt: "2026-09-05", updatedAt: "2026-09-05" },
@@ -25,8 +25,8 @@ const overview = buildHomeOverview({
   ],
 });
 
-assert.equal(overview.upcomingConsultations.length, 4, "modal needs the full consultation collection");
-assert.deepEqual(overview.upcomingConsultations.map((item) => item.date), ["2026-09-06", "2026-09-07", "2026-09-08", "2026-09-09"]);
+assert.equal(overview.upcomingConsultations.length, 3, "canceled consultations stay out of active collections");
+assert.deepEqual(overview.upcomingConsultations.map((item) => item.date), ["2026-09-06", "2026-09-07", "2026-09-08"]);
 assert.deepEqual(overview.recentRecruits.map((item) => item.id), [3, 4]);
 assert.match(services, /useState/);
 assert.match(services, /role="dialog"/);

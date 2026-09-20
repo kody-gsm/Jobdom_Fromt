@@ -2,6 +2,7 @@ export type ConsultationType = "career" | "general";
 export type ConsultationKind = "course" | "common";
 export type CounselingCategory = "학업" | "취업" | "진학" | "생활" | "기타";
 export type ConsultationTeacher = string;
+export type ReservationStatus = "WAITING" | "RESERVED" | "CANCELED";
 
 export interface ConsultationDraft {
   type: ConsultationType;
@@ -25,7 +26,7 @@ export interface StudentReservation {
   name: string;
   date: string;
   period: string;
-  status?: "WAITING" | "RESERVED" | "CANCELED";
+  status: ReservationStatus;
 }
 
 export interface TeacherReservation {

@@ -48,7 +48,7 @@ export const HomeServices = () => {
       setCancelingId(item.id);
       await handleCancel(item.id);
     } catch {
-      setCancelError("상담 예약을 취소하지 못했습니다.");
+      setCancelError(`${item.actionLabel}하지 못했습니다.`);
     } finally {
       setCancelingId(null);
     }
@@ -99,9 +99,9 @@ export const HomeServices = () => {
                 {consultationPreview.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={item.type}
+                    title={`${item.type} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
-                    actionLabel="예약 취소"
+                    actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
@@ -214,9 +214,9 @@ export const HomeServices = () => {
                 upcomingConsultations.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={item.type}
+                    title={`${item.type} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
-                    actionLabel="예약 취소"
+                    actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
