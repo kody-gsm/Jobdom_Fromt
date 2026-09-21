@@ -6,6 +6,7 @@ import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { ApiError } from "@fsd/shared/api";
 import {
   analyzeRecruit,
+  createRecruit,
   deleteRecruit,
   getRecruitDashboard,
   publishRecruit,
@@ -23,6 +24,7 @@ export function TeacherRecruitPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"ALL" | Recruit["status"]>("ALL");
   const [editing, setEditing] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<RecruitUpdate>(blank);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
@@ -73,12 +75,22 @@ export function TeacherRecruitPage() {
 
   const select = (row: RecruitDashboardRow) => {
     setSelectedId(row.recruit.id);
+    setCreating(false);
     setEditing(false);
+  };
+
+  const startCreating = () => {
+    setSelectedId(null);
+    setForm(blank);
+    setCreating(true);
+    setEditing(true);
+    setMessage(null);
   };
 
   const startEditing = (row: RecruitDashboardRow) => {
     const recruit = row.recruit;
     setSelectedId(recruit.id);
+    setCreating(false);
     setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "" });
     setEditing(true);
     setMessage(null);
@@ -94,6 +106,7 @@ export function TeacherRecruitPage() {
       const recruit = await analyzeRecruit(file);
       await load(recruit.id);
       setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "" });
+      setCreating(false);
       setEditing(true);
       setMessage({ text: "공고 초안을 만들었습니다. 내용을 확인해주세요." });
     } catch (caught) {
@@ -105,14 +118,20 @@ export function TeacherRecruitPage() {
   };
 
   const save = async (publish = false) => {
-    if (!selectedId) return;
-    if (Object.values(form).some((value) => !value?.trim())) return setMessage({ text: "모든 공고 항목을 입력해주세요.", error: true });
+    if (!form.companyName?.trim()) return setMessage({ text: "회사명을 입력해주세요.", error: true });
     try {
       setWorking(true);
-      await updateRecruit(selectedId, form);
-      if (publish) await publishRecruit(selectedId);
-      await load(selectedId);
+      const isNew = selectedId === null;
+      const recruit = isNew ? await createRecruit(form) : await updateRecruit(selectedId, form);
+      if (isNew) {
+        setSelectedId(recruit.id);
+        setCreating(false);
+        await load(recruit.id);
+      }
+      if (publish) await publishRecruit(recruit.id);
+      await load(recruit.id);
       setEditing(false);
+      setCreating(false);
       setMessage({ text: publish ? "공고를 공개했습니다." : "공고를 저장했습니다." });
     } catch (caught) {
       setMessage({ text: caught instanceof Error ? caught.message : "공고를 저장하지 못했습니다.", error: true });
@@ -149,10 +168,7 @@ export function TeacherRecruitPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Link href="/teacher/forms" className="inline-flex h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700">신청 폼 관리</Link>
-              <label className={`inline-flex h-11 cursor-pointer items-center rounded-xl bg-[#02C551] px-4 text-sm font-bold text-white ${working ? "pointer-events-none opacity-60" : ""}`}>
-                + AI로 공고 초안 생성
-                <input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" />
-              </label>
+              <button type="button" onClick={startCreating} className="inline-flex h-11 items-center rounded-xl bg-[#02C551] px-4 text-sm font-bold text-white disabled:opacity-60" disabled={working}>+ 공고 작성</button>
             </div>
           </header>
 
@@ -213,8 +229,10 @@ export function TeacherRecruitPage() {
               </div>
 
               <aside className="bg-[#fbfcfb] p-5 sm:p-6">
-                {!selected ? <div className="grid h-full min-h-64 place-items-center text-center text-sm text-gray-400">왼쪽에서 공고를 선택해주세요.</div> : editing ? (
-                  <Editor row={selected} form={form} setForm={setForm} working={working} cancel={() => setEditing(false)} save={save} />
+                {creating ? (
+                  <Editor row={null} form={form} setForm={setForm} working={working} cancel={() => { setCreating(false); setEditing(false); }} save={save} analyze={analyze} />
+                ) : !selected ? <div className="grid h-full min-h-64 place-items-center text-center text-sm text-gray-400">왼쪽에서 공고를 선택해주세요.</div> : editing ? (
+                  <Editor row={selected} form={form} setForm={setForm} working={working} cancel={() => setEditing(false)} save={save} analyze={analyze} />
                 ) : (
                   <>
                     <div className="flex items-start justify-between gap-3">
@@ -257,9 +275,10 @@ function Info({ label, value }: { label: string; value: string | null }) {
   return <div className="rounded-xl border border-gray-200 bg-white p-3"><dt className="text-[11px] font-bold text-gray-400">{label}</dt><dd className="mt-1 text-sm font-bold text-gray-800">{value || "—"}</dd></div>;
 }
 
-function Editor({ row, form, setForm, working, cancel, save }: { row: RecruitDashboardRow; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (publish?: boolean) => Promise<void> }) {
+function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: RecruitDashboardRow | null; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (publish?: boolean) => Promise<void>; analyze: (event: ChangeEvent<HTMLInputElement>) => Promise<void> }) {
   const update = (key: keyof RecruitUpdate, value: string) => setForm((current) => ({ ...current, [key]: value }));
-  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">공고 수정</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><label className="block text-xs font-bold text-gray-500">공고 요약<textarea value={form.summary || ""} onChange={(event) => update("summary", event.target.value)} className="mt-2 min-h-36 w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#02C551]" /></label></div>{row.recruit.status === "DRAFT" && <Link href={row.form ? `/teacher/forms?formId=${row.form.id}` : "/teacher/forms"} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{row.recruit.status === "DRAFT" ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-soft text-sm font-bold text-brand-accent">공개됨</span>}</div></div>;
+  const isDraft = row === null || row.recruit.status === "DRAFT";
+  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "공고 수정" : "공고 작성"}</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><label className={`mt-5 block cursor-pointer rounded-xl border border-dashed border-[#02C551] bg-[#effbf3] p-4 ${working ? "pointer-events-none opacity-60" : ""}`}><span className="block text-sm font-bold text-[#02a946]">이미지로 AI 초안 채우기 <span className="font-normal text-gray-500">(선택)</span></span><span className="mt-1 block text-xs leading-5 text-gray-500">이미지 없이 직접 작성해도 됩니다. 이미지를 넣으면 AI가 공고 내용을 읽어 초안을 만듭니다.</span><span className="mt-3 inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-bold text-[#02a946]">공고 이미지 선택</span><input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" /></label><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><label className="block text-xs font-bold text-gray-500">공고 요약<textarea value={form.summary || ""} onChange={(event) => update("summary", event.target.value)} className="mt-2 min-h-36 w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#02C551]" /></label></div>{isDraft && row?.form && <Link href={`/teacher/forms?formId=${row.form.id}`} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-soft text-sm font-bold text-brand-accent">공개됨</span>}</div></div>;
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {

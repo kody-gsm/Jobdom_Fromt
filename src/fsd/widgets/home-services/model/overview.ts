@@ -1,10 +1,10 @@
-import type { Recruit } from "@fsd/entities/recruit";
+import type { Recruit } from "../../../entities/recruit/index.ts";
 import {
   getReservationPresentation,
   isActiveReservation,
   type ReservationStatus,
   type StudentReservation,
-} from "@fsd/entities/consultation";
+} from "../../../entities/consultation/index.ts";
 
 export type HomeConsultationItem = {
   id: number;

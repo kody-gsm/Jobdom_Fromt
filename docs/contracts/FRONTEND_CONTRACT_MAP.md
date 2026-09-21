@@ -182,6 +182,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | GET | `/recruit` | 공개 공고 목록 |
 | GET | `/recruit/{id}` | 공개 공고 상세 |
 | GET | `/teacher/recruit` | 교사 공고 목록 |
+| POST | `/teacher/recruit` | 이미지 없이 공고 초안 생성 |
 | POST | `/teacher/recruit/analyze` | 이미지 기반 공고 분석(FormData `image`) |
 | PATCH | `/teacher/recruit/{id}` | 공고 수정 |
 | POST | `/teacher/recruit/{id}/publish` | 공고 공개 |
