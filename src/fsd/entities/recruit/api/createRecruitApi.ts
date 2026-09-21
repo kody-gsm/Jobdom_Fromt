@@ -8,6 +8,11 @@ export const createRecruitApi = (request: RequestFn) => ({
   getAll: () => request<Recruit[]>("/recruit"),
   getById: (id: number) => request<Recruit>(`/recruit/${id}`),
   getTeacherAll: () => request<Recruit[]>("/teacher/recruit"),
+  createTeacher: (input: RecruitUpdate) =>
+    request<Recruit>("/teacher/recruit", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   analyze: (image: File) => {
     const body = new FormData();
     body.append("image", image);

@@ -77,6 +77,7 @@ const update = {
 };
 const image = new File(["image"], "notice.png", { type: "image/png" });
 await recruit.getTeacherAll();
+await recruit.createTeacher(update);
 await recruit.analyze(image);
 await recruit.updateTeacher(3, update);
 await recruit.publishTeacher(3);
@@ -84,10 +85,14 @@ await recruit.deleteTeacher(3);
 
 const recruitCalls = calls.splice(0);
 assert.equal(recruitCalls[0]?.path, "/teacher/recruit");
-assert.equal(recruitCalls[1]?.path, "/teacher/recruit/analyze");
-assert.equal(recruitCalls[1]?.init?.method, "POST");
-assert.ok(recruitCalls[1]?.init?.body instanceof FormData);
-assert.deepEqual(recruitCalls.slice(2), [
+assert.deepEqual(recruitCalls[1], {
+  path: "/teacher/recruit",
+  init: { method: "POST", body: JSON.stringify(update) },
+});
+assert.equal(recruitCalls[2]?.path, "/teacher/recruit/analyze");
+assert.equal(recruitCalls[2]?.init?.method, "POST");
+assert.ok(recruitCalls[2]?.init?.body instanceof FormData);
+assert.deepEqual(recruitCalls.slice(3), [
   {
     path: "/teacher/recruit/3",
     init: { method: "PATCH", body: JSON.stringify(update) },
