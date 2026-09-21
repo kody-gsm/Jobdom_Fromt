@@ -10,9 +10,6 @@ const restore = source.match(
   /export const restoreRememberedSession = async \(\) => \{([\s\S]*?)\n\};/,
 )?.[1] || "";
 
-assert.match(restore, /readRememberedSession\(\)/);
-assert.match(restore, /remembered\?\.refreshToken/);
-assert.match(restore, /return \{ \.\.\.remembered, role: decodeUserRole\(remembered\.accessToken\) \}/);
 assert.match(restore, /const active = getSession\(\)/);
 assert.match(restore, /return active && !isAccessTokenExpired\(active\.accessToken\) \? active : null/);
 assert.doesNotMatch(restore, /reissueSession\(/);

@@ -93,6 +93,16 @@ assert.deepEqual(recruitCalls.slice(2), [
     init: { method: "PATCH", body: JSON.stringify(update) },
   },
   { path: "/teacher/recruit/3/publish", init: { method: "POST" } },
+  {
+    path: "/api/notices",
+    init: {
+      method: "POST",
+      body: JSON.stringify({
+        title: "취업 공고",
+        content: "새로운 취업 공고가 등록되었습니다.",
+      }),
+    },
+  },
   { path: "/teacher/recruit/3", init: { method: "DELETE" } },
 ]);
 

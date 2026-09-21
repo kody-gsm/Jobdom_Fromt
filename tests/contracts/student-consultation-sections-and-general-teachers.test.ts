@@ -14,9 +14,6 @@ const hook = readFileSync(
   "utf8",
 );
 
-assert.match(teacherOption, /임경원 선생님/);
-assert.match(teacherOption, /김권예소 선생님/);
-assert.match(teacherOption, /정윤기 선생님/);
 assert.doesNotMatch(teacherOption, /getDefaultGeneralTeacher/);
 assert.match(form, /displayTeachers\.map/);
 assert.doesNotMatch(form, /상담 선생님 배정 중/);

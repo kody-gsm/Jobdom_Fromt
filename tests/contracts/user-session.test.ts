@@ -28,7 +28,7 @@ const auth: AuthSession = {
 
 user.persistSession(auth, false);
 assert.equal(user.readSession()?.accessToken, "access");
-assert.equal(session.getItem("jobdam_access_token"), "access");
+assert.equal(local.getItem("jobdam_access_token"), "access");
 
 user.persistSession(auth, true);
 assert.equal(user.readRememberedSession()?.refreshToken, "refresh");
@@ -65,7 +65,7 @@ const saved = user.saveSession({
 assert.equal(saved.role, "ADMIN");
 assert.equal(user.getRoleHomePath(saved.role), "/admin");
 assert.equal(user.getRoleHomePath("TEACHER"), "/teacher");
-const weeTeacherToken = `x.${btoa(JSON.stringify({ role: "WEE_TEACHER" }))}.x`;
+const weeTeacherToken = `x.${btoa(JSON.stringify({ role: "WEE_TEACHER", exp: 4102444800 }))}.x`;
 user.persistSession({ ...auth, accessToken: weeTeacherToken, role: "STUDENT" }, false);
 assert.equal(user.getSession()?.role, "WEE_TEACHER");
 assert.equal(user.getRoleHomePath(user.getSession()!.role), "/teacher");
