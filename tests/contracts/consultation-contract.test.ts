@@ -23,14 +23,14 @@ assert.equal(toConsultationKind("general"), "common");
 assert.equal(toCounselingCategory("career"), "취업");
 assert.equal(toCounselingCategory("general"), "기타");
 assert.deepEqual(getAvailablePeriods("career", "임경원 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "5교시",
-  "6교시", "7교시", "8교시", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시",
+  "6교시", "7교시", "8교시", "저녁시간", "9교시",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "김권예소 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "5교시", "6교시", "7교시", "8교시", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "새로 추가된 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "5교시", "6교시", "7교시", "8교시", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
 ]);
 assert.deepEqual(getAvailablePeriods("career", null), []);
 assert.deepEqual(getAvailablePeriods("general", null), [
