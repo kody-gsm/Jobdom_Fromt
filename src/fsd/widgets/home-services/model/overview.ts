@@ -9,6 +9,7 @@ import {
 export type HomeConsultationItem = {
   id: number;
   type: "진로상담" | "일반상담";
+  teacherName: string;
   date: string;
   period: string;
   status: ReservationStatus;
@@ -27,6 +28,7 @@ const toHomeConsultationItem = (
 ): HomeConsultationItem => ({
   id: item.id * 2 + (kind === "common" ? 1 : 0),
   type: kind === "course" ? "진로상담" : "일반상담",
+  teacherName: item.teacherName,
   date: item.date,
   period: item.period,
   ...getReservationPresentation(item.status),

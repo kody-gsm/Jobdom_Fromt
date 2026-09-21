@@ -9,6 +9,7 @@ export interface ProfileConsultation {
   type: string;
   date: string;
   slot: string;
+  teacherName: string;
   status: ReservationStatus;
   counselor?: string;
   counselorComment?: string;
@@ -23,6 +24,7 @@ export const toProfileConsultation = (
   type: kind === "course" ? "진로상담" : "일반상담",
   date: item.date.replaceAll("-", "."),
   slot: item.period,
+  teacherName: item.teacherName,
   status: item.status,
 });
 

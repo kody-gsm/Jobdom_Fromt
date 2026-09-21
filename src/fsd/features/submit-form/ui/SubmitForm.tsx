@@ -173,7 +173,14 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           </p>
         ) : null}
         {submission && !editing ? (
-          <ActionButton type="button" onClick={() => setEditing(true)} className="w-full bg-brand hover:bg-brand-hover">
+          <ActionButton
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              setEditing(true);
+            }}
+            className="w-full bg-brand hover:bg-brand-hover"
+          >
             응답 재응답
           </ActionButton>
         ) : (

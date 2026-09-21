@@ -99,7 +99,7 @@ export const HomeServices = () => {
                 {consultationPreview.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={`${item.type} · ${item.statusLabel}`}
+                    title={`${item.teacherName} · ${item.type} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
                     actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
@@ -214,7 +214,7 @@ export const HomeServices = () => {
                 upcomingConsultations.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={`${item.type} · ${item.statusLabel}`}
+                    title={`${item.teacherName} · ${item.type} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
                     actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
