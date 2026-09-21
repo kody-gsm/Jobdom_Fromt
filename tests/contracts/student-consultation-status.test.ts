@@ -23,6 +23,8 @@ assert.equal(
   toProfileConsultation("course", {
     id: 1,
     name: "학생",
+    teacherId: 11,
+    teacherName: "임경원 선생님",
     date: "2026-09-21",
     period: "1교시",
     status: "WAITING",

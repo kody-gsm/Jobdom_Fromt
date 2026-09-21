@@ -67,7 +67,7 @@ export const ProfileConsultations = ({ reservations, onCancel }: ProfileConsulta
               return (
                 <SummaryActionCard
                   key={item.id}
-                  title={`${item.type} · ${presentation.statusLabel}`}
+                  title={`${item.teacherName} · ${item.type} · ${presentation.statusLabel}`}
                   detail={`${item.date} / ${item.slot}`}
                   actionLabel={presentation.actionLabel}
                   actionDisabled={!isConsultationCancelable(item.date, item.slot, now)}

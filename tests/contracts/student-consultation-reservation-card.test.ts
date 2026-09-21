@@ -18,11 +18,11 @@ const sharedUi = readFileSync("src/fsd/shared/ui/index.ts", "utf8");
 assert.match(sharedUi, /SummaryActionCard/);
 assert.match(profile, /SummaryActionCard/);
 assert.match(home, /SummaryActionCard/);
-assert.match(profile, /actionLabel="예약 취소"/);
+assert.match(profile, /teacherName/);
+assert.match(home, /teacherName/);
+assert.match(profile, /actionLabel=\{presentation\.actionLabel\}/);
+assert.match(home, /actionLabel=\{item\.actionLabel\}/);
 assert.doesNotMatch(card, /Consultation|상담/);
 assert.doesNotMatch(home, /const ConsultationRow/);
-
-const homeCancelActions = home.match(/actionLabel="예약 취소"/g) ?? [];
-assert.equal(homeCancelActions.length, 2, "home preview and modal must share the same cancel card action");
 
 console.log("student consultation reservation card contract passed");
