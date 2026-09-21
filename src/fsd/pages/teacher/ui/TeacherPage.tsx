@@ -133,6 +133,9 @@ export function TeacherPage() {
     const periods = getTeacherAvailablePeriods(kind, teacherName);
     const teacherKinds = getTeacherConsultationKinds(teacherRole);
     const canManageBanner = teacherName !== "선생님" && canManageHomeBanner(teacherName);
+    const todayKey = dateKey(today);
+    const upcomingPending = useMemo(() => pending.filter((item) => item.date >= todayKey), [pending, todayKey]);
+    const upcomingApproved = useMemo(() => approved.filter((item) => item.date >= todayKey), [approved, todayKey]);
     const loadSlotStatuses = useCallback(async () => {
         const allowedKinds = getTeacherConsultationKinds(teacherRole);
         if (teacherId === null || !allowedKinds.includes(kind)) {
@@ -210,18 +213,21 @@ export function TeacherPage() {
     };
     const handleSlotToggle = async (date: string, period: string) => {
         if (teacherId === null || processingSlot) return;
+        if (date < todayKey) return;
         const slot = `${date}_${period}`;
         const isLocked = lockedSlots.has(slot);
-        const hasReservation = approved.some((item) => reservationSlot(item) === slot)
-            || pending.some((item) => reservationSlot(item) === slot);
-        if (!isLocked && hasReservation && !window.confirm("이 시간의 기존 상담 신청도 취소하고 예약 금지할까요?")) return;
+        const reservations = [...upcomingApproved, ...upcomingPending].filter((item) => reservationSlot(item) === slot);
+        if (!isLocked && reservations.length > 0 && !window.confirm("이 시간의 신청을 거절하고 학생에게 알림을 보낸 뒤 예약 금지할까요?")) return;
 
         setProcessingSlot(slot);
         setSlotError(null);
         try {
             const input = { date, period };
             if (isLocked) await unlockConsultation(kind, input);
-            else await lockConsultation(kind, input);
+            else {
+                await Promise.all(reservations.map((item) => rejectConsultation(kind, item.reservation_id)));
+                await lockConsultation(kind, input);
+            }
             setLockedSlots((current) => {
                 const next = new Set(current);
                 if (isLocked) next.delete(slot);
@@ -274,7 +280,8 @@ export function TeacherPage() {
         );
     }, [students, studentSearchQuery]);
 
-    const handleSlotModeAction = (date: string, period: string, isLocked: boolean) => {
+    const handleSlotModeAction = (date: string, period: string, isLocked: boolean, isPast: boolean) => {
+        if (isPast) return true;
         if (isLockMode) {
             void handleSlotToggle(date, period);
             return true;
@@ -298,8 +305,9 @@ export function TeacherPage() {
         date: string,
         period: string,
         isLocked: boolean,
+        isPast: boolean,
     ) => {
-        if (handleSlotModeAction(date, period, isLocked)) return;
+        if (handleSlotModeAction(date, period, isLocked, isPast)) return;
         openReservation(reservation, isApproved);
     };
 
@@ -386,10 +394,10 @@ export function TeacherPage() {
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-gray-400" />예약 금지</p>
                 </div>
                 <section aria-labelledby="pending-title" className="border-t border-border pt-5">
-                    <h2 id="pending-title" className="mb-3 font-bold">상담 예약 요청 목록 <span className="text-brand-accent">{pending.length}</span></h2>
-                    {!isLoading && !loadError && pending.length === 0 && <p className="text-sm text-secondary-text">대기 중인 예약이 없습니다.</p>}
+                    <h2 id="pending-title" className="mb-3 font-bold">상담 예약 요청 목록 <span className="text-brand-accent">{upcomingPending.length}</span></h2>
+                    {!isLoading && !loadError && upcomingPending.length === 0 && <p className="text-sm text-secondary-text">대기 중인 예약이 없습니다.</p>}
                     <div className="max-h-80 space-y-2 overflow-y-auto">
-                        {pending.map((item) => (
+                        {upcomingPending.map((item) => (
                             <button key={item.reservation_id} onClick={() => openReservation(item, false)} className="w-full rounded-xl border border-border p-3 text-left hover:bg-brand-soft">
                                 <span className="block font-semibold">{item.name}</span>
                                 <span className="block text-xs text-secondary-text">{item.date} · {formatPeriod(item.period)}</span>
@@ -433,35 +441,41 @@ export function TeacherPage() {
                     <table className="w-full min-w-[720px] table-fixed border-collapse bg-white text-center">
                         <thead><tr>
                             <th className="w-24 border border-border p-3">교시</th>
-                            {week.map((date, index) => <th key={dateKey(date)} className={`border border-border p-3 ${dateKey(date) === dateKey(selectedDate) ? "bg-brand-soft" : ""}`}><span className="block text-xs text-secondary-text">{WEEKDAYS[index]}</span><span className="text-2xl">{date.getDate()}</span></th>)}
+                            {week.map((date, index) => {
+                                const isPast = dateKey(date) < todayKey;
+                                return <th key={dateKey(date)} className={`border border-border p-3 ${isPast ? "bg-gray-300 text-gray-500" : dateKey(date) === dateKey(selectedDate) ? "bg-brand-soft" : ""}`}><span className="block text-xs text-secondary-text">{WEEKDAYS[index]}</span><span className="text-2xl">{date.getDate()}</span></th>;
+                            })}
                         </tr></thead>
                         <tbody>{periods.map((period) => <tr key={period}>
                             <th scope="row" className="border border-border p-2 text-sm">{period}</th>
                             {week.map((date, index) => {
-                                const slot = `${dateKey(date)}_${period}`;
+                                const currentDate = dateKey(date);
+                                const isPast = currentDate < todayKey;
+                                const slot = `${currentDate}_${period}`;
                                 const classItem = teacherVariant === "im-gyeongwon" ? WEEKLY_CLASS_SCHEDULE[WEEKDAYS[index]]?.[period] : undefined;
-                                const confirmed = approved.filter((item) => reservationSlot(item) === slot);
-                                const waiting = pending.filter((item) => reservationSlot(item) === slot);
-                                const isLocked = lockedSlots.has(slot);
+                                const confirmed = isPast ? [] : upcomingApproved.filter((item) => reservationSlot(item) === slot);
+                                const waiting = isPast ? [] : upcomingPending.filter((item) => reservationSlot(item) === slot);
+                                const isLocked = !isPast && lockedSlots.has(slot);
+                                const isModeActive = !isPast && (isLockMode || isForceMode);
                                 return <td key={slot}
-                                    role={isLockMode || isForceMode ? "button" : undefined}
-                                    tabIndex={isLockMode || isForceMode ? 0 : undefined}
-                                    aria-label={isLockMode ? `${dateKey(date)} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : isForceMode ? `${dateKey(date)} ${period} 상담 강제 추가` : undefined}
+                                    role={isModeActive ? "button" : undefined}
+                                    tabIndex={isModeActive ? 0 : undefined}
+                                    aria-label={isPast ? undefined : isLockMode ? `${currentDate} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : isForceMode ? `${currentDate} ${period} 상담 강제 추가` : undefined}
                                     onClick={(event) => {
-                                        if (event.target instanceof Element && event.target.closest("button")) return;
-                                        handleSlotModeAction(dateKey(date), period, isLocked);
+                                        if (isPast || (event.target instanceof Element && event.target.closest("button"))) return;
+                                        handleSlotModeAction(currentDate, period, isLocked, isPast);
                                     }}
                                     onKeyDown={(event) => {
-                                        if ((event.key !== "Enter" && event.key !== " ") || (event.target instanceof Element && event.target.closest("button"))) return;
+                                        if (isPast || (event.key !== "Enter" && event.key !== " ") || (event.target instanceof Element && event.target.closest("button"))) return;
                                         event.preventDefault();
-                                        handleSlotModeAction(dateKey(date), period, isLocked);
+                                        handleSlotModeAction(currentDate, period, isLocked, isPast);
                                     }}
-                                    className={`h-20 border border-border p-0 align-top ${isLocked ? "bg-gray-50" : ""} ${isLockMode ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""} ${isForceMode ? "cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-inset" : ""}`}>
-                                    <div className={`max-h-20 overflow-y-auto p-2 ${isForceMode || isLockMode ? "cursor-pointer" : ""}`}>
+                                    className={`h-20 border border-border p-0 align-top ${isPast ? "bg-gray-300" : isLocked ? "bg-gray-50" : ""} ${isLockMode && !isPast ? "cursor-pointer hover:ring-2 hover:ring-red-300 hover:ring-inset" : ""} ${isForceMode && !isPast ? "cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-inset" : ""}`}>
+                                    <div className={`max-h-20 overflow-y-auto p-2 ${isModeActive ? "cursor-pointer" : ""}`}>
                                     {isLocked && <div className="rounded-xl bg-gray-200 p-2 text-sm font-semibold text-gray-600">예약 금지</div>}
                                     {classItem && <div className="rounded-xl bg-yellow-100 p-2 text-yellow-900"><span className="block font-semibold">{classItem.label}</span><span className="text-xs">{classItem.subtitle}</span></div>}
-                                    {confirmed.map((item) => <button key={item.reservation_id} onClick={() => handleReservationClick(item, true, dateKey(date), period, isLocked)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
-                                    {waiting.map((item) => <button key={item.reservation_id} onClick={() => handleReservationClick(item, false, dateKey(date), period, isLocked)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
+                                    {confirmed.map((item) => <button key={item.reservation_id} onClick={() => handleReservationClick(item, true, currentDate, period, isLocked, isPast)} className="mt-1 w-full rounded-xl bg-brand p-2 text-sm font-semibold text-white">{item.name} · 상담 확정</button>)}
+                                    {waiting.map((item) => <button key={item.reservation_id} onClick={() => handleReservationClick(item, false, currentDate, period, isLocked, isPast)} className="mt-1 w-full rounded-xl border border-brand bg-brand-soft p-2 text-sm font-semibold text-brand-accent">{item.name} · 상담 대기</button>)}
                                     </div>
                                 </td>;
                             })}

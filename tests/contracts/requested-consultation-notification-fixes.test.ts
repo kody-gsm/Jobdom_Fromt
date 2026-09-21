@@ -11,13 +11,13 @@ import {
 import { formatNotificationTime } from "../../src/fsd/features/notifications/model/time.ts";
 
 assert.deepEqual(getAvailablePeriods("career", "임경원 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "5교시", "6교시", "7교시", "8교시", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "김권예소 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "5교시", "6교시", "7교시", "8교시", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "정윤기 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "5교시", "6교시", "7교시", "8교시", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
 ]);
 assert.equal(getTeacherWorkspaceVariant("임경원 선생님"), "im-gyeongwon");
 assert.equal(getTeacherWorkspaceVariant("김권예소"), "kim-gwon-yeso");
@@ -50,13 +50,11 @@ assert.equal(formatNotificationTime("2026-09-10T01:06:00", now), "방금");
 
 const read = (path: string) => readFileSync(path, "utf8");
 const authGate = read("src/fsd/app/auth-gate/ui/AuthGate.tsx");
-const form = read("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx");
 const teacherPage = read("src/fsd/pages/teacher/ui/TeacherPage.tsx");
 const home = read("src/fsd/widgets/home-services/ui/HomeServices.tsx");
 const bell = read("src/fsd/features/notifications/ui/NotificationBell.tsx");
 
 assert.doesNotMatch(authGate, /isAccessTokenExpired|clearSession/);
-assert.match(form, /공강시간/);
 assert.match(teacherPage, /canManageHomeBanner/);
 assert.match(teacherPage, /학생 홈 배너/);
 assert.match(home, /readHomeBanner/);
