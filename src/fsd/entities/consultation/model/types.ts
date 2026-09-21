@@ -24,6 +24,8 @@ export interface ReservationInput {
 export interface StudentReservation {
   id: number;
   name: string;
+  teacherId: number;
+  teacherName: string;
   date: string;
   period: string;
   status: ReservationStatus;
