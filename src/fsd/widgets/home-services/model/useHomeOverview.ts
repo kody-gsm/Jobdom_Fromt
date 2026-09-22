@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   createConsultationApi,
+  createConsultationRefreshCoordinator,
   RESERVATION_CHANGED_EVENT,
 } from "@fsd/entities/consultation";
 import type { StudentReservation } from "@fsd/entities/consultation";
@@ -14,7 +15,6 @@ import {
   replaceHomeConsultations,
   type HomeOverview,
 } from "./overview.ts";
-import { createConsultationRefreshCoordinator } from "./consultationRefreshCoordinator.ts";
 
 const consultationApi = createConsultationApi(requestWithSession);
 const recruitApi = createRecruitApi(requestWithSession);

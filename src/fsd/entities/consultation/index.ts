@@ -33,6 +33,7 @@ export {
   isConsultationUpcoming,
 } from "./model/timePolicy.ts";
 export { getConsultationTeacherLabel } from "./model/labels.ts";
+export { createConsultationRefreshCoordinator } from "./model/refreshCoordinator.ts";
 export {
   RESERVATION_CHANGED_EVENT,
   isReservationRealtimeEvent,

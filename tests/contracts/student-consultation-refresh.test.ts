@@ -9,7 +9,8 @@ import {
   removeHomeReservationFromCache,
   type HomeOverview,
 } from "../../src/fsd/widgets/home-services/model/overview.ts";
-import { createConsultationRefreshCoordinator } from "../../src/fsd/widgets/home-services/model/consultationRefreshCoordinator.ts";
+import { getCancelTargetInvalidationNotice } from "../../src/fsd/widgets/home-services/model/cancelTarget.ts";
+import { createConsultationRefreshCoordinator } from "../../src/fsd/entities/consultation/model/refreshCoordinator.ts";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -52,6 +53,15 @@ const commonCacheAfterCancel = removeHomeReservationFromCache(
 assert.equal(commonCacheAfterCancel.common.length, 0);
 
 assert.equal(
+  getCancelTargetInvalidationNotice(8, [{ id: 8 }]),
+  "",
+);
+assert.equal(
+  getCancelTargetInvalidationNotice(8, []),
+  "상담 상태가 변경되어 취소 창을 닫았습니다.",
+);
+
+assert.equal(
   getConsultationCancelError(
     "2026-09-07",
     "2교시",
@@ -78,6 +88,7 @@ assert.deepEqual(refreshed.recentRecruits, existing.recentRecruits);
 
 const homeHook = read("src/fsd/widgets/home-services/model/useHomeOverview.ts");
 const profileHook = read("src/fsd/pages/profile/model/useProfilePage.ts");
+const profileApi = read("src/fsd/pages/profile/api/profile.ts");
 const profilePage = read("src/fsd/pages/profile/ui/ProfilePage.tsx");
 const dialog = read("src/fsd/entities/consultation/ui/ConsultationCancelDialog.tsx");
 const notificationContext = read("src/fsd/features/notifications/model/NotificationContext.tsx");
@@ -89,8 +100,14 @@ assert.match(homeHook, /consultationError/);
 assert.match(homeHook, /recruitError/);
 assert.match(homeHook, /refreshConsultationsRef/);
 assert.match(homeHook, /removeHomeReservationFromCache/);
+assert.match(homeHook, /createConsultationRefreshCoordinator/);
+assert.match(homeHook, /finishCancellation/);
 assert.match(profileHook, /createRequestVersionGuard/);
-assert.match(profileHook, /loadProfile\(false\)/);
+assert.match(profileHook, /createConsultationRefreshCoordinator/);
+assert.match(profileHook, /fetchProfileReservations/);
+assert.match(profileHook, /refreshReservationsRef/);
+assert.doesNotMatch(profileHook, /loadProfile\(false\)/);
+assert.match(profileApi, /fetchProfileReservations/);
 assert.match(profilePage, /loading && !profile/);
 assert.match(dialog, /confirmDisabled/);
 assert.match(homeHook, /replaceHomeConsultations/);

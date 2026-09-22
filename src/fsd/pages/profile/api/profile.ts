@@ -1,4 +1,8 @@
-import { createConsultationApi } from "@fsd/entities/consultation";
+import {
+  createConsultationApi,
+  toProfileConsultation,
+} from "@fsd/entities/consultation";
+import type { ProfileConsultation } from "@fsd/entities/consultation";
 import { getSession, requestWithSession } from "@fsd/entities/user";
 import { buildUserProfileData } from "../model/buildUserProfileData.ts";
 
@@ -58,4 +62,19 @@ export const fetchUserProfile = async () => {
         : undefined,
     },
   });
+};
+
+export const fetchProfileReservations = async (): Promise<ProfileConsultation[]> => {
+  const session = getSession();
+  if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") return [];
+
+  const [upcomingCourse, upcomingCommon] = await Promise.all([
+    consultationApi.getUpcoming("course"),
+    consultationApi.getUpcoming("common"),
+  ]);
+
+  return [
+    ...upcomingCourse.map((item) => toProfileConsultation("course", item)),
+    ...upcomingCommon.map((item) => toProfileConsultation("common", item)),
+  ];
 };
