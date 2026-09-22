@@ -6,8 +6,10 @@ import {
 } from "../../src/fsd/entities/consultation/model/timePolicy.ts";
 import {
   replaceHomeConsultations,
+  removeHomeReservationFromCache,
   type HomeOverview,
 } from "../../src/fsd/widgets/home-services/model/overview.ts";
+import { createConsultationRefreshCoordinator } from "../../src/fsd/widgets/home-services/model/consultationRefreshCoordinator.ts";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -16,6 +18,38 @@ const firstRequest = requests.next();
 const latestRequest = requests.next();
 assert.equal(requests.isLatest(firstRequest), false);
 assert.equal(requests.isLatest(latestRequest), true);
+
+const coordinator = createConsultationRefreshCoordinator();
+const inFlightRefresh = coordinator.beginRefresh();
+assert.ok(inFlightRefresh !== null);
+coordinator.startCancellation(8);
+assert.equal(coordinator.isLatest(inFlightRefresh), false, "cancel must invalidate an in-flight refresh");
+assert.equal(coordinator.beginRefresh(), null, "cancel in progress must defer refresh");
+assert.equal(coordinator.finishCancellation(8), true, "deferred refresh must be retried after cancel");
+const refreshAfterCancel = coordinator.beginRefresh();
+assert.ok(refreshAfterCancel !== null);
+assert.equal(coordinator.isLatest(refreshAfterCancel), true);
+
+const cachedReservation = {
+  id: 4,
+  name: "학생",
+  teacherId: 11,
+  teacherName: "선생님",
+  date: "2026-09-22",
+  period: "1교시",
+  status: "WAITING" as const,
+};
+const cacheAfterCancel = removeHomeReservationFromCache(
+  { course: [cachedReservation], common: [] },
+  8,
+);
+assert.equal(cacheAfterCancel.course.length, 0);
+
+const commonCacheAfterCancel = removeHomeReservationFromCache(
+  { course: [], common: [cachedReservation] },
+  9,
+);
+assert.equal(commonCacheAfterCancel.common.length, 0);
 
 assert.equal(
   getConsultationCancelError(
@@ -50,7 +84,11 @@ const notificationContext = read("src/fsd/features/notifications/model/Notificat
 
 assert.match(homeHook, /refreshConsultations/);
 assert.match(homeHook, /refreshRecruits/);
-assert.match(homeHook, /createRequestVersionGuard/);
+assert.match(homeHook, /createConsultationRefreshCoordinator/);
+assert.match(homeHook, /consultationError/);
+assert.match(homeHook, /recruitError/);
+assert.match(homeHook, /refreshConsultationsRef/);
+assert.match(homeHook, /removeHomeReservationFromCache/);
 assert.match(profileHook, /createRequestVersionGuard/);
 assert.match(profileHook, /loadProfile\(false\)/);
 assert.match(profilePage, /loading && !profile/);

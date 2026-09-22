@@ -1,5 +1,6 @@
 import type { Recruit } from "../../../entities/recruit/model/types.ts";
 import { getConsultationTeacherLabel } from "../../../entities/consultation/model/labels.ts";
+import { decodeProfileConsultationId } from "../../../entities/consultation/model/profile.ts";
 import { getReservationPresentation, isActiveReservation } from "../../../entities/consultation/model/status.ts";
 import type { ReservationStatus, StudentReservation } from "../../../entities/consultation/model/types.ts";
 
@@ -66,3 +67,22 @@ export const replaceHomeConsultations = (
     recruits: [],
   }).upcomingConsultations,
 });
+
+export const removeHomeReservationFromCache = (
+  cache: {
+    course: StudentReservation[];
+    common: StudentReservation[];
+  },
+  homeId: number,
+) => {
+  const { kind, reservationId } = decodeProfileConsultationId(homeId);
+
+  return {
+    course: kind === "course"
+      ? cache.course.filter((item) => item.id !== reservationId)
+      : cache.course,
+    common: kind === "common"
+      ? cache.common.filter((item) => item.id !== reservationId)
+      : cache.common,
+  };
+};
