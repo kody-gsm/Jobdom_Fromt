@@ -1,7 +1,7 @@
 import {
   isReservationRealtimeEvent,
   type ReservationRealtimeEvent,
-} from "../../../entities/consultation/model/realtime.ts";
+} from "../../../entities/consultation/index.ts";
 import { issueNotificationSubscribeTicket, type NotificationItem } from "./notifications.ts";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");

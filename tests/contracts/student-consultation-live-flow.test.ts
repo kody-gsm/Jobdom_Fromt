@@ -18,7 +18,7 @@ assert.deepEqual(getReservationPresentation("RESERVED"), {
   actionLabel: "예약 취소",
 });
 
-const dialog = read("src/fsd/entities/consultation/ui/ConsultationCancelDialog.tsx");
+const dialog = read("src/fsd/features/cancel-consultation/ui/ConsultationCancelDialog.tsx");
 const home = read("src/fsd/widgets/home-services/ui/HomeServices.tsx");
 const profile = read("src/fsd/widgets/profile-consultations/ui/ProfileConsultations.tsx");
 const notifications = read("src/fsd/features/notifications/api/notifications.ts");

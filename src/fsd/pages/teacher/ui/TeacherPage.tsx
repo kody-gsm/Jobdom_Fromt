@@ -135,7 +135,7 @@ export function TeacherPage() {
     const canManageBanner = teacherName !== "선생님" && canManageHomeBanner(teacherName);
     const todayKey = dateKey(today);
     const upcomingPending = useMemo(() => pending.filter((item) => item.date >= todayKey), [pending, todayKey]);
-    const upcomingApproved = useMemo(() => approved.filter((item) => item.date >= todayKey), [approved, todayKey]);
+    const upcomingApproved = useMemo(() => approved, [approved]);
     const loadSlotStatuses = useCallback(async () => {
         const allowedKinds = getTeacherConsultationKinds(teacherRole);
         if (teacherId === null || !allowedKinds.includes(kind)) {
@@ -459,7 +459,7 @@ export function TeacherPage() {
                                 const isPast = currentDate < todayKey;
                                 const slot = `${currentDate}_${period}`;
                                 const classItem = teacherVariant === "im-gyeongwon" ? WEEKLY_CLASS_SCHEDULE[WEEKDAYS[index]]?.[period] : undefined;
-                                const confirmed = isPast ? [] : upcomingApproved.filter((item) => reservationSlot(item) === slot);
+                                const confirmed = upcomingApproved.filter((item) => reservationSlot(item) === slot);
                                 const waiting = isPast ? [] : upcomingPending.filter((item) => reservationSlot(item) === slot);
                                 const isLocked = !isPast && lockedSlots.has(slot);
                                 const isModeActive = !isPast && (isLockMode || isForceMode);

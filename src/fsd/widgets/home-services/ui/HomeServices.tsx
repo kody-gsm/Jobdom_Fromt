@@ -9,7 +9,7 @@ import {
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
-import { ConsultationCancelDialog } from "@fsd/entities/consultation/ui/ConsultationCancelDialog.tsx";
+import { ConsultationCancelDialog } from "@fsd/features/cancel-consultation";
 import {
   HOME_BANNER_CHANGED_EVENT,
   readHomeBanner,

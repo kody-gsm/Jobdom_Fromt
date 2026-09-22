@@ -29,6 +29,8 @@ assert.match(page, /aria-pressed={isLockMode}/);
 assert.match(page, /handleSlotToggle/);
 assert.match(page, /rejectConsultation\(kind, item\.reservation_id\)/);
 assert.match(page, /const upcomingPending/);
+assert.match(page, /const upcomingApproved = useMemo\(\(\) => approved, \[approved\]\)/);
+assert.match(page, /const confirmed = upcomingApproved\.filter/);
 assert.match(page, /const isPast/);
 assert.match(page, /bg-gray-300/);
 assert.match(page, /getFullYear\(\)}년 \{currentDate\.getMonth\(\) \+ 1\}월/);

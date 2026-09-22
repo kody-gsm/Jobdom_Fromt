@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { ApiError, request } from "../../src/fsd/shared/api/index.ts";
-import { createConsultationApi } from "../../src/fsd/entities/consultation/index.ts";
+import { createConsultationApi } from "../../src/fsd/entities/consultation/api/createConsultationApi.ts";
 import { createFormApi } from "../../src/fsd/entities/form/index.ts";
 import { createRecruitApi } from "../../src/fsd/entities/recruit/index.ts";
 import { requestWithSession, saveSession } from "../../src/fsd/entities/user/index.ts";

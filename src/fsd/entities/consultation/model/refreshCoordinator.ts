@@ -1,4 +1,4 @@
-import { createRequestVersionGuard } from "../../../shared/lib/requestVersion.ts";
+import { createRequestVersionGuard } from "../../../shared/lib/index.ts";
 
 export const createConsultationRefreshCoordinator = () => {
   const requests = createRequestVersionGuard();
