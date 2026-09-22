@@ -7,8 +7,9 @@ import {
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
+import { ConsultationCancelDialog } from "@fsd/entities/consultation/ui/ConsultationCancelDialog.tsx";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
-import { ActionButton, ContentCard, SummaryActionCard } from "@fsd/shared/ui";
+import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
 
 interface ProfileConsultationsProps {
   reservations: ProfileConsultation[];
@@ -21,9 +22,6 @@ export const ProfileConsultations = ({ reservations, onCancel }: ProfileConsulta
   const [cancelError, setCancelError] = useState("");
   const [now, setNow] = useState(() => new Date());
   const cancelTargetItem = reservations.find((item) => item.id === cancelTarget);
-  const cancelActionLabel = cancelTargetItem
-    ? getReservationPresentation(cancelTargetItem.status).actionLabel
-    : "취소";
   const visibleReservations = reservations.filter((item) =>
     isActiveReservation(item.status) && isConsultationUpcoming(item.date, item.slot, now),
   );
@@ -67,11 +65,14 @@ export const ProfileConsultations = ({ reservations, onCancel }: ProfileConsulta
               return (
                 <SummaryActionCard
                   key={item.id}
-                  title={`${item.teacherName} · ${item.type} · ${presentation.statusLabel}`}
+                  title={`${item.type} · ${item.teacherName} · ${presentation.statusLabel}`}
                   detail={`${item.date} / ${item.slot}`}
                   actionLabel={presentation.actionLabel}
                   actionDisabled={!isConsultationCancelable(item.date, item.slot, now)}
-                  onAction={() => setCancelTarget(item.id)}
+                  onAction={() => {
+                    setCancelError("");
+                    setCancelTarget(item.id);
+                  }}
                 />
               );
             })
@@ -82,19 +83,24 @@ export const ProfileConsultations = ({ reservations, onCancel }: ProfileConsulta
         </p>
       </ContentCard>
 
-      {cancelTarget !== null ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-reservation-title">
-          <button type="button" aria-label="취소 닫기" onClick={() => setCancelTarget(null)} className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 id="cancel-reservation-title" className="text-center text-xl font-bold text-ink">{cancelActionLabel}</h2>
-            <p className="mt-4 text-center font-semibold text-gray-800">정말 {cancelActionLabel}하시겠습니까?</p>
-            {cancelError ? <p role="alert" className="mt-3 text-center text-sm text-red-600">{cancelError}</p> : null}
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <ActionButton type="button" variant="secondary" disabled={canceling} onClick={() => setCancelTarget(null)}>아니요</ActionButton>
-              <ActionButton type="button" disabled={canceling} onClick={() => void executeCancel()} className="bg-brand hover:bg-[#00B94C]">확인</ActionButton>
-            </div>
-          </div>
-        </div>
+      {cancelTargetItem ? (
+        <ConsultationCancelDialog
+          target={{
+            type: cancelTargetItem.type,
+            teacherName: cancelTargetItem.teacherName,
+            date: cancelTargetItem.date,
+            period: cancelTargetItem.slot,
+            actionLabel: getReservationPresentation(cancelTargetItem.status).actionLabel,
+          }}
+          pending={canceling}
+          error={cancelError}
+          confirmButtonClassName="bg-brand hover:bg-[#00B94C]"
+          onClose={() => {
+            setCancelError("");
+            setCancelTarget(null);
+          }}
+          onConfirm={() => void executeCancel()}
+        />
       ) : null}
     </>
   );

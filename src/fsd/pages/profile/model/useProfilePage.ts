@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import {
   getProfileAvatarUserKey,
   getSession,
+  type UserRole,
   saveProfileAvatar,
   validateProfileAvatarFile,
 } from "@fsd/entities/user";
-import type { UserRole } from "@fsd/entities/user";
+import { RESERVATION_CHANGED_EVENT } from "@fsd/entities/consultation";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
 import { fetchUserProfile, uploadProfileImage } from "../api/profile.ts";
 import type { UserProfileData } from "./buildUserProfileData.ts";
@@ -24,25 +25,32 @@ export const useProfilePage = () => {
       if (active) setUserRole(getSession()?.role ?? null);
     });
 
-    fetchUserProfile()
-      .then((data) => {
+    const loadProfile = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchUserProfile();
         if (!active) return;
         setProfile(data);
         setProfileAvatar(data.avatarUrl || null);
-      })
-      .catch((caught) => {
+        setError("");
+      } catch (caught) {
         if (active) {
           setError(
             caught instanceof Error ? caught.message : "프로필을 불러오지 못했습니다.",
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoading(false);
-      });
+      }
+    };
+
+    void loadProfile();
+    const handleReservationChange = () => void loadProfile();
+    window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
     return () => {
       active = false;
+      window.removeEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
     };
   }, []);
 

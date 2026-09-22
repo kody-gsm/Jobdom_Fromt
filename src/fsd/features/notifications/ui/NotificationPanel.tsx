@@ -22,6 +22,8 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   COURSE_COUNSELING_REQUESTED: "진로상담",
   COUNSELING_APPROVED: "상담 승인",
   COUNSELING_REJECTED: "상담 거절",
+  COUNSELING_AUTO_CANCELED: "상담 자동 취소",
+  COUNSELING_EXPIRED: "신청 만료",
 };
 
 const TYPE_COLORS: Record<NotificationType, string> = {
@@ -31,6 +33,8 @@ const TYPE_COLORS: Record<NotificationType, string> = {
   COURSE_COUNSELING_REQUESTED: "bg-orange-100 text-orange-700",
   COUNSELING_APPROVED: "bg-green-100 text-green-700",
   COUNSELING_REJECTED: "bg-red-100 text-red-700",
+  COUNSELING_AUTO_CANCELED: "bg-red-100 text-red-700",
+  COUNSELING_EXPIRED: "bg-gray-100 text-gray-700",
 };
 
 // ─── NotificationItem row ─────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import {
   getNotificationTargetUrl,
   NotificationItem,
 } from "../api/notifications.ts";
+import { RESERVATION_CHANGED_EVENT } from "@fsd/entities/consultation";
 
 import { subscribeNotifications } from "../api/notificationStream.ts";
 
@@ -110,7 +111,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         pushToast(item);
         refreshCount();
       }
-    }, refreshCount, ctrl.signal);
+    }, refreshCount, ctrl.signal, (event) => {
+      window.dispatchEvent(new CustomEvent(RESERVATION_CHANGED_EVENT, { detail: event }));
+    });
     ctrl.signal.addEventListener("abort", () => window.clearInterval(polling), { once: true });
   }, [pushToast]);
 

@@ -1,10 +1,7 @@
-import type { Recruit } from "@fsd/entities/recruit";
-import {
-  getReservationPresentation,
-  isActiveReservation,
-  type ReservationStatus,
-  type StudentReservation,
-} from "@fsd/entities/consultation";
+import type { Recruit } from "../../../entities/recruit/model/types.ts";
+import { getConsultationTeacherLabel } from "../../../entities/consultation/model/labels.ts";
+import { getReservationPresentation, isActiveReservation } from "../../../entities/consultation/model/status.ts";
+import type { ReservationStatus, StudentReservation } from "../../../entities/consultation/model/types.ts";
 
 export type HomeConsultationItem = {
   id: number;
@@ -28,7 +25,7 @@ const toHomeConsultationItem = (
 ): HomeConsultationItem => ({
   id: item.id * 2 + (kind === "common" ? 1 : 0),
   type: kind === "course" ? "진로상담" : "일반상담",
-  teacherName: item.teacherName,
+  teacherName: getConsultationTeacherLabel(item.teacherName),
   date: item.date,
   period: item.period,
   ...getReservationPresentation(item.status),

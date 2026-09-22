@@ -53,13 +53,34 @@ try {
   const ctrl = new AbortController();
   const received: number[] = [];
   let connected = 0;
-  subscribeNotifications((item) => received.push(item.id), () => connected++, ctrl.signal);
+  const reservationEvents: unknown[] = [];
+  subscribeNotifications(
+    (item) => received.push(item.id),
+    () => connected++,
+    ctrl.signal,
+    (event) => reservationEvents.push(event),
+  );
   await flush();
   const first = FakeStream.instances[0];
   first.dispatchEvent(new Event("connect"));
   first.dispatchEvent(new MessageEvent("notification", { data: '{"id":7}' }));
   first.dispatchEvent(new MessageEvent("notification", { data: 'invalid' }));
+  first.dispatchEvent(new MessageEvent("reservation", {
+    data: JSON.stringify({
+      counselingType: "COMMON",
+      action: "EXPIRED",
+      reservationId: 9,
+      date: "2026-09-22",
+      period: "1교시",
+      status: "CANCELED",
+      teacherId: 3,
+      studentId: 7,
+    }),
+  }));
+  first.dispatchEvent(new MessageEvent("reservation", { data: "invalid" }));
   assert.deepEqual(received, [7]);
+  assert.equal(reservationEvents.length, 1);
+  assert.equal((reservationEvents[0] as { action: string }).action, "EXPIRED");
   assert.equal(connected, 1);
   first.dispatchEvent(new Event("error"));
   assert.equal(first.closed, true);

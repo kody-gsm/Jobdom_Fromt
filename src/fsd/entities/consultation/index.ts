@@ -28,5 +28,11 @@ export { getReservationPresentation, isActiveReservation } from "./model/status.
 export type { ProfileConsultation } from "./model/profile.ts";
 export { decodeProfileConsultationId, toProfileConsultation } from "./model/profile.ts";
 export { isConsultationCancelable, isConsultationUpcoming } from "./model/timePolicy.ts";
+export { getConsultationTeacherLabel } from "./model/labels.ts";
+export {
+  RESERVATION_CHANGED_EVENT,
+  isReservationRealtimeEvent,
+} from "./model/realtime.ts";
+export type { ReservationRealtimeEvent } from "./model/realtime.ts";
 
 export { CONSULTATION_SCHEDULE, getConsultationScheduleItem } from "./model/schedule.ts";

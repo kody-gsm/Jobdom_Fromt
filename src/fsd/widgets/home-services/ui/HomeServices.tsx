@@ -8,6 +8,7 @@ import {
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
+import { ConsultationCancelDialog } from "@fsd/entities/consultation/ui/ConsultationCancelDialog.tsx";
 import {
   HOME_BANNER_CHANGED_EVENT,
   readHomeBanner,
@@ -22,6 +23,7 @@ export const HomeServices = () => {
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [cancelingId, setCancelingId] = useState<number | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<HomeConsultationItem | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [homeBanner, setHomeBanner] = useState<HomeBanner | null>(null);
   const upcomingConsultations = overview.upcomingConsultations.filter((item) =>
@@ -41,12 +43,18 @@ export const HomeServices = () => {
     return () => window.removeEventListener(HOME_BANNER_CHANGED_EVENT, syncBanner);
   }, []);
 
+  const openCancelDialog = (item: HomeConsultationItem) => {
+    setCancelError("");
+    setCancelTarget(item);
+  };
+
   const cancelConsultation = async (item: HomeConsultationItem) => {
     if (!isConsultationCancelable(item.date, item.period, new Date())) return;
     try {
       setCancelError("");
       setCancelingId(item.id);
       await handleCancel(item.id);
+      setCancelTarget(null);
     } catch {
       setCancelError(`${item.actionLabel}하지 못했습니다.`);
     } finally {
@@ -99,13 +107,13 @@ export const HomeServices = () => {
                 {consultationPreview.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={`${item.teacherName} · ${item.type} · ${item.statusLabel}`}
+                    title={`${item.type} · ${item.teacherName} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
                     actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
-                    onAction={() => void cancelConsultation(item)}
+                    onAction={() => openCancelDialog(item)}
                   />
                 ))}
               </div>
@@ -214,19 +222,40 @@ export const HomeServices = () => {
                 upcomingConsultations.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={`${item.teacherName} · ${item.type} · ${item.statusLabel}`}
+                    title={`${item.type} · ${item.teacherName} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
                     actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
-                    onAction={() => void cancelConsultation(item)}
+                    onAction={() => openCancelDialog(item)}
                   />
                 ))
               )}
             </div>
           </div>
         </div>
+      ) : null}
+
+      {cancelTarget ? (
+        <ConsultationCancelDialog
+          target={{
+            type: cancelTarget.type,
+            teacherName: cancelTarget.teacherName,
+            date: cancelTarget.date.replaceAll("-", "."),
+            period: cancelTarget.period,
+            actionLabel: cancelTarget.actionLabel,
+          }}
+          pending={cancelingId === cancelTarget.id}
+          error={cancelError}
+          onClose={() => {
+            if (cancelingId === null) {
+              setCancelError("");
+              setCancelTarget(null);
+            }
+          }}
+          onConfirm={() => void cancelConsultation(cancelTarget)}
+        />
       ) : null}
     </section>
   );
