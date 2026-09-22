@@ -1,10 +1,12 @@
-import type { Recruit } from "@fsd/entities/recruit";
+import type { Recruit } from "../../../entities/recruit/index.ts";
 import {
+  decodeProfileConsultationId,
+  getConsultationTeacherLabel,
   getReservationPresentation,
   isActiveReservation,
   type ReservationStatus,
   type StudentReservation,
-} from "@fsd/entities/consultation";
+} from "../../../entities/consultation/index.ts";
 
 export type HomeConsultationItem = {
   id: number;
@@ -28,7 +30,7 @@ const toHomeConsultationItem = (
 ): HomeConsultationItem => ({
   id: item.id * 2 + (kind === "common" ? 1 : 0),
   type: kind === "course" ? "진로상담" : "일반상담",
-  teacherName: item.teacherName,
+  teacherName: getConsultationTeacherLabel(item.teacherName),
   date: item.date,
   period: item.period,
   ...getReservationPresentation(item.status),
@@ -56,3 +58,35 @@ export const buildHomeOverview = ({
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 2),
 });
+
+export const replaceHomeConsultations = (
+  current: HomeOverview,
+  course: StudentReservation[],
+  common: StudentReservation[],
+): HomeOverview => ({
+  ...current,
+  upcomingConsultations: buildHomeOverview({
+    course,
+    common,
+    recruits: [],
+  }).upcomingConsultations,
+});
+
+export const removeHomeReservationFromCache = (
+  cache: {
+    course: StudentReservation[];
+    common: StudentReservation[];
+  },
+  homeId: number,
+) => {
+  const { kind, reservationId } = decodeProfileConsultationId(homeId);
+
+  return {
+    course: kind === "course"
+      ? cache.course.filter((item) => item.id !== reservationId)
+      : cache.course,
+    common: kind === "common"
+      ? cache.common.filter((item) => item.id !== reservationId)
+      : cache.common,
+  };
+};

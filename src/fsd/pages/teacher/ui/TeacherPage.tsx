@@ -135,7 +135,7 @@ export function TeacherPage() {
     const canManageBanner = teacherName !== "선생님" && canManageHomeBanner(teacherName);
     const todayKey = dateKey(today);
     const upcomingPending = useMemo(() => pending.filter((item) => item.date >= todayKey), [pending, todayKey]);
-    const upcomingApproved = useMemo(() => approved.filter((item) => item.date >= todayKey), [approved, todayKey]);
+    const upcomingApproved = useMemo(() => approved, [approved]);
     const loadSlotStatuses = useCallback(async () => {
         const allowedKinds = getTeacherConsultationKinds(teacherRole);
         if (teacherId === null || !allowedKinds.includes(kind)) {
@@ -173,7 +173,11 @@ export function TeacherPage() {
     const changeMonth = (direction: number) => {
         const next = new Date(year, month + direction, 1);
         setCurrentDate(next);
-        setSelectedDate(next);
+        setSelectedDate(
+            next.getFullYear() === today.getFullYear() && next.getMonth() === today.getMonth()
+                ? new Date(today)
+                : next,
+        );
     };
     const openReservation = (reservation: TeacherReservation, isApproved: boolean) => {
         setActionError(null);
@@ -344,7 +348,7 @@ export function TeacherPage() {
             <aside className="shrink-0 p-7 lg:w-[380px]">
                 <div>
                     <div className="mb-5 flex items-center justify-between">
-                        <h2 className="text-xl font-bold">{currentDate.toLocaleString("en-US", { month: "long", year: "numeric" })}</h2>
+                        <h2 className="text-xl font-bold">{currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월</h2>
                         <div className="flex gap-2">
                             <button aria-label="이전 달" onClick={() => changeMonth(-1)} className="p-2"><FiChevronLeft /></button>
                             <button aria-label="다음 달" onClick={() => changeMonth(1)} className="p-2"><FiChevronRight /></button>
@@ -356,10 +360,12 @@ export function TeacherPage() {
                             if (!date) return <span key={`blank-${index}`} />;
                             const isToday = dateKey(date) === dateKey(today);
                             const isSelected = dateKey(date) === dateKey(selectedDate);
+                            const hasReservation = upcomingPending.some((item) => item.date === dateKey(date))
+                                || upcomingApproved.some((item) => item.date === dateKey(date));
                             return (
                                 <button key={dateKey(date)} onClick={() => setSelectedDate(date)}
                                     aria-label={dateKey(date)} aria-current={isToday ? "date" : undefined} aria-pressed={isSelected}
-                                    className={`mx-auto flex h-10 w-10 items-center justify-center rounded-md text-sm ${isToday ? "bg-brand text-white" : "hover:bg-brand-soft"} ${isSelected ? "outline-2 outline-offset-2 outline-ink" : ""}`}>
+                                    className={`mx-auto flex h-10 w-10 items-center justify-center rounded-md text-sm ${isToday ? "bg-brand text-white" : hasReservation ? "bg-brand-soft text-brand-accent" : "hover:bg-brand-soft"} ${isSelected ? "outline-2 outline-offset-2 outline-ink" : ""}`}>
                                     {date.getDate()}
                                 </button>
                             );
@@ -410,7 +416,7 @@ export function TeacherPage() {
             <main className="min-w-0 flex-1 bg-panel">
                 <div className="border-b border-border bg-white px-8 py-5">
                     <div>
-                        <h1 className="text-2xl font-bold">{selectedDate.toLocaleString("en-US", { month: "long", year: "numeric" }).toUpperCase()}</h1>
+                        <h1 className="text-2xl font-bold">{selectedDate.getFullYear()}년 {selectedDate.getMonth() + 1}월</h1>
                         <p className="mt-1 text-sm text-secondary-text">{teacherName.replace(/ 선생님$/, "")} 선생님</p>
                     </div>
                 </div>
@@ -453,7 +459,7 @@ export function TeacherPage() {
                                 const isPast = currentDate < todayKey;
                                 const slot = `${currentDate}_${period}`;
                                 const classItem = teacherVariant === "im-gyeongwon" ? WEEKLY_CLASS_SCHEDULE[WEEKDAYS[index]]?.[period] : undefined;
-                                const confirmed = isPast ? [] : upcomingApproved.filter((item) => reservationSlot(item) === slot);
+                                const confirmed = upcomingApproved.filter((item) => reservationSlot(item) === slot);
                                 const waiting = isPast ? [] : upcomingPending.filter((item) => reservationSlot(item) === slot);
                                 const isLocked = !isPast && lockedSlots.has(slot);
                                 const isModeActive = !isPast && (isLockMode || isForceMode);

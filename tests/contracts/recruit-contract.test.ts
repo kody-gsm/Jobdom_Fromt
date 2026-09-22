@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createRecruitApi } from "../../src/fsd/entities/recruit/api/createRecruitApi.ts";
 import { createRecruitApplyUrl } from "../../src/fsd/features/copy-recruit-link/model/createRecruitApplyUrl.ts";
+
+const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 
 const calls: Array<{ path: string; init?: RequestInit }> = [];
 const api = createRecruitApi(async <T>(path: string, init?: RequestInit) => {
@@ -24,9 +28,9 @@ assert.equal(
   "https://jobdam.example/recruit/7/apply",
 );
 
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
+assert.match(read("app/page.tsx"), /title: \"대시보드\"/);
+assert.match(read("app/recruit/[id]/layout.tsx"), /title: \"취업 공고\"/);
+
 const listRoute = read("app/recruit/page.tsx");
 const detailRoute = read("app/recruit/[id]/page.tsx");
 const applyRoute = read("app/recruit/[id]/apply/page.tsx");
@@ -35,6 +39,7 @@ const detailPage = read("src/fsd/pages/recruit-detail/ui/RecruitDetailPage.tsx")
 const listHook = read("src/fsd/pages/recruit/model/useRecruitList.ts");
 
 assert.match(listRoute, /@fsd\/pages\/recruit/);
+assert.match(listRoute, /title: "취업 공고"/);
 assert.match(detailRoute, /@fsd\/pages\/recruit-detail/);
 assert.doesNotMatch(listRoute, /useState|useEffect|getRecruits/);
 assert.doesNotMatch(detailRoute, /useState|useEffect|getRecruit/);

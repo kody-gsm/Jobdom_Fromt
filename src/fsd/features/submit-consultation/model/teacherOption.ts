@@ -1,8 +1,10 @@
-import type { ConsultationType } from "@fsd/entities/consultation";
+import {
+  getConsultationTeacherLabel,
+  type ConsultationType,
+} from "../../../entities/consultation/index.ts";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
 
-export const getConsultationTeacherLabel = (name: string) =>
-  name.endsWith(" 선생님") ? name : `${name} 선생님`;
+export { getConsultationTeacherLabel };
 
 export const getConsultationTeacherOptions = (
   _type: ConsultationType,

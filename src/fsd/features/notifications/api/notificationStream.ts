@@ -1,3 +1,7 @@
+import {
+  isReservationRealtimeEvent,
+  type ReservationRealtimeEvent,
+} from "../../../entities/consultation/index.ts";
 import { issueNotificationSubscribeTicket, type NotificationItem } from "./notifications.ts";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
@@ -6,6 +10,7 @@ export function subscribeNotifications(
   onNotification: (item: NotificationItem) => void,
   onConnect: () => void,
   signal: AbortSignal,
+  onReservation?: (event: ReservationRealtimeEvent) => void,
 ) {
   let stream: EventSource | null = null;
   let retry: ReturnType<typeof setTimeout> | undefined;
@@ -26,6 +31,12 @@ export function subscribeNotifications(
       stream.addEventListener("notification", (event) => {
         try {
           onNotification(JSON.parse((event as MessageEvent).data));
+        } catch { /* 잘못된 이벤트는 무시한다. */ }
+      });
+      stream.addEventListener("reservation", (event) => {
+        try {
+          const parsed: unknown = JSON.parse((event as MessageEvent).data);
+          if (isReservationRealtimeEvent(parsed)) onReservation?.(parsed);
         } catch { /* 잘못된 이벤트는 무시한다. */ }
       });
       stream.addEventListener("error", reconnect);

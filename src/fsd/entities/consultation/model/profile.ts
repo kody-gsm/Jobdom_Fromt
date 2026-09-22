@@ -3,6 +3,7 @@ import type {
   ReservationStatus,
   StudentReservation,
 } from "./types.ts";
+import { getConsultationTeacherLabel } from "./labels.ts";
 
 export interface ProfileConsultation {
   id: number;
@@ -24,7 +25,7 @@ export const toProfileConsultation = (
   type: kind === "course" ? "진로상담" : "일반상담",
   date: item.date.replaceAll("-", "."),
   slot: item.period,
-  teacherName: item.teacherName,
+  teacherName: getConsultationTeacherLabel(item.teacherName),
   status: item.status,
 });
 

@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getProfileAvatarUserKey,
   getSession,
+  type UserRole,
   saveProfileAvatar,
   validateProfileAvatarFile,
 } from "@fsd/entities/user";
-import type { UserRole } from "@fsd/entities/user";
+import {
+  createConsultationRefreshCoordinator,
+  RESERVATION_CHANGED_EVENT,
+} from "@fsd/entities/consultation";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
-import { fetchUserProfile, uploadProfileImage } from "../api/profile.ts";
+import { createRequestVersionGuard } from "@fsd/shared/lib";
+import {
+  fetchProfileReservations,
+  fetchUserProfile,
+  uploadProfileImage,
+} from "../api/profile.ts";
 import type { UserProfileData } from "./buildUserProfileData.ts";
 
 export const useProfilePage = () => {
@@ -17,6 +26,9 @@ export const useProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const profileRequests = useRef(createRequestVersionGuard());
+  const reservationRefresh = useRef(createConsultationRefreshCoordinator());
+  const refreshReservationsRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -24,38 +36,76 @@ export const useProfilePage = () => {
       if (active) setUserRole(getSession()?.role ?? null);
     });
 
-    fetchUserProfile()
-      .then((data) => {
-        if (!active) return;
+    const refreshReservations = async () => {
+      const requestVersion = reservationRefresh.current.beginRefresh();
+      if (requestVersion === null) return;
+      try {
+        const reservations = await fetchProfileReservations();
+        if (!active || !reservationRefresh.current.isLatest(requestVersion)) return;
+        setProfile((current) => (current ? { ...current, reservations } : current));
+        setError("");
+      } catch (caught) {
+        if (active && reservationRefresh.current.isLatest(requestVersion)) {
+          setError(
+            caught instanceof Error ? caught.message : "예약을 불러오지 못했습니다.",
+          );
+        }
+      }
+    };
+    refreshReservationsRef.current = refreshReservations;
+
+    const loadProfile = async () => {
+      const requestVersion = profileRequests.current.next();
+      setLoading(true);
+      try {
+        const data = await fetchUserProfile();
+        if (!active || !profileRequests.current.isLatest(requestVersion)) return;
         setProfile(data);
         setProfileAvatar(data.avatarUrl || null);
-      })
-      .catch((caught) => {
-        if (active) {
+        setError("");
+        setLoading(false);
+      } catch (caught) {
+        if (active && profileRequests.current.isLatest(requestVersion)) {
           setError(
             caught instanceof Error ? caught.message : "프로필을 불러오지 못했습니다.",
           );
+          setLoading(false);
         }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+      }
+    };
+
+    void loadProfile();
+    const handleReservationChange = () => void refreshReservations();
+    window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
     return () => {
       active = false;
+      window.removeEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
     };
   }, []);
 
   const handleCancel = async (id: number) => {
-    await cancelProfileConsultation(id);
-    setProfile((current) =>
-      current
-        ? {
-            ...current,
-            reservations: current.reservations.filter((item) => item.id !== id),
-          }
-        : current,
-    );
+    reservationRefresh.current.startCancellation(id);
+    profileRequests.current.next();
+    let canceled = false;
+
+    try {
+      await cancelProfileConsultation(id);
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              reservations: current.reservations.filter((item) => item.id !== id),
+            }
+          : current,
+      );
+      canceled = true;
+    } finally {
+      const shouldRefresh = reservationRefresh.current.finishCancellation(id);
+      if (canceled || shouldRefresh) {
+        await refreshReservationsRef.current?.();
+      }
+    }
   };
 
   const handleAvatarChange = (file: File) => {
