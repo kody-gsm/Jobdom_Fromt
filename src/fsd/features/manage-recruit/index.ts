@@ -2,6 +2,7 @@ export type { Recruit, RecruitDashboardRow, RecruitUpdate } from "./model/types.
 export { createRecruitDashboardLoader, findRecruitForm } from "./model/dashboard.ts";
 export {
   analyzeRecruit,
+  createRecruit,
   deleteRecruit,
   getRecruitDashboard,
   publishRecruit,

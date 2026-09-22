@@ -1,8 +1,12 @@
-import type { Recruit } from "../../../entities/recruit/model/types.ts";
-import { getConsultationTeacherLabel } from "../../../entities/consultation/model/labels.ts";
-import { decodeProfileConsultationId } from "../../../entities/consultation/model/profile.ts";
-import { getReservationPresentation, isActiveReservation } from "../../../entities/consultation/model/status.ts";
-import type { ReservationStatus, StudentReservation } from "../../../entities/consultation/model/types.ts";
+import type { Recruit } from "../../../entities/recruit/index.ts";
+import {
+  decodeProfileConsultationId,
+  getConsultationTeacherLabel,
+  getReservationPresentation,
+  isActiveReservation,
+  type ReservationStatus,
+  type StudentReservation,
+} from "../../../entities/consultation/index.ts";
 
 export type HomeConsultationItem = {
   id: number;
