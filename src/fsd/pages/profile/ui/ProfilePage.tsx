@@ -30,9 +30,9 @@ export const ProfilePage = () => {
         <StudentHeader />
       ) : null}
       <main className="mx-auto w-full max-w-[840px] px-6 py-10 lg:px-10 lg:py-12">
-        {loading ? (
+        {loading && !profile ? (
           <ContentCard className="py-24 text-center text-muted">프로필을 불러오는 중…</ContentCard>
-        ) : error ? (
+        ) : !profile && error ? (
           <div role="alert" className="rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] p-5 text-[#9A4F45]">
             {error}
           </div>
@@ -80,6 +80,12 @@ export const ProfilePage = () => {
                 </p>
               </div>
             </ContentCard>
+
+            {error ? (
+              <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </p>
+            ) : null}
 
             <ProfileConsultations
               reservations={profile.reservations}

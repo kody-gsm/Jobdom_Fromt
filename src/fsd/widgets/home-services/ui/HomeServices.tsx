@@ -5,15 +5,18 @@ import { useEffect, useState } from "react";
 import { FaBriefcase } from "react-icons/fa";
 import { IoMdChatbubbles } from "react-icons/io";
 import {
+  getConsultationCancelError,
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
+import { ConsultationCancelDialog } from "@fsd/entities/consultation/ui/ConsultationCancelDialog.tsx";
 import {
   HOME_BANNER_CHANGED_EVENT,
   readHomeBanner,
 } from "@fsd/entities/banner";
 import type { HomeBanner } from "@fsd/entities/banner";
 import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
+import { getCancelTargetInvalidationNotice } from "../model/cancelTarget.ts";
 import type { HomeConsultationItem } from "../model/overview.ts";
 import { useHomeOverview } from "../model/useHomeOverview.ts";
 
@@ -21,7 +24,9 @@ export const HomeServices = () => {
   const { overview, loading, error, handleCancel } = useHomeOverview();
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [cancelError, setCancelError] = useState("");
+  const [reservationChangeNotice, setReservationChangeNotice] = useState("");
   const [cancelingId, setCancelingId] = useState<number | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<HomeConsultationItem | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [homeBanner, setHomeBanner] = useState<HomeBanner | null>(null);
   const upcomingConsultations = overview.upcomingConsultations.filter((item) =>
@@ -35,18 +40,52 @@ export const HomeServices = () => {
   }, []);
 
   useEffect(() => {
+    if (!cancelTarget) return;
+    const latestTarget = overview.upcomingConsultations.find(
+      (item) => item.id === cancelTarget.id,
+    );
+    const invalidationNotice = getCancelTargetInvalidationNotice(
+      cancelTarget.id,
+      overview.upcomingConsultations,
+    );
+    if (invalidationNotice) {
+      queueMicrotask(() => {
+        setCancelTarget(null);
+        setCancelError("");
+        setReservationChangeNotice(invalidationNotice);
+      });
+      return;
+    }
+    if (latestTarget && latestTarget.status !== cancelTarget.status) {
+      queueMicrotask(() => setCancelTarget(latestTarget));
+    }
+  }, [cancelTarget, overview.upcomingConsultations]);
+
+  useEffect(() => {
     const syncBanner = () => setHomeBanner(readHomeBanner());
     syncBanner();
     window.addEventListener(HOME_BANNER_CHANGED_EVENT, syncBanner);
     return () => window.removeEventListener(HOME_BANNER_CHANGED_EVENT, syncBanner);
   }, []);
 
+  const openCancelDialog = (item: HomeConsultationItem) => {
+    setCancelError("");
+    setReservationChangeNotice("");
+    setCancelTarget(item);
+  };
+
   const cancelConsultation = async (item: HomeConsultationItem) => {
-    if (!isConsultationCancelable(item.date, item.period, new Date())) return;
+    const cancelError = getConsultationCancelError(item.date, item.period, new Date());
+    if (!isConsultationCancelable(item.date, item.period, new Date())) {
+      setCancelError(cancelError ?? "취소할 수 없습니다.");
+      return;
+    }
     try {
       setCancelError("");
       setCancelingId(item.id);
       await handleCancel(item.id);
+      setCancelTarget(null);
+      setReservationChangeNotice("");
     } catch {
       setCancelError(`${item.actionLabel}하지 못했습니다.`);
     } finally {
@@ -99,13 +138,13 @@ export const HomeServices = () => {
                 {consultationPreview.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={`${item.teacherName} · ${item.type} · ${item.statusLabel}`}
+                    title={`${item.type} · ${item.teacherName} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
                     actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
-                    onAction={() => void cancelConsultation(item)}
+                    onAction={() => openCancelDialog(item)}
                   />
                 ))}
               </div>
@@ -173,6 +212,11 @@ export const HomeServices = () => {
       </ContentCard>
 
       {error ? <p role="status" className="text-sm text-[#9A675E]">{error}</p> : null}
+      {reservationChangeNotice ? (
+        <p role="status" className="text-sm text-[#9A675E]">
+          {reservationChangeNotice}
+        </p>
+      ) : null}
 
       {isConsultationModalOpen ? (
         <div
@@ -214,19 +258,41 @@ export const HomeServices = () => {
                 upcomingConsultations.map((item) => (
                   <SummaryActionCard
                     key={item.id}
-                    title={`${item.teacherName} · ${item.type} · ${item.statusLabel}`}
+                    title={`${item.type} · ${item.teacherName} · ${item.statusLabel}`}
                     detail={`${item.date.replaceAll("-", ".")} / ${item.period}`}
                     actionLabel={item.actionLabel}
                     pendingActionLabel="취소 중"
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
-                    onAction={() => void cancelConsultation(item)}
+                    onAction={() => openCancelDialog(item)}
                   />
                 ))
               )}
             </div>
           </div>
         </div>
+      ) : null}
+
+      {cancelTarget ? (
+        <ConsultationCancelDialog
+          target={{
+            type: cancelTarget.type,
+            teacherName: cancelTarget.teacherName,
+            date: cancelTarget.date.replaceAll("-", "."),
+            period: cancelTarget.period,
+            actionLabel: cancelTarget.actionLabel,
+          }}
+          pending={cancelingId === cancelTarget.id}
+          error={cancelError}
+          confirmDisabled={!isConsultationCancelable(cancelTarget.date, cancelTarget.period, now)}
+          onClose={() => {
+            if (cancelingId === null) {
+              setCancelError("");
+              setCancelTarget(null);
+            }
+          }}
+          onConfirm={() => void cancelConsultation(cancelTarget)}
+        />
       ) : null}
     </section>
   );

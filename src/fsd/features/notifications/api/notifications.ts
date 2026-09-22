@@ -6,7 +6,9 @@ export type NotificationType =
   | "COMMON_COUNSELING_REQUESTED"
   | "COURSE_COUNSELING_REQUESTED"
   | "COUNSELING_APPROVED"
-  | "COUNSELING_REJECTED";
+  | "COUNSELING_REJECTED"
+  | "COUNSELING_AUTO_CANCELED"
+  | "COUNSELING_EXPIRED";
 
 export interface NotificationItem {
   id: number;
