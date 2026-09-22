@@ -16,6 +16,7 @@ type ConsultationCancelDialogProps = {
   target: ConsultationCancelTarget;
   pending?: boolean;
   error?: string;
+  confirmDisabled?: boolean;
   confirmButtonClassName?: string;
   onClose: () => void;
   onConfirm: () => void;
@@ -25,6 +26,7 @@ export const ConsultationCancelDialog = ({
   target,
   pending = false,
   error = "",
+  confirmDisabled = false,
   confirmButtonClassName = "",
   onClose,
   onConfirm,
@@ -61,13 +63,18 @@ export const ConsultationCancelDialog = ({
               {error}
             </p>
           ) : null}
+          {confirmDisabled ? (
+            <p role="status" className="mt-3 text-center text-sm text-gray-500">
+              상담 시작 1시간 전부터는 취소할 수 없습니다.
+            </p>
+          ) : null}
           <div className="mt-6 grid grid-cols-2 gap-3">
             <ActionButton type="button" variant="secondary" disabled={pending} onClick={close}>
               아니요
             </ActionButton>
             <ActionButton
               type="button"
-              disabled={pending}
+              disabled={pending || confirmDisabled}
               onClick={onConfirm}
               className={confirmButtonClassName}
             >
@@ -110,11 +117,20 @@ export const ConsultationCancelDialog = ({
             {error}
           </p>
         ) : null}
+        {confirmDisabled ? (
+          <p role="status" className="mt-3 text-center text-sm text-gray-500">
+            상담 시작 1시간 전부터는 취소할 수 없습니다.
+          </p>
+        ) : null}
         <div className="mt-6 grid grid-cols-2 gap-3">
           <ActionButton type="button" variant="secondary" onClick={close}>
             닫기
           </ActionButton>
-          <ActionButton type="button" onClick={() => setConfirming(true)}>
+          <ActionButton
+            type="button"
+            disabled={confirmDisabled}
+            onClick={() => setConfirming(true)}
+          >
             {target.actionLabel}
           </ActionButton>
         </div>

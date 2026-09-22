@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { FaBriefcase } from "react-icons/fa";
 import { IoMdChatbubbles } from "react-icons/io";
 import {
+  getConsultationCancelError,
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
@@ -49,7 +50,11 @@ export const HomeServices = () => {
   };
 
   const cancelConsultation = async (item: HomeConsultationItem) => {
-    if (!isConsultationCancelable(item.date, item.period, new Date())) return;
+    const cancelError = getConsultationCancelError(item.date, item.period, new Date());
+    if (!isConsultationCancelable(item.date, item.period, new Date())) {
+      setCancelError(cancelError ?? "취소할 수 없습니다.");
+      return;
+    }
     try {
       setCancelError("");
       setCancelingId(item.id);
@@ -248,6 +253,7 @@ export const HomeServices = () => {
           }}
           pending={cancelingId === cancelTarget.id}
           error={cancelError}
+          confirmDisabled={!isConsultationCancelable(cancelTarget.date, cancelTarget.period, now)}
           onClose={() => {
             if (cancelingId === null) {
               setCancelError("");

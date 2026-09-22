@@ -88,6 +88,8 @@ try {
   await flush();
   assert.equal(tickets, 2);
   assert.match(FakeStream.instances[1].url, /ticket=ticket-2$/);
+  FakeStream.instances[1].dispatchEvent(new Event("connect"));
+  assert.equal(connected, 2);
   FakeStream.instances[1].dispatchEvent(new Event("error"));
   ctrl.abort();
   mock.timers.tick(3000);

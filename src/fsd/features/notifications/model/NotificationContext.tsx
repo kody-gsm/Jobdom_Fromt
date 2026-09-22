@@ -104,6 +104,13 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       }).catch(() => undefined);
     };
     refreshCount();
+    const reservationRefresh = () => {
+      window.dispatchEvent(new CustomEvent(RESERVATION_CHANGED_EVENT));
+    };
+    const handleConnect = () => {
+      refreshCount();
+      reservationRefresh();
+    };
     const polling = window.setInterval(refreshCount, 60_000);
     subscribeNotifications((item) => {
       if (!ctrl.signal.aborted) {
@@ -111,9 +118,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         pushToast(item);
         refreshCount();
       }
-    }, refreshCount, ctrl.signal, (event) => {
-      window.dispatchEvent(new CustomEvent(RESERVATION_CHANGED_EVENT, { detail: event }));
-    });
+    }, handleConnect, ctrl.signal, reservationRefresh);
     ctrl.signal.addEventListener("abort", () => window.clearInterval(polling), { once: true });
   }, [pushToast]);
 

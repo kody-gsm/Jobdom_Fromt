@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  getConsultationCancelError,
   getReservationPresentation,
   isActiveReservation,
   isConsultationCancelable,
@@ -35,7 +36,11 @@ export const ProfileConsultations = ({ reservations, onCancel }: ProfileConsulta
     if (cancelTarget === null || canceling) return;
     const target = reservations.find((item) => item.id === cancelTarget);
     if (!target || !isConsultationCancelable(target.date, target.slot, new Date())) {
-      setCancelError("상담 시작 1시간 전부터는 취소할 수 없습니다.");
+      setCancelError(
+        target
+          ? getConsultationCancelError(target.date, target.slot, new Date()) ?? "취소할 수 없습니다."
+          : "취소할 수 없습니다.",
+      );
       return;
     }
     try {
@@ -94,6 +99,7 @@ export const ProfileConsultations = ({ reservations, onCancel }: ProfileConsulta
           }}
           pending={canceling}
           error={cancelError}
+          confirmDisabled={!isConsultationCancelable(cancelTargetItem.date, cancelTargetItem.slot, now)}
           confirmButtonClassName="bg-brand hover:bg-[#00B94C]"
           onClose={() => {
             setCancelError("");

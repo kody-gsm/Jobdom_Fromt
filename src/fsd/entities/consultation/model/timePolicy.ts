@@ -22,3 +22,11 @@ export const isConsultationCancelable = (date: string, period: string, now = new
   const start = getStartTimestamp(date, period);
   return start !== null && now.getTime() < start - 60 * 60 * 1000;
 };
+
+export const getConsultationCancelError = (
+  date: string,
+  period: string,
+  now = new Date(),
+) => isConsultationCancelable(date, period, now)
+  ? null
+  : "상담 시작 1시간 전부터는 취소할 수 없습니다.";

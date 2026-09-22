@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getProfileAvatarUserKey,
   getSession,
@@ -8,6 +8,7 @@ import {
 } from "@fsd/entities/user";
 import { RESERVATION_CHANGED_EVENT } from "@fsd/entities/consultation";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
+import { createRequestVersionGuard } from "@fsd/shared/lib";
 import { fetchUserProfile, uploadProfileImage } from "../api/profile.ts";
 import type { UserProfileData } from "./buildUserProfileData.ts";
 
@@ -18,6 +19,7 @@ export const useProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const profileRequests = useRef(createRequestVersionGuard());
 
   useEffect(() => {
     let active = true;
@@ -25,27 +27,28 @@ export const useProfilePage = () => {
       if (active) setUserRole(getSession()?.role ?? null);
     });
 
-    const loadProfile = async () => {
-      setLoading(true);
+    const loadProfile = async (initial: boolean) => {
+      const requestVersion = profileRequests.current.next();
+      if (initial) setLoading(true);
       try {
         const data = await fetchUserProfile();
-        if (!active) return;
+        if (!active || !profileRequests.current.isLatest(requestVersion)) return;
         setProfile(data);
         setProfileAvatar(data.avatarUrl || null);
         setError("");
+        setLoading(false);
       } catch (caught) {
-        if (active) {
+        if (active && profileRequests.current.isLatest(requestVersion)) {
           setError(
             caught instanceof Error ? caught.message : "프로필을 불러오지 못했습니다.",
           );
+          setLoading(false);
         }
-      } finally {
-        if (active) setLoading(false);
       }
     };
 
-    void loadProfile();
-    const handleReservationChange = () => void loadProfile();
+    void loadProfile(true);
+    const handleReservationChange = () => void loadProfile(false);
     window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
     return () => {
@@ -55,6 +58,7 @@ export const useProfilePage = () => {
   }, []);
 
   const handleCancel = async (id: number) => {
+    profileRequests.current.next();
     await cancelProfileConsultation(id);
     setProfile((current) =>
       current

@@ -53,3 +53,16 @@ export const buildHomeOverview = ({
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 2),
 });
+
+export const replaceHomeConsultations = (
+  current: HomeOverview,
+  course: StudentReservation[],
+  common: StudentReservation[],
+): HomeOverview => ({
+  ...current,
+  upcomingConsultations: buildHomeOverview({
+    course,
+    common,
+    recruits: [],
+  }).upcomingConsultations,
+});
