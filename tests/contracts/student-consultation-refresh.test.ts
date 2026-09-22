@@ -90,7 +90,7 @@ const homeHook = read("src/fsd/widgets/home-services/model/useHomeOverview.ts");
 const profileHook = read("src/fsd/pages/profile/model/useProfilePage.ts");
 const profileApi = read("src/fsd/pages/profile/api/profile.ts");
 const profilePage = read("src/fsd/pages/profile/ui/ProfilePage.tsx");
-const dialog = read("src/fsd/entities/consultation/ui/ConsultationCancelDialog.tsx");
+const dialog = read("src/fsd/features/cancel-consultation/ui/ConsultationCancelDialog.tsx");
 const notificationContext = read("src/fsd/features/notifications/model/NotificationContext.tsx");
 
 assert.match(homeHook, /refreshConsultations/);

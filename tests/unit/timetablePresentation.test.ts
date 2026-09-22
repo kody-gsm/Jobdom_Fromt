@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { getTimetableSubject } from "../../model/timetablePresentation.ts";
-import { createTimetablePath } from "../../model/timetablePath.ts";
+import { getTimetableSubject } from "../../src/fsd/features/submit-consultation/model/timetablePresentation.ts";
+import { createTimetablePath } from "../../src/fsd/features/submit-consultation/model/timetablePath.ts";
 
 assert.equal(
   createTimetablePath("2026-09-21", "2026-09-25"),
@@ -15,5 +15,3 @@ const timetable = [
 assert.equal(getTimetableSubject(timetable, "2026-09-21", "1교시"), "수학");
 assert.equal(getTimetableSubject(timetable, "2026-09-22", "1교시"), null);
 assert.equal(getTimetableSubject(timetable, "2026-09-21", "3교시"), null);
-
-console.log("timetable presentation test passed");

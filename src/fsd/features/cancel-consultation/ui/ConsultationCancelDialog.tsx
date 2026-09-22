@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getConsultationTeacherLabel } from "../model/labels.ts";
+import { getConsultationTeacherLabel } from "@fsd/entities/consultation";
 import { ActionButton } from "@fsd/shared/ui";
 
 export type ConsultationCancelTarget = {
@@ -99,7 +99,7 @@ export const ConsultationCancelDialog = ({
         onClick={close}
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
       />
-      <div className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-6">
         <h2 id="consultation-cancel-title" className="text-center text-xl font-bold text-ink">
           상담 취소
         </h2>

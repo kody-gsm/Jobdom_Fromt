@@ -39,5 +39,4 @@ export {
   isReservationRealtimeEvent,
 } from "./model/realtime.ts";
 export type { ReservationRealtimeEvent } from "./model/realtime.ts";
-
 export { CONSULTATION_SCHEDULE, getConsultationScheduleItem } from "./model/schedule.ts";

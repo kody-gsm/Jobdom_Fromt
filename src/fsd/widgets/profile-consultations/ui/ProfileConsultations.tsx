@@ -8,7 +8,7 @@ import {
   isConsultationCancelable,
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
-import { ConsultationCancelDialog } from "@fsd/entities/consultation/ui/ConsultationCancelDialog.tsx";
+import { ConsultationCancelDialog } from "@fsd/features/cancel-consultation";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
 import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
 
