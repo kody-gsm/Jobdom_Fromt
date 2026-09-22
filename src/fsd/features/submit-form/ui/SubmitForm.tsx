@@ -177,6 +177,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
             type="button"
             onClick={(event) => {
               event.preventDefault();
+              setMessage(null);
               setEditing(true);
             }}
             className="w-full bg-brand hover:bg-brand-hover"
