@@ -25,6 +25,8 @@ export const useProfilePage = () => {
   const [avatarError, setAvatarError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reservationLoading, setReservationLoading] = useState(true);
+  const [reservationError, setReservationError] = useState("");
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const profileRequests = useRef(createRequestVersionGuard());
   const reservationRefresh = useRef(createConsultationRefreshCoordinator());
@@ -39,16 +41,20 @@ export const useProfilePage = () => {
     const refreshReservations = async () => {
       const requestVersion = reservationRefresh.current.beginRefresh();
       if (requestVersion === null) return;
+      setReservationLoading(true);
+      setReservationError("");
       try {
         const reservations = await fetchProfileReservations();
         if (!active || !reservationRefresh.current.isLatest(requestVersion)) return;
         setProfile((current) => (current ? { ...current, reservations } : current));
-        setError("");
+        setReservationError("");
+        setReservationLoading(false);
       } catch (caught) {
         if (active && reservationRefresh.current.isLatest(requestVersion)) {
-          setError(
+          setReservationError(
             caught instanceof Error ? caught.message : "예약을 불러오지 못했습니다.",
           );
+          setReservationLoading(false);
         }
       }
     };
@@ -75,6 +81,7 @@ export const useProfilePage = () => {
     };
 
     void loadProfile();
+    void refreshReservations();
     const handleReservationChange = () => void refreshReservations();
     window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
@@ -138,6 +145,9 @@ export const useProfilePage = () => {
     avatarError,
     loading,
     error,
+    reservationLoading,
+    reservationError,
+    retryReservations: () => refreshReservationsRef.current?.(),
     userRole,
     handleCancel,
     handleAvatarChange,

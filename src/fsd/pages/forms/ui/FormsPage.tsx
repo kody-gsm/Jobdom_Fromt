@@ -6,7 +6,7 @@ import { StudentHeader } from "@fsd/widgets/student-header";
 import { useFormsPage } from "../model/useFormsPage.ts";
 
 export const FormsPage = () => {
-  const { forms, loading, error } = useFormsPage();
+  const { forms, loading, error, retry } = useFormsPage();
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
@@ -19,15 +19,11 @@ export const FormsPage = () => {
           </Link>
         </div>
 
-        {error ? (
-          <p role="alert" className="mt-6 rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] p-5 text-sm text-[#9A4F45]">
-            {error}
-          </p>
-        ) : null}
-
         <section className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
           {loading ? (
             <Empty text="불러오는 중…" />
+          ) : error ? (
+            <LoadError message={error} onRetry={() => void retry()} />
           ) : forms.length === 0 ? (
             <Empty text="공개된 폼이 없습니다." />
           ) : (
@@ -61,6 +57,19 @@ export const FormsPage = () => {
 
 const Empty = ({ text }: { text: string }) => (
   <ContentCard className="col-span-full px-6 py-20 text-center text-muted">{text}</ContentCard>
+);
+
+const LoadError = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
+  <ContentCard className="col-span-full border border-[#F0D7D2] bg-[#FFF7F5] px-6 py-10 text-center">
+    <p role="alert" className="text-sm text-[#9A4F45]">{message}</p>
+    <button
+      type="button"
+      onClick={onRetry}
+      className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-white px-4 text-sm font-bold text-[#9A4F45] ring-1 ring-[#E7C6C0] hover:bg-[#FFF0EC]"
+    >
+      다시 시도
+    </button>
+  </ContentCard>
 );
 
 const formatFormDeadline = (deadline: string | null) => {

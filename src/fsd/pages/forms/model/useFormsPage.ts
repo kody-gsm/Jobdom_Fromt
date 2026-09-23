@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormSummary } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
 import { formsApi } from "../api/forms.ts";
@@ -8,8 +8,12 @@ export const useFormsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    formsApi
+  const loadForms = useCallback((resetState = true) => {
+    if (resetState) {
+      setLoading(true);
+      setError("");
+    }
+    return formsApi
       .getAll()
       .then(setForms)
       .catch((caught) =>
@@ -24,5 +28,9 @@ export const useFormsPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  return { forms, loading, error };
+  useEffect(() => {
+    queueMicrotask(() => void loadForms(false));
+  }, [loadForms]);
+
+  return { forms, loading, error, retry: () => loadForms() };
 };

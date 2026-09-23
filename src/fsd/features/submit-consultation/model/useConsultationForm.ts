@@ -94,10 +94,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(() => {
     const today = new Date();
-    return today.getDay() === 0 || today.getDay() === 6
-      ? null
-      : getNextWeekdays(today, 1)[0]?.value ?? null;
+    return getNextWeekdays(today, 1)[0]?.value ?? null;
   });
+  const selectedDateRef = useRef(selectedDate);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [serverUnavailablePeriods, setServerUnavailablePeriods] = useState<Set<string>>(
     () => new Set(),
@@ -113,6 +112,15 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [toast, setToast] = useState<ConsultationToast | null>(null);
   const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
   const toastTimer = useRef<number | null>(null);
+
+  const updateSelectedDate = (nextDate: string | null) => {
+    if (selectedDateRef.current !== nextDate) {
+      selectedDateRef.current = nextDate;
+      setSelectedTime(null);
+      setServerUnavailablePeriods(new Set());
+    }
+    setSelectedDate(nextDate);
+  };
 
   const candidateDates = useMemo(() => getNextWeekdays(), []);
   const dates = useMemo(
@@ -147,9 +155,10 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         );
         setHolidayDates(holidays);
         setClock(currentNow);
-        setSelectedDate((current) =>
-          current !== null && selectableDates.some((item) => item.value === current)
-            ? current
+        const currentDate = selectedDateRef.current;
+        updateSelectedDate(
+          currentDate !== null && selectableDates.some((item) => item.value === currentDate)
+            ? currentDate
             : selectableDates[0]?.value ?? null,
         );
       })
@@ -168,6 +177,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       .then((items) => {
         if (!active) return;
         setTeachers(items);
+        setSelectedTeacher((current) =>
+          current !== null && items.some((item) => item.id === current.id)
+            ? current
+            : null,
+        );
         setTeacherStatus("ready");
       })
       .catch(() => {
@@ -211,9 +225,10 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     const advanceAfterLastPeriod = () => {
       const currentNow = new Date();
       setClock(currentNow);
-      setSelectedDate((current) =>
-        current ? getNextAvailableDate(current, currentNow, holidayDates) : current,
-      );
+      const currentDate = selectedDateRef.current;
+      if (currentDate !== null) {
+        updateSelectedDate(getNextAvailableDate(currentDate, currentNow, holidayDates));
+      }
     };
     const timer = window.setInterval(advanceAfterLastPeriod, 30_000);
     advanceAfterLastPeriod();
@@ -250,6 +265,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const handleTabChange = (type: ConsultationType) => {
     setCounselType(type);
+    setTeachers([]);
+    setTeacherStatus("loading");
     setSelectedTeacher(null);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
@@ -266,9 +283,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const toggleDate = (date: string) => {
-    setSelectedDate((current) => current === date ? null : date);
-    setSelectedTime(null);
-    setServerUnavailablePeriods(new Set());
+    updateSelectedDate(selectedDateRef.current === date ? null : date);
     if (errorTarget === "date") setErrorTarget(null);
   };
 
@@ -302,8 +317,10 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setTitle("");
     setContent("");
     setSelectedTeacher(null);
+    selectedDateRef.current = null;
     setSelectedDate(null);
     setSelectedTime(null);
+    setServerUnavailablePeriods(new Set());
     setErrorTarget(null);
     router.push("/");
   };

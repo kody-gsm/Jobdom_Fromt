@@ -9,6 +9,8 @@ import type {
 } from "./types.ts";
 import { CONSULTATION_SCHEDULE } from "./schedule.ts";
 
+const KOREA_TIME_ZONE = "Asia/Seoul";
+
 export const TEACHERS: ConsultationTeacher[] = [
   "임경원 선생님",
   "김권예소 선생님",
@@ -43,7 +45,7 @@ export const getAvailablePeriods = (
 
 const getKoreaClock = (now: Date) => {
   const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Seoul",
+    timeZone: KOREA_TIME_ZONE,
     weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
@@ -74,14 +76,26 @@ export const getSelectablePeriods = (
   });
 };
 
+const getKoreaDateValue = (date: Date) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: KOREA_TIME_ZONE }).format(date);
+
+const addDateValue = (dateValue: string, days: number) => {
+  const date = new Date(`${dateValue}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+const getDateWeekday = (dateValue: string) =>
+  new Date(`${dateValue}T00:00:00Z`).getUTCDay();
+
 const getNextAvailableDateWithBlockedDates = (
   date: string,
   now: Date,
   blockedDates: ReadonlySet<string> = new Set(),
 ) => {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(now);
+  const today = getKoreaDateValue(now);
   const time = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Seoul",
+    timeZone: KOREA_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -89,14 +103,15 @@ const getNextAvailableDateWithBlockedDates = (
   const isBlocked = blockedDates.has(date);
   if (!isBlocked && (date > today || (date === today && time < "19:30"))) return date;
 
-  const next = new Date(`${date}T12:00:00+09:00`);
-  do next.setDate(next.getDate() + 1);
+  let next = addDateValue(date, 1);
   while (
-    next.getDay() === 0 ||
-    next.getDay() === 6 ||
-    blockedDates.has(toLocalDateValue(next))
-  );
-  return toLocalDateValue(next);
+    getDateWeekday(next) === 0 ||
+    getDateWeekday(next) === 6 ||
+    blockedDates.has(next)
+  ) {
+    next = addDateValue(next, 1);
+  }
+  return next;
 };
 
 export const getNextAvailableDate = (
@@ -114,28 +129,24 @@ export const getSelectableConsultationDates = (
   getNextAvailableDateWithBlockedDates(value, now, blockedDates) === value,
 );
 
-const toLocalDateValue = (date: Date) =>
-  new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 10);
-
 export const getNextWeekdays = (
   start = new Date(),
   days = 31,
 ): ConsultationDate[] => {
   const result: ConsultationDate[] = [];
-  const cursor = new Date(start);
+  const startValue = getKoreaDateValue(start);
   const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
   for (let offset = 0; offset < days; offset += 1) {
-    if (cursor.getDay() !== 0 && cursor.getDay() !== 6) {
+    const value = addDateValue(startValue, offset);
+    const weekday = getDateWeekday(value);
+    if (weekday !== 0 && weekday !== 6) {
       result.push({
-        day: dayLabels[cursor.getDay()] ?? "",
-        date: cursor.getDate(),
-        value: toLocalDateValue(cursor),
+        day: dayLabels[weekday] ?? "",
+        date: Number(value.slice(-2)),
+        value,
       });
     }
-    cursor.setDate(cursor.getDate() + 1);
   }
   return result;
 };

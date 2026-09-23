@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   getNextAvailableDate,
+  getNextWeekdays,
   getSelectableConsultationDates,
   getSelectablePeriods,
 } from "../../src/fsd/entities/consultation/model/rules.ts";
@@ -101,6 +102,19 @@ try {
       "9교시",
       "저녁시간",
     ],
+  );
+
+  assert.equal(
+    getNextWeekdays(new Date("2026-09-06T23:30:00Z"), 1)[0]?.value,
+    "2026-09-07",
+  );
+  process.env.TZ = "America/Los_Angeles";
+  assert.equal(
+    getNextAvailableDate(
+      "2026-09-11",
+      new Date("2026-09-11T10:30:00Z"),
+    ),
+    "2026-09-14",
   );
 } finally {
   if (originalTimeZone === undefined) delete process.env.TZ;

@@ -45,15 +45,11 @@ export const fetchUserProfile = async () => {
     });
   }
 
-  const [upcomingCourse, upcomingCommon, identity] = await Promise.all([
-    consultationApi.getUpcoming("course"),
-    consultationApi.getUpcoming("common"),
-    requestWithSession<UserProfileResponse>("/auth/profile"),
-  ]);
+  const identity = await requestWithSession<UserProfileResponse>("/auth/profile");
 
   return buildUserProfileData({
-    upcomingCourse,
-    upcomingCommon,
+    upcomingCourse: [],
+    upcomingCommon: [],
     session: getSession(),
     profile: {
       ...identity,

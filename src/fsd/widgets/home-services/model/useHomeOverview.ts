@@ -26,7 +26,8 @@ const EMPTY_OVERVIEW: HomeOverview = {
 
 export const useHomeOverview = () => {
   const [overview, setOverview] = useState<HomeOverview>(EMPTY_OVERVIEW);
-  const [loading, setLoading] = useState(true);
+  const [consultationLoading, setConsultationLoading] = useState(true);
+  const [recruitLoading, setRecruitLoading] = useState(true);
   const [consultationError, setConsultationError] = useState("");
   const [recruitError, setRecruitError] = useState("");
   const courseReservations = useRef<StudentReservation[]>([]);
@@ -34,6 +35,7 @@ export const useHomeOverview = () => {
   const consultationRefresh = useRef(createConsultationRefreshCoordinator());
   const recruitRequests = useRef(createRequestVersionGuard());
   const refreshConsultationsRef = useRef<(() => Promise<void>) | null>(null);
+  const refreshRecruitsRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -41,28 +43,33 @@ export const useHomeOverview = () => {
     const refreshConsultations = async () => {
       const requestVersion = consultationRefresh.current.beginRefresh();
       if (requestVersion === null) return;
+      setConsultationLoading(true);
+      setConsultationError("");
       const [courseResult, commonResult] = await Promise.allSettled([
         consultationApi.getUpcoming("course"),
         consultationApi.getUpcoming("common"),
       ]);
       if (!active || !consultationRefresh.current.isLatest(requestVersion)) return;
-      if (courseResult.status === "rejected" || commonResult.status === "rejected") {
-        setConsultationError("상담 일정을 불러오지 못했습니다.");
-        return;
-      }
-      courseReservations.current = courseResult.value;
-      commonReservations.current = commonResult.value;
+      if (courseResult.status === "fulfilled") courseReservations.current = courseResult.value;
+      if (commonResult.status === "fulfilled") commonReservations.current = commonResult.value;
       setOverview((current) => replaceHomeConsultations(
         current,
         courseReservations.current,
         commonReservations.current,
       ));
-      setConsultationError("");
+      setConsultationError(
+        courseResult.status === "rejected" || commonResult.status === "rejected"
+          ? "상담 일정을 불러오지 못했습니다."
+          : "",
+      );
+      setConsultationLoading(false);
     };
     refreshConsultationsRef.current = refreshConsultations;
 
     const refreshRecruits = async () => {
       const requestVersion = recruitRequests.current.next();
+      setRecruitLoading(true);
+      setRecruitError("");
       try {
         const result = await recruitApi.getAll();
         if (!active || !recruitRequests.current.isLatest(requestVersion)) return;
@@ -75,18 +82,18 @@ export const useHomeOverview = () => {
           }).recentRecruits,
         }));
         setRecruitError("");
+        setRecruitLoading(false);
       } catch {
         if (active && recruitRequests.current.isLatest(requestVersion)) {
           setRecruitError("취업 공고를 불러오지 못했습니다.");
+          setRecruitLoading(false);
         }
       }
     };
+    refreshRecruitsRef.current = refreshRecruits;
 
     const load = async () => {
-      setConsultationError("");
-      setRecruitError("");
       await Promise.all([refreshConsultations(), refreshRecruits()]);
-      if (active) setLoading(false);
     };
 
     void load();
@@ -129,7 +136,13 @@ export const useHomeOverview = () => {
 
   return {
     overview,
-    loading,
+    loading: consultationLoading || recruitLoading,
+    consultationLoading,
+    recruitLoading,
+    consultationError,
+    recruitError,
+    retryConsultations: () => refreshConsultationsRef.current?.(),
+    retryRecruits: () => refreshRecruitsRef.current?.(),
     error: consultationError || recruitError,
     handleCancel,
   };
