@@ -123,7 +123,10 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const koreaToday = getKoreaDate();
-  const candidateDates = useMemo(() => getNextWeekdays(), [koreaToday]);
+  const candidateDates = useMemo(
+    () => getNextWeekdays(new Date(`${koreaToday}T00:00:00Z`)),
+    [koreaToday],
+  );
   const dates = useMemo(
     () => getSelectableConsultationDates(candidateDates, clock, holidayDates),
     [candidateDates, clock, holidayDates],
