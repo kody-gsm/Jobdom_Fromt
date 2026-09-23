@@ -74,4 +74,11 @@ assert.match(formsHook, /retry/);
 assert.match(formsPage, /onRetry/);
 assert.match(formsPage, /error \?/);
 
+const submitForm = read("src/fsd/features/submit-form/ui/SubmitForm.tsx");
+assert.match(submitForm, /formRequestVersion/);
+assert.match(submitForm, /setSubmission\(null\)/);
+assert.match(submitForm, /setValues\(\{\}\)/);
+assert.match(submitForm, /requestVersion !== formRequestVersion\.current/);
+assert.match(submitForm, /loadedSubmission \? valuesFromSubmission\(loadedSubmission\) : \{\}/);
+
 console.log("student resilience regressions contract passed");

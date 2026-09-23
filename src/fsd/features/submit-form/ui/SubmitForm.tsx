@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   buildFormAnswers,
@@ -34,8 +34,22 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const formRequestVersion = useRef(0);
 
   useEffect(() => {
+    const requestVersion = ++formRequestVersion.current;
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active || requestVersion !== formRequestVersion.current) return;
+      setForm(null);
+      setSubmission(null);
+      setValues({});
+      setEditing(false);
+      setMessage(null);
+      setSubmitting(false);
+    });
+
     Promise.all([
       formApi.getById(formId),
       formApi.getMySubmission(formId).catch((caught) =>
@@ -43,23 +57,22 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
       ),
     ])
       .then(([loadedForm, loadedSubmission]) => {
+        if (!active || requestVersion !== formRequestVersion.current) return;
         setForm(loadedForm);
         setSubmission(loadedSubmission);
-        if (loadedSubmission) {
-          setValues(Object.fromEntries(loadedSubmission.answers.map((answer) => [
-            answer.questionId,
-            answer.fileId
-              ? { fileId: answer.fileId, fileName: answer.fileName ?? "첨부 파일" }
-              : answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
-          ])));
-        }
+        setValues(loadedSubmission ? valuesFromSubmission(loadedSubmission) : {});
       })
-      .catch((caught) =>
+      .catch((caught) => {
+        if (!active || requestVersion !== formRequestVersion.current) return;
         setMessage({
           text: caught instanceof Error ? caught.message : "폼을 불러오지 못했습니다.",
           error: true,
-        }),
-      );
+        });
+      });
+
+    return () => {
+      active = false;
+    };
   }, [formId]);
 
   const setValue = (questionId: number, value: FormValue) => {
