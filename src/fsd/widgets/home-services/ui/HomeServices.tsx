@@ -268,7 +268,13 @@ export const HomeServices = () => {
               </p>
             ) : null}
             <div className="mt-5 space-y-3">
-              {upcomingConsultations.length === 0 ? (
+              {consultationLoading && !hasConsultationData ? (
+                <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-sm text-[#6B7787]">
+                  상담 일정을 불러오는 중입니다.
+                </p>
+              ) : consultationError && !hasConsultationData ? (
+                <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
+              ) : upcomingConsultations.length === 0 ? (
                 <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-sm text-[#6B7787]">
                   예정된 상담이 없습니다.
                 </p>
@@ -286,6 +292,9 @@ export const HomeServices = () => {
                   />
                 ))
               )}
+              {consultationError && hasConsultationData ? (
+                <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
+              ) : null}
             </div>
           </div>
         </div>

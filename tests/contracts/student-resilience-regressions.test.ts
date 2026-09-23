@@ -44,6 +44,10 @@ assert.match(homeHook, /retryConsultations/);
 assert.match(homeHook, /retryRecruits/);
 assert.match(homePage, /onRetry/);
 assert.match(homePage, /consultationLoading && !hasConsultationData/);
+const consultationModalSource = homePage.slice(homePage.indexOf("isConsultationModalOpen ?"));
+assert.match(consultationModalSource, /consultationLoading && !hasConsultationData/);
+assert.match(consultationModalSource, /consultationError && !hasConsultationData/);
+assert.match(consultationModalSource, /retryConsultations/);
 
 const recruitDetailHook = read("src/fsd/pages/recruit-detail/model/useRecruitDetail.ts");
 assert.doesNotMatch(recruitDetailHook, /Promise\.all\(\[getRecruit/);
