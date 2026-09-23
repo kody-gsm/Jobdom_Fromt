@@ -77,6 +77,10 @@ const formsPage = read("src/fsd/pages/forms/ui/FormsPage.tsx");
 assert.match(formsHook, /retry/);
 assert.match(formsPage, /onRetry/);
 assert.match(formsPage, /error \?/);
+assert.match(formsHook, /createRequestVersionGuard/);
+assert.match(formsHook, /isLatest\(requestVersion\)/);
+assert.match(formsHook, /mounted\.current/);
+assert.match(formsHook, /requestGuard\.next\(\)/);
 
 const submitForm = read("src/fsd/features/submit-form/ui/SubmitForm.tsx");
 assert.match(submitForm, /formRequestVersion/);
