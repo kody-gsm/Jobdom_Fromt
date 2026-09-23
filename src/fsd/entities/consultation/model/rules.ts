@@ -100,10 +100,15 @@ const getNextAvailableDateWithBlockedDates = (
     minute: "2-digit",
     hour12: false,
   }).format(now);
-  const isBlocked = blockedDates.has(date);
-  if (!isBlocked && (date > today || (date === today && time < "19:30"))) return date;
+  const baseDate = date > today ? date : today;
+  const isWeekday = getDateWeekday(baseDate) !== 0 && getDateWeekday(baseDate) !== 6;
+  if (
+    isWeekday &&
+    !blockedDates.has(baseDate) &&
+    (baseDate > today || time < "19:30")
+  ) return baseDate;
 
-  let next = addDateValue(date, 1);
+  let next = addDateValue(baseDate, 1);
   while (
     getDateWeekday(next) === 0 ||
     getDateWeekday(next) === 6 ||

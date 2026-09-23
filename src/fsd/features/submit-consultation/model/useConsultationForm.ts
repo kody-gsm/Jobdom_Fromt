@@ -122,7 +122,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setSelectedDate(nextDate);
   };
 
-  const candidateDates = useMemo(() => getNextWeekdays(), []);
+  const koreaToday = getKoreaDate();
+  const candidateDates = useMemo(() => getNextWeekdays(), [koreaToday]);
   const dates = useMemo(
     () => getSelectableConsultationDates(candidateDates, clock, holidayDates),
     [candidateDates, clock, holidayDates],
@@ -233,7 +234,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     const timer = window.setInterval(advanceAfterLastPeriod, 30_000);
     advanceAfterLastPeriod();
     return () => window.clearInterval(timer);
-  }, [holidayDates]);
+  }, [candidateDates, holidayDates]);
 
   useEffect(
     () => () => {

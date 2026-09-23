@@ -21,6 +21,8 @@ assert.deepEqual(
 
 const consultationHook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
 assert.match(consultationHook, /selectedDateRef/);
+assert.match(consultationHook, /const koreaToday = getKoreaDate\(\)/);
+assert.match(consultationHook, /useMemo\(\(\) => getNextWeekdays\(\), \[koreaToday\]\)/);
 assert.match(consultationHook, /setSelectedTime\(null\)/);
 assert.match(consultationHook, /setTeachers\(\[\]\)/);
 assert.match(consultationHook, /setTeacherStatus\("loading"\)/);
