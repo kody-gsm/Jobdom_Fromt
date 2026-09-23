@@ -5,6 +5,7 @@ import {
   createReservationInput,
   getNextAvailableDate,
   getNextWeekdays,
+  getSelectableConsultationDates,
   getSelectablePeriods,
   getConsultationScheduleItem,
   toConsultationKind,
@@ -17,6 +18,7 @@ import type {
 import { ApiError } from "@fsd/shared/api";
 import {
   getConsultationSlotStatus,
+  getStudentSchedules,
   getConsultationTeachers,
   getStudentTimetable,
   submitConsultation,
@@ -103,19 +105,62 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [unavailableSlotKeys, setUnavailableSlotKeys] = useState<Set<string>>(
     () => new Set(),
   );
+  const [holidayDates, setHolidayDates] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [clock, setClock] = useState(() => new Date());
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<ConsultationToast | null>(null);
   const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
   const toastTimer = useRef<number | null>(null);
 
-  const dates = useMemo(() => getNextWeekdays(), []);
+  const candidateDates = useMemo(() => getNextWeekdays(), []);
+  const dates = useMemo(
+    () => getSelectableConsultationDates(candidateDates, clock, holidayDates),
+    [candidateDates, clock, holidayDates],
+  );
 
   useEffect(() => {
-    const from = dates[0]?.value;
-    const to = dates.at(-1)?.value;
+    const from = candidateDates[0]?.value;
+    const to = candidateDates.at(-1)?.value;
     if (!from || !to) return;
     void getStudentTimetable(from, to).then(setTimetable).catch(() => setTimetable([]));
-  }, [dates]);
+  }, [candidateDates]);
+
+  useEffect(() => {
+    const from = candidateDates[0]?.value;
+    const to = candidateDates.at(-1)?.value;
+    if (!from || !to) return;
+
+    let active = true;
+    void getStudentSchedules(from, to)
+      .then((items) => {
+        if (!active) return;
+        const holidays = new Set(
+          items.filter((item) => item.holiday).map((item) => item.date),
+        );
+        const currentNow = new Date();
+        const selectableDates = getSelectableConsultationDates(
+          candidateDates,
+          currentNow,
+          holidays,
+        );
+        setHolidayDates(holidays);
+        setClock(currentNow);
+        setSelectedDate((current) =>
+          current !== null && selectableDates.some((item) => item.value === current)
+            ? current
+            : selectableDates[0]?.value ?? null,
+        );
+      })
+      .catch(() => {
+        // The reservation API remains the final authority when the schedule feed is unavailable.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [candidateDates]);
 
   useEffect(() => {
     let active = true;
@@ -164,12 +209,16 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   useEffect(() => {
     const advanceAfterLastPeriod = () => {
-      setSelectedDate((current) => current ? getNextAvailableDate(current, new Date()) : current);
+      const currentNow = new Date();
+      setClock(currentNow);
+      setSelectedDate((current) =>
+        current ? getNextAvailableDate(current, currentNow, holidayDates) : current,
+      );
     };
     const timer = window.setInterval(advanceAfterLastPeriod, 30_000);
     advanceAfterLastPeriod();
     return () => window.clearInterval(timer);
-  }, []);
+  }, [holidayDates]);
 
   useEffect(
     () => () => {

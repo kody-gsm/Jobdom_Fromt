@@ -160,7 +160,7 @@ export const ConsultationForm = ({
               label="상담 제목"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="고민거리 한 줄 요약을 적어주세요"
+              placeholder="상담 제목을 작성해주세요"
             />
 
             <div className="space-y-2">
