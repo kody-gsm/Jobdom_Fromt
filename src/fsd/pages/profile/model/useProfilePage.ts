@@ -21,6 +21,7 @@ import type { UserProfileData } from "./buildUserProfileData.ts";
 
 export const useProfilePage = () => {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
+  const [reservations, setReservations] = useState<UserProfileData["reservations"]>([]);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,7 @@ export const useProfilePage = () => {
       try {
         const reservations = await fetchProfileReservations();
         if (!active || !reservationRefresh.current.isLatest(requestVersion)) return;
-        setProfile((current) => (current ? { ...current, reservations } : current));
+        setReservations(reservations);
         setReservationError("");
         setReservationLoading(false);
       } catch (caught) {
@@ -98,14 +99,7 @@ export const useProfilePage = () => {
 
     try {
       await cancelProfileConsultation(id);
-      setProfile((current) =>
-        current
-          ? {
-              ...current,
-              reservations: current.reservations.filter((item) => item.id !== id),
-            }
-          : current,
-      );
+      setReservations((current) => current.filter((item) => item.id !== id));
       canceled = true;
     } finally {
       const shouldRefresh = reservationRefresh.current.finishCancellation(id);
@@ -139,8 +133,12 @@ export const useProfilePage = () => {
       .catch(() => setAvatarError("프로필 이미지를 저장하지 못했습니다."));
   };
 
+  const profileWithReservations = profile
+    ? { ...profile, reservations }
+    : null;
+
   return {
-    profile,
+    profile: profileWithReservations,
     profileAvatar,
     avatarError,
     loading,
