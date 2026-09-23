@@ -69,11 +69,11 @@ export const ProfileConsultations = ({
       <ContentCard className="p-6">
         <h2 className="text-xl font-bold text-ink">예약 현황</h2>
         <div className="mt-5 space-y-3">
-          {loading ? (
+          {loading && reservations.length === 0 ? (
             <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-center text-sm text-muted">
               상담 목록을 불러오는 중입니다.
             </p>
-          ) : error ? (
+          ) : error && reservations.length === 0 ? (
             <div role="alert" className="rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] px-5 py-6">
               <p className="text-sm text-[#9A4F45]">{error}</p>
               {onRetry ? (
@@ -109,6 +109,20 @@ export const ProfileConsultations = ({
             })
           )}
         </div>
+        {error && reservations.length > 0 ? (
+          <div role="alert" className="mt-3 rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] px-5 py-4">
+            <p className="text-sm text-[#9A4F45]">{error}</p>
+            {onRetry ? (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-bold text-[#9A4F45] ring-1 ring-[#E7C6C0] hover:bg-[#FFF0EC]"
+              >
+                다시 시도
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <p className="mt-5 text-center text-xs text-gray-400">
           * 예약 취소는 1시간 전부터 불가능합니다
         </p>

@@ -37,10 +37,13 @@ assert.match(rules, /setUTCDate|Date\.UTC/);
 const homeHook = read("src/fsd/widgets/home-services/model/useHomeOverview.ts");
 const homePage = read("src/fsd/widgets/home-services/ui/HomeServices.tsx");
 assert.match(homeHook, /consultationLoading/);
+assert.match(homeHook, /consultationHasLoaded/);
+assert.match(homeHook, /if \(!consultationHasLoaded\.current\)/);
 assert.match(homeHook, /recruitLoading/);
 assert.match(homeHook, /retryConsultations/);
 assert.match(homeHook, /retryRecruits/);
 assert.match(homePage, /onRetry/);
+assert.match(homePage, /consultationLoading && !hasConsultationData/);
 
 const recruitDetailHook = read("src/fsd/pages/recruit-detail/model/useRecruitDetail.ts");
 assert.doesNotMatch(recruitDetailHook, /Promise\.all\(\[getRecruit/);
@@ -60,8 +63,10 @@ assert.match(profileHook, /const \[reservations, setReservations\]/);
 assert.match(profileHook, /profileWithReservations/);
 assert.match(profileHook, /\.\.\.profile, reservations/);
 assert.match(profileHook, /reservationError/);
+assert.match(profileHook, /reservationHasLoaded/);
 assert.match(profilePage, /reservationError/);
 assert.match(profileWidget, /onRetry/);
+assert.match(profileWidget, /loading && reservations\.length === 0/);
 
 const formsHook = read("src/fsd/pages/forms/model/useFormsPage.ts");
 const formsPage = read("src/fsd/pages/forms/ui/FormsPage.tsx");

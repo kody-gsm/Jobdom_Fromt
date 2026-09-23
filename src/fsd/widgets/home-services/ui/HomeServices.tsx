@@ -38,6 +38,7 @@ export const HomeServices = () => {
   const [cancelTarget, setCancelTarget] = useState<HomeConsultationItem | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [homeBanner, setHomeBanner] = useState<HomeBanner | null>(null);
+  const hasConsultationData = overview.upcomingConsultations.length > 0;
   const upcomingConsultations = overview.upcomingConsultations.filter((item) =>
     isConsultationUpcoming(item.date, item.period, now),
   );
@@ -136,9 +137,9 @@ export const HomeServices = () => {
           </div>
 
           <div className="mt-6">
-            {consultationLoading ? (
+            {consultationLoading && !hasConsultationData ? (
               <p className="py-8 text-sm text-muted">상담 일정을 불러오는 중입니다.</p>
-            ) : consultationError ? (
+            ) : consultationError && !hasConsultationData ? (
               <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
             ) : consultationPreview.length === 0 ? (
               <div className="rounded-2xl bg-[#F7F8FA] px-5 py-8">
@@ -160,6 +161,11 @@ export const HomeServices = () => {
                 ))}
               </div>
             )}
+            {consultationError && hasConsultationData ? (
+              <div className="mt-3">
+                <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
+              </div>
+            ) : null}
           </div>
         </ContentCard>
       </div>

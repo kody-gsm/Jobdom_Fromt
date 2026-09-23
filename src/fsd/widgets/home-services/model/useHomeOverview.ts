@@ -33,6 +33,7 @@ export const useHomeOverview = () => {
   const courseReservations = useRef<StudentReservation[]>([]);
   const commonReservations = useRef<StudentReservation[]>([]);
   const consultationRefresh = useRef(createConsultationRefreshCoordinator());
+  const consultationHasLoaded = useRef(false);
   const recruitRequests = useRef(createRequestVersionGuard());
   const refreshConsultationsRef = useRef<(() => Promise<void>) | null>(null);
   const refreshRecruitsRef = useRef<(() => Promise<void>) | null>(null);
@@ -43,7 +44,7 @@ export const useHomeOverview = () => {
     const refreshConsultations = async () => {
       const requestVersion = consultationRefresh.current.beginRefresh();
       if (requestVersion === null) return;
-      setConsultationLoading(true);
+      if (!consultationHasLoaded.current) setConsultationLoading(true);
       setConsultationError("");
       const [courseResult, commonResult] = await Promise.allSettled([
         consultationApi.getUpcoming("course"),
@@ -62,6 +63,7 @@ export const useHomeOverview = () => {
           ? "상담 일정을 불러오지 못했습니다."
           : "",
       );
+      consultationHasLoaded.current = true;
       setConsultationLoading(false);
     };
     refreshConsultationsRef.current = refreshConsultations;

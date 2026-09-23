@@ -31,6 +31,7 @@ export const useProfilePage = () => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const profileRequests = useRef(createRequestVersionGuard());
   const reservationRefresh = useRef(createConsultationRefreshCoordinator());
+  const reservationHasLoaded = useRef(false);
   const refreshReservationsRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
@@ -42,19 +43,21 @@ export const useProfilePage = () => {
     const refreshReservations = async () => {
       const requestVersion = reservationRefresh.current.beginRefresh();
       if (requestVersion === null) return;
-      setReservationLoading(true);
+      if (!reservationHasLoaded.current) setReservationLoading(true);
       setReservationError("");
       try {
         const reservations = await fetchProfileReservations();
         if (!active || !reservationRefresh.current.isLatest(requestVersion)) return;
         setReservations(reservations);
         setReservationError("");
+        reservationHasLoaded.current = true;
         setReservationLoading(false);
       } catch (caught) {
         if (active && reservationRefresh.current.isLatest(requestVersion)) {
           setReservationError(
             caught instanceof Error ? caught.message : "예약을 불러오지 못했습니다.",
           );
+          reservationHasLoaded.current = true;
           setReservationLoading(false);
         }
       }
