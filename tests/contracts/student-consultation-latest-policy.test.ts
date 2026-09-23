@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import {
   getNextAvailableDate,
   getSelectableConsultationDates,
+  getSelectablePeriods,
 } from "../../src/fsd/entities/consultation/model/rules.ts";
 import { CONSULTATION_SCHEDULE } from "../../src/fsd/entities/consultation/model/schedule.ts";
 
@@ -78,6 +79,33 @@ assert.deepEqual(
   ).map(({ value }) => value),
   ["2026-09-25"],
 );
+
+const originalTimeZone = process.env.TZ;
+try {
+  process.env.TZ = "UTC";
+  assert.deepEqual(
+    getSelectablePeriods(
+      "career",
+      "교사",
+      new Date("2026-09-06T23:50:00Z"),
+    ).map((period) => period),
+    [
+      "2교시",
+      "3교시",
+      "4교시",
+      "점심시간",
+      "5교시",
+      "6교시",
+      "7교시",
+      "8교시",
+      "9교시",
+      "저녁시간",
+    ],
+  );
+} finally {
+  if (originalTimeZone === undefined) delete process.env.TZ;
+  else process.env.TZ = originalTimeZone;
+}
 
 const form = readFileSync(
   resolve(process.cwd(), "src/fsd/features/submit-consultation/ui/ConsultationForm.tsx"),

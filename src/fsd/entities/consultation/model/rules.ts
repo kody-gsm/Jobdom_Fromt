@@ -41,18 +41,36 @@ export const getAvailablePeriods = (
   return CONSULTATION_SCHEDULE.map(({ period }) => period);
 };
 
+const getKoreaClock = (now: Date) => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const getPart = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+
+  return {
+    weekday: getPart("weekday"),
+    hour: Number(getPart("hour")),
+    minute: Number(getPart("minute")),
+  };
+};
+
 export const getSelectablePeriods = (
   type: ConsultationType,
   teacher: ConsultationTeacher | null,
   now = new Date(),
 ) => {
   const periods = getAvailablePeriods(type, teacher);
-  if (now.getDay() === 0 || now.getDay() === 6) return periods;
+  const { weekday, hour, minute } = getKoreaClock(now);
+  if (weekday === "Sun" || weekday === "Sat") return periods;
   return periods.filter((period) => {
     const schedule = CONSULTATION_SCHEDULE.find((item) => item.period === period);
     return schedule !== undefined &&
-      (schedule.startHour > now.getHours() ||
-        (schedule.startHour === now.getHours() && schedule.startMinute > now.getMinutes()));
+      (schedule.startHour > hour ||
+        (schedule.startHour === hour && schedule.startMinute > minute));
   });
 };
 
