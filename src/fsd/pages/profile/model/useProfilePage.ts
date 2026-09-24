@@ -1,21 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  getProfileAvatarUserKey,
   getSession,
   type UserRole,
-  saveProfileAvatar,
-  validateProfileAvatarFile,
 } from "@fsd/entities/user";
 import {
   createConsultationRefreshCoordinator,
   RESERVATION_CHANGED_EVENT,
 } from "@fsd/entities/consultation";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
+import { useChangeProfileAvatar } from "@fsd/features/change-profile-avatar";
 import { createRequestVersionGuard } from "@fsd/shared/lib";
 import {
   fetchProfileReservations,
   fetchUserProfile,
-  uploadProfileImage,
 } from "../api/profile.ts";
 import type { UserProfileData } from "./buildUserProfileData.ts";
 
@@ -23,7 +20,6 @@ export const useProfilePage = () => {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [reservations, setReservations] = useState<UserProfileData["reservations"]>([]);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
-  const [avatarError, setAvatarError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reservationLoading, setReservationLoading] = useState(true);
@@ -33,6 +29,7 @@ export const useProfilePage = () => {
   const reservationRefresh = useRef(createConsultationRefreshCoordinator());
   const reservationHasLoaded = useRef(false);
   const refreshReservationsRef = useRef<(() => Promise<void>) | null>(null);
+  const { avatarError, handleAvatarChange } = useChangeProfileAvatar(setProfileAvatar);
 
   useEffect(() => {
     let active = true;
@@ -112,29 +109,6 @@ export const useProfilePage = () => {
     }
   };
 
-  const handleAvatarChange = (file: File) => {
-    const validationError = validateProfileAvatarFile(file);
-    if (validationError) {
-      setAvatarError(validationError);
-      return;
-    }
-    if (!profile) {
-      setAvatarError("프로필을 불러온 뒤 이미지를 변경해주세요.");
-      return;
-    }
-
-    void uploadProfileImage(file)
-      .then((imageUrl) => {
-        setProfileAvatar(imageUrl || URL.createObjectURL(file));
-        const session = getSession();
-        saveProfileAvatar(
-          getProfileAvatarUserKey({ email: session?.email, name: session?.name }),
-          imageUrl,
-        );
-        setAvatarError("");
-      })
-      .catch(() => setAvatarError("프로필 이미지를 저장하지 못했습니다."));
-  };
 
   const profileWithReservations = profile
     ? { ...profile, reservations }

@@ -13,18 +13,6 @@ import { buildUserProfileData } from "../model/buildUserProfileData.ts";
 
 const consultationApi = createConsultationApi(requestWithSession);
 
-type ProfileImageUploadResponse = { profileImageUrl: string };
-
-export const uploadProfileImage = async (file: File) => {
-  const formData = new FormData();
-  formData.append("image", file);
-  const response = await requestWithSession<ProfileImageUploadResponse>(
-    "/auth/profile/image",
-    { method: "PATCH", body: formData },
-  );
-  return resolveProfileImageUrl(response.profileImageUrl);
-};
-
 export const fetchUserProfile = async () => {
   const session = getSession();
   if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") {
