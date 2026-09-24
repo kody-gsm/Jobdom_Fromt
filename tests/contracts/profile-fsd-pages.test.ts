@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createCancelProfileConsultation } from "../../src/fsd/features/cancel-consultation/model/createCancelProfileConsultation.ts";
 
@@ -15,6 +15,9 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8"
 const route = read("app/profile/page.tsx");
 const page = read("src/fsd/pages/profile/ui/ProfilePage.tsx");
 const api = read("src/fsd/pages/profile/api/profile.ts");
+const entityProfilePath = "src/fsd/entities/user/api/profile.ts";
+const entityProfile = existsSync(entityProfilePath) ? read(entityProfilePath) : "";
+const userIndex = read("src/fsd/entities/user/index.ts");
 const widget = read("src/fsd/widgets/profile-consultations/ui/ProfileConsultations.tsx");
 
 assert.match(route, /@fsd\/pages\/profile/);
@@ -26,7 +29,8 @@ assert.doesNotMatch(api, /getAll/);
 assert.match(api, /getSession/);
 assert.match(api, /session\?\.role === "TEACHER"/);
 assert.match(api, /upcomingCourse: \[\]/);
-assert.match(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
+assert.match(api, /getUserProfile/);
+assert.doesNotMatch(api, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
 assert.match(api, /requestWithSession[\s\S]{0,180}"\/auth\/profile\/image"/);
 assert.match(api, /new FormData\(\)/);
 assert.match(api, /formData\.append\("image", file\)/);
@@ -34,6 +38,10 @@ assert.match(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "PATCH"/);
 assert.doesNotMatch(api, /"\/auth\/profile\/image",[\s\S]*\{ method: "POST"/);
 assert.match(api, /profileImageUrl/);
 assert.match(api, /resolveProfileImageUrl/);
+assert.match(userIndex, /getUserProfile/);
+assert.match(userIndex, /resolveProfileImageUrl/);
+assert.match(entityProfile, /requestWithSession<[^>]+>\("\/auth\/profile"\)/);
+assert.match(entityProfile, /resolveProfileImageUrl/);
 assert.match(widget, /예약 현황/);
 assert.match(widget, /예약 취소/);
 assert.match(page, /studentId|학번/);

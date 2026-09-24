@@ -3,25 +3,17 @@ import {
   toProfileConsultation,
 } from "@fsd/entities/consultation";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
-import { getSession, requestWithSession } from "@fsd/entities/user";
+import {
+  getSession,
+  getUserProfile,
+  requestWithSession,
+  resolveProfileImageUrl,
+} from "@fsd/entities/user";
 import { buildUserProfileData } from "../model/buildUserProfileData.ts";
 
 const consultationApi = createConsultationApi(requestWithSession);
 
-type UserProfileResponse = {
-  name: string;
-  email: string;
-  student_number: string;
-  profileImageUrl?: string;
-};
-
 type ProfileImageUploadResponse = { profileImageUrl: string };
-
-export const resolveProfileImageUrl = (imageUrl: string) => {
-  if (/^https?:\/\//.test(imageUrl)) return imageUrl;
-  const basePath = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
-  return `${basePath}/${imageUrl.replace(/^\/+/, "")}`;
-};
 
 export const uploadProfileImage = async (file: File) => {
   const formData = new FormData();
@@ -36,7 +28,7 @@ export const uploadProfileImage = async (file: File) => {
 export const fetchUserProfile = async () => {
   const session = getSession();
   if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") {
-    const identity = await requestWithSession<UserProfileResponse>("/auth/profile");
+    const identity = await getUserProfile();
     return buildUserProfileData({
       upcomingCourse: [],
       upcomingCommon: [],
@@ -45,7 +37,7 @@ export const fetchUserProfile = async () => {
     });
   }
 
-  const identity = await requestWithSession<UserProfileResponse>("/auth/profile");
+  const identity = await getUserProfile();
 
   return buildUserProfileData({
     upcomingCourse: [],
