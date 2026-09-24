@@ -14,6 +14,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
     formLoading,
     formError,
     formMessage,
+    retryForm,
     showMissingForm,
   } = useRecruitDetail(recruitId);
 
@@ -58,9 +59,12 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
             </section>
 
             {formError ? (
-              <p role="alert" className="mt-8 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-                {formError}
-              </p>
+              <div role="alert" className="mt-8 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                <p>{formError}</p>
+                <button type="button" onClick={retryForm} className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-brand px-4 font-bold text-white hover:bg-brand-hover">
+                  Retry
+                </button>
+              </div>
             ) : null}
             <div className="mt-10 grid gap-3 sm:grid-cols-[1fr_auto]">
               {formLoading ? (
