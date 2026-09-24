@@ -6,7 +6,7 @@ export const getProfileAvatarUserKey = ({
   studentId,
   name,
 }: { email?: string; studentId?: string; name?: string }) =>
-  email?.trim().toLowerCase() || studentId?.trim() || name?.trim() || "student";
+  studentId?.trim() || email?.trim().toLowerCase() || name?.trim() || "student";
 
 export const getProfileAvatarStorageKey = (userKey: string) =>
   `jobdam.profile-avatar.${userKey}`;
@@ -26,6 +26,7 @@ export const readProfileAvatar = (userKey: string) => {
 
 export const saveProfileAvatar = (userKey: string, dataUrl: string) => {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(getProfileAvatarStorageKey(userKey), dataUrl);
-  window.dispatchEvent(new Event(PROFILE_AVATAR_CHANGED_EVENT));
+  if (dataUrl) window.localStorage.setItem(getProfileAvatarStorageKey(userKey), dataUrl);
+  else window.localStorage.removeItem(getProfileAvatarStorageKey(userKey));
+  window.dispatchEvent(new CustomEvent(PROFILE_AVATAR_CHANGED_EVENT, { detail: { userKey } }));
 };
