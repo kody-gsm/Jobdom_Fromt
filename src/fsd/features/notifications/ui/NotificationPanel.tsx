@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  getNotifications,
   getNotificationTargetUrl,
   markAllNotificationsRead,
   markNotificationRead,
-  NotificationItem,
   NotificationType,
 } from "../api/notifications.ts";
+import type { NotificationItem } from "../api/notifications.ts";
 import { useNotification } from "../model/NotificationContext.tsx";
 import { formatNotificationTime } from "../model/time.ts";
 
@@ -104,14 +103,19 @@ interface NotificationPanelProps {
 }
 
 export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
-  const { clearUnread, decrementUnread, setUnreadCount } = useNotification();
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    clearUnread,
+    decrementUnread,
+    notifications,
+    notificationLoading,
+    notificationError,
+    notificationHasMore,
+    retryNotifications,
+    loadMoreNotifications,
+    markNotificationReadLocally,
+    markAllNotificationsReadLocally,
+  } = useNotification();
   const panelRef = useRef<HTMLDivElement>(null);
-  const initialFetched = useRef(false);
   const readingIds = useRef(new Set<number>());
 
   // close panel when clicking outside
@@ -125,62 +129,35 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
     return () => document.removeEventListener("pointerdown", handlePointerDown, true);
   }, [onClose]);
 
-  const fetchPage = useCallback(async (pageNum: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await getNotifications(pageNum, 20);
-      if (pageNum === 0) {
-        setItems(result.content);
-      } else {
-        setItems((prev) => [...prev, ...result.content]);
-      }
-      setHasMore(!result.last);
-      setPage(pageNum);
-    } catch {
-      setError("알림을 불러오지 못했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!initialFetched.current) {
-      initialFetched.current = true;
-      void fetchPage(0);
-    }
-  }, [fetchPage]);
-
   const handleRead = useCallback(
     async (id: number) => {
       if (readingIds.current.has(id)) return;
       readingIds.current.add(id);
       try {
         await markNotificationRead(id);
-        setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+        markNotificationReadLocally(id);
         decrementUnread();
       } catch {
-        setError("알림 읽음 처리에 실패했습니다.");
+        retryNotifications();
       } finally {
         readingIds.current.delete(id);
       }
     },
-    [decrementUnread],
+    [decrementUnread, markNotificationReadLocally, retryNotifications],
   );
 
 
   const handleReadAll = useCallback(async () => {
     try {
       await markAllNotificationsRead();
-      setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      markAllNotificationsReadLocally();
       clearUnread();
-      setUnreadCount(0);
     } catch {
-      // ignore
+      retryNotifications();
     }
-  }, [clearUnread, setUnreadCount]);
+  }, [clearUnread, markAllNotificationsReadLocally, retryNotifications]);
 
-  const unreadInList = items.filter((n) => !n.isRead).length;
+  const unreadInList = notifications.filter((n) => !n.isRead).length;
 
   return (
     <div
@@ -205,17 +182,22 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
 
       {/* List */}
       <div className="max-h-[420px] overflow-y-auto overscroll-contain">
-        {error && (
-          <p className="p-4 text-sm text-red-500 text-center">{error}</p>
+        {notificationError && (
+          <div role="alert" className="p-4 text-center text-sm text-red-500">
+            <p>{notificationError}</p>
+            <button type="button" onClick={retryNotifications} className="mt-3 rounded-lg bg-brand px-4 py-2 font-semibold text-white">
+              다시 시도
+            </button>
+          </div>
         )}
 
-        {!error && items.length === 0 && !loading && (
+        {!notificationError && notifications.length === 0 && !notificationLoading && (
           <p className="p-8 text-sm text-gray-400 text-center">알림이 없습니다</p>
         )}
 
-        {items.length > 0 && (
+        {notifications.length > 0 && (
           <ul className="divide-y divide-gray-50">
-            {items.map((item) => (
+            {notifications.map((item) => (
               <NotificationRow
                 key={item.id}
                 item={item}
@@ -225,20 +207,20 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
           </ul>
         )}
 
-        {hasMore && (
+        {notificationHasMore && (
           <div className="p-3 text-center">
             <button
               type="button"
-              onClick={() => void fetchPage(page + 1)}
-              disabled={loading}
+              onClick={loadMoreNotifications}
+              disabled={notificationLoading}
               className="text-xs text-[#02C551] font-medium hover:underline disabled:opacity-50 focus:outline-none"
             >
-              {loading ? "불러오는 중…" : "더 보기"}
+              {notificationLoading ? "불러오는 중…" : "더 보기"}
             </button>
           </div>
         )}
 
-        {loading && items.length === 0 && (
+        {notificationLoading && notifications.length === 0 && (
           <div className="flex justify-center py-8">
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#02C551] border-t-transparent" />
           </div>
