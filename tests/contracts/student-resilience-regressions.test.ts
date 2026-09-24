@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { buildHomeOverview } from "../../src/fsd/widgets/home-services/model/overview.ts";
 
@@ -20,10 +20,18 @@ assert.deepEqual(
 );
 
 const consultationHook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
-assert.match(consultationHook, /selectedDateRef/);
-assert.match(consultationHook, /const koreaToday = getKoreaDate\(\)/);
-assert.match(consultationHook, /getNextWeekdays\(new Date\(`\$\{koreaToday\}T00:00:00Z`\)\)/);
-assert.match(consultationHook, /setSelectedTime\(null\)/);
+const availabilityHookPath = "src/fsd/features/submit-consultation/model/useConsultationAvailability.ts";
+const availabilityHook = existsSync(availabilityHookPath) ? read(availabilityHookPath) : "";
+assert.match(availabilityHook, /selectedDateRef/);
+assert.match(consultationHook, /useConsultationAvailability/);
+assert.doesNotMatch(consultationHook, /getStudentSchedules/);
+assert.doesNotMatch(consultationHook, /getConsultationSlotStatus/);
+assert.match(availabilityHook, /useConsultationAvailability/);
+assert.match(availabilityHook, /getStudentSchedules/);
+assert.match(availabilityHook, /getConsultationSlotStatus/);
+assert.match(availabilityHook, /const koreaToday = getKoreaDate\(\)/);
+assert.match(availabilityHook, /getNextWeekdays\(new Date\(`\$\{koreaToday\}T00:00:00Z`\)\)/);
+assert.match(availabilityHook, /setSelectedTime\(null\)/);
 assert.match(consultationHook, /setTeachers\(\[\]\)/);
 assert.match(consultationHook, /setTeacherStatus\("loading"\)/);
 assert.match(consultationHook, /items\.some/);
