@@ -40,17 +40,39 @@ export const fetchUserProfile = async () => {
   });
 };
 
-export const fetchProfileReservations = async (): Promise<ProfileConsultation[]> => {
-  const session = getSession();
-  if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") return [];
+export type ProfileReservationResult = {
+  reservations: ProfileConsultation[];
+  errors: {
+    course?: string;
+    common?: string;
+  };
+};
 
-  const [upcomingCourse, upcomingCommon] = await Promise.all([
+const getReservationErrorMessage = (caught: unknown) =>
+  caught instanceof Error ? caught.message : "상담 예약을 불러오지 못했습니다.";
+
+export const fetchProfileReservations = async (): Promise<ProfileReservationResult> => {
+  const session = getSession();
+  if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") {
+    return { reservations: [], errors: {} };
+  }
+
+  const [courseResult, commonResult] = await Promise.allSettled([
     consultationApi.getUpcoming("course"),
     consultationApi.getUpcoming("common"),
   ]);
 
-  return [
-    ...upcomingCourse.map((item) => toProfileConsultation("course", item)),
-    ...upcomingCommon.map((item) => toProfileConsultation("common", item)),
-  ];
+  const errors: ProfileReservationResult["errors"] = {};
+  const reservations: ProfileConsultation[] = [];
+  if (courseResult.status === "fulfilled") {
+    reservations.push(...courseResult.value.map((item) => toProfileConsultation("course", item)));
+  } else {
+    errors.course = getReservationErrorMessage(courseResult.reason);
+  }
+  if (commonResult.status === "fulfilled") {
+    reservations.push(...commonResult.value.map((item) => toProfileConsultation("common", item)));
+  } else {
+    errors.common = getReservationErrorMessage(commonResult.reason);
+  }
+  return { reservations, errors };
 };

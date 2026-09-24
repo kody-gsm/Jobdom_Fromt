@@ -43,10 +43,11 @@ export const useProfilePage = () => {
       if (!reservationHasLoaded.current) setReservationLoading(true);
       setReservationError("");
       try {
-        const reservations = await fetchProfileReservations();
+        const result = await fetchProfileReservations();
         if (!active || !reservationRefresh.current.isLatest(requestVersion)) return;
-        setReservations(reservations);
-        setReservationError("");
+        setReservations(result.reservations);
+        const reservationErrors = Object.values(result.errors).filter(Boolean);
+        setReservationError(reservationErrors.join(" / "));
         reservationHasLoaded.current = true;
         setReservationLoading(false);
       } catch (caught) {

@@ -30,11 +30,21 @@ export const ProfileConsultations = ({
   const [cancelTarget, setCancelTarget] = useState<number | null>(null);
   const [canceling, setCanceling] = useState(false);
   const [cancelError, setCancelError] = useState("");
+  const [reservationChangedMessage, setReservationChangedMessage] = useState("");
   const [now, setNow] = useState(() => new Date());
   const cancelTargetItem = reservations.find((item) => item.id === cancelTarget);
   const visibleReservations = reservations.filter((item) =>
     isActiveReservation(item.status) && isConsultationUpcoming(item.date, item.slot, now),
   );
+
+  useEffect(() => {
+    if (cancelTarget === null || cancelTargetItem) return;
+    queueMicrotask(() => {
+      setCancelTarget(null);
+      setCancelError("");
+      setReservationChangedMessage("상담 예약 상태가 변경되어 취소 창을 닫았습니다.");
+    });
+  }, [cancelTarget, cancelTargetItem]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000);
@@ -68,6 +78,14 @@ export const ProfileConsultations = ({
     <>
       <ContentCard className="p-6">
         <h2 className="text-xl font-bold text-ink">예약 현황</h2>
+        {reservationChangedMessage ? (
+          <div role="status" className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-[#FFF8E6] px-4 py-3 text-sm text-[#8A5A00]">
+            <p>{reservationChangedMessage}</p>
+            <button type="button" onClick={() => setReservationChangedMessage("")} className="shrink-0 font-bold underline">
+              확인
+            </button>
+          </div>
+        ) : null}
         <div className="mt-5 space-y-3">
           {loading && reservations.length === 0 ? (
             <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-center text-sm text-muted">
@@ -102,6 +120,7 @@ export const ProfileConsultations = ({
                   actionDisabled={!isConsultationCancelable(item.date, item.slot, now)}
                   onAction={() => {
                     setCancelError("");
+                    setReservationChangedMessage("");
                     setCancelTarget(item.id);
                   }}
                 />
@@ -143,6 +162,7 @@ export const ProfileConsultations = ({
           confirmButtonClassName="bg-brand hover:bg-[#00B94C]"
           onClose={() => {
             setCancelError("");
+            setReservationChangedMessage("");
             setCancelTarget(null);
           }}
           onConfirm={() => void executeCancel()}
