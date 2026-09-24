@@ -23,6 +23,7 @@ export {
   getAuthErrorMessage,
   getLoginErrorMessage,
   getPasswordResetError,
+  getPasswordResetCodeError,
   getSignupError,
 } from "./model/auth-errors.ts";
 export { decodeUserRole, getRoleHomePath } from "./model/role.ts";
