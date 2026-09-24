@@ -95,6 +95,6 @@ assert.match(submitForm, /formRequestVersion/);
 assert.match(submitForm, /setSubmission\(null\)/);
 assert.match(submitForm, /setValues\(\{\}\)/);
 assert.match(submitForm, /requestVersion !== formRequestVersion\.current/);
-assert.match(submitForm, /loadedSubmission \? valuesFromSubmission\(loadedSubmission\) : \{\}/);
+assert.match(submitForm, /setValues\(valuesFromSubmission\(loadedSubmission\)\)/);
 
 console.log("student resilience regressions contract passed");
