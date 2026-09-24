@@ -31,6 +31,6 @@ assert.match(form, /displayTeachers\.map/);
 assert.match(form, /isTimeUnavailable\(row\.period\)/);
 assert.match(availability, /counselType === "general"[\s\S]*time === "4교시"/);
 assert.match(form, /예약 불가/);
-assert.doesNotMatch(form, /예약 가능|선택됨/);
+assert.doesNotMatch(form, /선택됨/);
 
 console.log("student consultation submit contract passed");

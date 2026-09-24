@@ -39,7 +39,7 @@ assert.match(form, /예약 불가/);
 assert.match(form, /ContentCard className="h-full min-h-\[720px\] p-6 sm:p-8"/);
 assert.match(form, /lg:items-stretch/);
 assert.equal((form.match(/h-full min-h-\[720px\]/g) ?? []).length, 2);
-assert.doesNotMatch(form, /예약 가능|선택됨|상담 확정 신청/);
+assert.doesNotMatch(form, /선택됨|상담 확정 신청/);
 assert.match(form, /grid-cols-7/);
 assert.doesNotMatch(form, /errorTarget === "date" \? "border border-\[#E53935\] p-2"/);
 assert.doesNotMatch(form, /errorTarget === "period" \? "border border-\[#E53935\] p-2"/);

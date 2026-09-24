@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getAvailablePeriods,
   type ConsultationType,
@@ -61,6 +61,9 @@ export const ConsultationForm = ({
     selectedTeacher,
     selectedDate,
     selectedTime,
+    availabilityStatus,
+    availabilityError,
+    retryAvailability,
     submitting,
     toast,
     errorTarget,
@@ -88,6 +91,17 @@ export const ConsultationForm = ({
     const { year, month } = getKoreaCalendarParts(new Date());
     return createCalendarDate(year, month - 1);
   });
+  useEffect(() => {
+    if (!selectedDate) return;
+    const [year, month] = selectedDate.split("-").map(Number);
+    queueMicrotask(() => {
+      setCalendarDate((current) =>
+        current.getUTCFullYear() === year && current.getUTCMonth() === month - 1
+          ? current
+          : createCalendarDate(year, month - 1),
+      );
+    });
+  }, [selectedDate]);
   const availableDateValues = useMemo(
     () => new Set(dates.map((item) => item.value)),
     [dates],
@@ -275,6 +289,18 @@ export const ConsultationForm = ({
                 errorTarget === "period" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
+              {availabilityStatus === "loading" ? (
+                <p role="status" className="rounded-xl bg-[#F5F6F7] px-4 py-3 text-sm font-semibold text-muted">
+                  예약 가능 시간을 확인하는 중입니다.
+                </p>
+              ) : availabilityStatus === "error" ? (
+                <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <p>{availabilityError || "예약 가능 시간을 확인하지 못했습니다."}</p>
+                  <button type="button" onClick={retryAvailability} className="mt-3 rounded-lg bg-brand px-4 py-2 font-semibold text-white">
+                    다시 시도
+                  </button>
+                </div>
+              ) : null}
               {scheduleRows.map((row) => {
                 const unavailable = isTimeUnavailable(row.period);
                 return (

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getNextAvailableDate,
   getNextWeekdays,
@@ -21,6 +21,8 @@ type UseConsultationAvailabilityInput = {
   counselType: ConsultationType;
   selectedTeacher: ConsultationTeacherOption | null;
 };
+
+export type ConsultationAvailabilityStatus = "idle" | "loading" | "success" | "error";
 
 const getKoreaDate = () => new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Seoul",
@@ -50,6 +52,9 @@ export const useConsultationAvailability = ({
     () => new Set(),
   );
   const [clock, setClock] = useState(() => new Date());
+  const [availabilityStatus, setAvailabilityStatus] = useState<ConsultationAvailabilityStatus>("idle");
+  const [availabilityError, setAvailabilityError] = useState("");
+  const availabilityRequestVersion = useRef(0);
 
   const koreaToday = getKoreaDate();
   const candidateDates = useMemo(
@@ -113,31 +118,50 @@ export const useConsultationAvailability = ({
     };
   }, [candidateDates]);
 
+  const retryAvailability = useCallback(() => {
+    const requestVersion = ++availabilityRequestVersion.current;
+    const teacherId = selectedTeacher?.id ?? null;
+    const date = selectedDate;
+    queueMicrotask(() => {
+      if (availabilityRequestVersion.current !== requestVersion) return;
+      if (teacherId === null || date === null) {
+        setAvailabilityStatus("idle");
+        setAvailabilityError("");
+        setServerUnavailablePeriods(new Set());
+        setSelectedTime(null);
+        return;
+      }
+
+      setAvailabilityStatus("loading");
+      setAvailabilityError("");
+      setServerUnavailablePeriods(new Set());
+      setSelectedTime(null);
+      void getConsultationSlotStatus(toConsultationKind(counselType), teacherId, date)
+        .then((items) => {
+          if (availabilityRequestVersion.current !== requestVersion) return;
+          const unavailable = getUnavailablePeriods(items);
+          setServerUnavailablePeriods(unavailable);
+          setSelectedTime((current) =>
+            current !== null && unavailable.has(current) ? null : current,
+          );
+          setAvailabilityStatus("success");
+        })
+        .catch((caught) => {
+          if (availabilityRequestVersion.current !== requestVersion) return;
+          setServerUnavailablePeriods(new Set());
+          setSelectedTime(null);
+          setAvailabilityStatus("error");
+          setAvailabilityError(caught instanceof Error ? caught.message : "예약 가능 시간을 확인하지 못했습니다.");
+        });
+    });
+  }, [counselType, selectedDate, selectedTeacher]);
+
   useEffect(() => {
-    if (selectedTeacher === null || selectedDate === null) return;
-
-    let active = true;
-    void getConsultationSlotStatus(
-      toConsultationKind(counselType),
-      selectedTeacher.id,
-      selectedDate,
-    )
-      .then((items) => {
-        if (!active) return;
-        const unavailable = getUnavailablePeriods(items);
-        setServerUnavailablePeriods(unavailable);
-        setSelectedTime((current) =>
-          current !== null && unavailable.has(current) ? null : current,
-        );
-      })
-      .catch(() => {
-        if (active) setServerUnavailablePeriods(new Set());
-      });
-
+    retryAvailability();
     return () => {
-      active = false;
+      availabilityRequestVersion.current += 1;
     };
-  }, [counselType, selectedTeacher, selectedDate]);
+  }, [retryAvailability]);
 
   useEffect(() => {
     const advanceAfterLastPeriod = () => {
@@ -154,6 +178,7 @@ export const useConsultationAvailability = ({
   }, [candidateDates, holidayDates]);
 
   const isTimeUnavailable = (time: string) =>
+    availabilityStatus !== "success" ||
     (counselType === "general" && time === "4교시") ||
     (selectedDate === getKoreaDate() &&
       !getSelectablePeriods(
@@ -174,6 +199,8 @@ export const useConsultationAvailability = ({
   const clearPeriodSelection = () => {
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
+    setAvailabilityStatus("idle");
+    setAvailabilityError("");
   };
 
   const markUnavailableSlot = (teacherId: number, date: string, period: string) => {
@@ -186,12 +213,17 @@ export const useConsultationAvailability = ({
     setSelectedDate(null);
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
+    setAvailabilityStatus("idle");
+    setAvailabilityError("");
   };
 
   return {
     timetable,
     selectedDate,
     selectedTime,
+    availabilityStatus,
+    availabilityError,
+    retryAvailability,
     dates,
     toggleDate: (date: string) =>
       updateSelectedDate(selectedDateRef.current === date ? null : date),
