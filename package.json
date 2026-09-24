@@ -10,7 +10,7 @@
     "check:unit": "node --no-warnings --experimental-strip-types tests/unit/timetablePresentation.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "check:forms": "node --no-warnings --experimental-strip-types tests/contracts/form-answers.test.ts",
-    "check:api": "node --no-warnings --experimental-strip-types tests/contracts/api-contract.test.ts",
+    "check:api": "node --import ./scripts/harness/register-fsd-alias.mjs --no-warnings --experimental-strip-types tests/contracts/api-contract.test.ts",
     "harness:preflight": "node --no-warnings --experimental-strip-types scripts/harness/preflight.ts",
     "harness:verify": "node --no-warnings --experimental-strip-types scripts/harness/verify.ts",
     "harness:lint": "node --no-warnings --experimental-strip-types scripts/harness/changed-lint.ts",
@@ -20,7 +20,7 @@
     "harness:fsd": "node --no-warnings --experimental-strip-types scripts/harness/fsd-boundary-check.ts",
     "harness:convention": "node --no-warnings --experimental-strip-types scripts/harness/convention-check.ts",
     "harness:branches": "node --no-warnings --experimental-strip-types scripts/harness/branch-cleanup.ts",
-    "check:notifications": "node --no-warnings --experimental-strip-types tests/contracts/notification.test.ts"
+    "check:notifications": "node --import ./scripts/harness/register-fsd-alias.mjs --no-warnings --experimental-strip-types tests/contracts/notification.test.ts"
   },
   "dependencies": {
     "next": "^16.2.7",

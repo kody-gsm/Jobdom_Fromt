@@ -1,4 +1,4 @@
-import type { Recruit } from "../../../entities/recruit/index.ts";
+import type { Recruit } from "@fsd/entities/recruit";
 import {
   decodeProfileConsultationId,
   getConsultationTeacherLabel,
@@ -7,7 +7,7 @@ import {
   CONSULTATION_SCHEDULE,
   type ReservationStatus,
   type StudentReservation,
-} from "../../../entities/consultation/index.ts";
+} from "@fsd/entities/consultation";
 
 export type HomeConsultationItem = {
   id: number;

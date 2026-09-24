@@ -21,7 +21,7 @@ assert.equal(getAuthRedirect("/admin", "ADMIN"), null);
 assert.equal(getAuthRedirect("/profile", "ADMIN"), "/admin");
 
 const packageJson = JSON.parse(read("package.json"));
-assert.equal(packageJson.scripts["check:api"], "node --no-warnings --experimental-strip-types tests/contracts/api-contract.test.ts");
+assert.equal(packageJson.scripts["check:api"], "node --import ./scripts/harness/register-fsd-alias.mjs --no-warnings --experimental-strip-types tests/contracts/api-contract.test.ts");
 assert.equal(packageJson.scripts["check:forms"], "node --no-warnings --experimental-strip-types tests/contracts/form-answers.test.ts");
 assert.equal(existsSync("scripts/api-contract-check.ts"), false);
 assert.equal(existsSync("scripts/form-answers-check.ts"), false);

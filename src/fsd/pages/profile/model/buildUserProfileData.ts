@@ -1,8 +1,8 @@
-import type { StudentReservation } from "../../../entities/consultation/index.ts";
+import type { StudentReservation } from "@fsd/entities/consultation";
 import {
   toProfileConsultation,
   type ProfileConsultation,
-} from "../../../entities/consultation/index.ts";
+} from "@fsd/entities/consultation";
 
 interface ProfileSession {
   name?: string;
