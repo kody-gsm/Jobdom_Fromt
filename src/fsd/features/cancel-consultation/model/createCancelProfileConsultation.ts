@@ -1,5 +1,5 @@
-import { decodeProfileConsultationId } from "../../../entities/consultation/index.ts";
-import type { ConsultationKind } from "../../../entities/consultation/index.ts";
+import { decodeProfileConsultationId } from "@fsd/entities/consultation";
+import type { ConsultationKind } from "@fsd/entities/consultation";
 
 interface CancelReservation {
   (kind: ConsultationKind, id: number): Promise<unknown>;

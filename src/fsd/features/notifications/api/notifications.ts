@@ -1,4 +1,4 @@
-import { requestWithSession as request } from "../../../entities/user/index.ts";
+import { requestWithSession as request } from "@fsd/entities/user";
 
 export type NotificationType =
   | "RECRUIT_PUBLISHED"

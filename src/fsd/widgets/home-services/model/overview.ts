@@ -1,12 +1,13 @@
-import type { Recruit } from "../../../entities/recruit/index.ts";
+import type { Recruit } from "@fsd/entities/recruit";
 import {
   decodeProfileConsultationId,
   getConsultationTeacherLabel,
   getReservationPresentation,
   isActiveReservation,
+  CONSULTATION_SCHEDULE,
   type ReservationStatus,
   type StudentReservation,
-} from "../../../entities/consultation/index.ts";
+} from "@fsd/entities/consultation";
 
 export type HomeConsultationItem = {
   id: number;
@@ -22,6 +23,21 @@ export type HomeConsultationItem = {
 export type HomeOverview = {
   upcomingConsultations: HomeConsultationItem[];
   recentRecruits: Recruit[];
+};
+
+const getConsultationStartMinutes = (period: string) => {
+  const schedule = CONSULTATION_SCHEDULE.find((item) => item.period === period);
+  return schedule === undefined
+    ? Number.MAX_SAFE_INTEGER
+    : schedule.startHour * 60 + schedule.startMinute;
+};
+
+const compareConsultationSchedule = (left: HomeConsultationItem, right: HomeConsultationItem) => {
+  const dateOrder = left.date.localeCompare(right.date);
+  if (dateOrder !== 0) return dateOrder;
+
+  const periodOrder = getConsultationStartMinutes(left.period) - getConsultationStartMinutes(right.period);
+  return periodOrder !== 0 ? periodOrder : left.period.localeCompare(right.period);
 };
 
 const toHomeConsultationItem = (
@@ -52,7 +68,7 @@ export const buildHomeOverview = ({
     ...common
       .filter((item) => isActiveReservation(item.status))
       .map((item) => toHomeConsultationItem("common", item)),
-  ].sort((a, b) => `${a.date} ${a.period}`.localeCompare(`${b.date} ${b.period}`)),
+  ].sort(compareConsultationSchedule),
   recentRecruits: recruits
     .filter((item) => item.status === "PUBLISHED")
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

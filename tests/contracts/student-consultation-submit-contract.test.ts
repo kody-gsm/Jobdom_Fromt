@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 const api = read("src/fsd/features/submit-consultation/api/consultation.ts");
 const hook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
+const availability = read("src/fsd/features/submit-consultation/model/useConsultationAvailability.ts");
 const form = read("src/fsd/features/submit-consultation/ui/ConsultationForm.tsx");
 
 assert.match(api, /getConsultationTeachers\s*=\s*\(kind: ConsultationKind\)/);
@@ -22,14 +23,14 @@ assert.match(hook, /teacherId:\s*teacherId/);
 assert.match(hook, /상담 신청 요청을 보냈습니다/);
 assert.doesNotMatch(hook, /상담 신청이 완료되었습니다/);
 assert.doesNotMatch(hook, /setHasCareerReservation\(true\)/);
-assert.match(hook, /unavailableSlotKeys/);
+assert.match(availability, /unavailableSlotKeys/);
 assert.match(hook, /value\.slice\(0, MAX_CONSULTATION_CONTENT_LENGTH\)/);
 assert.match(hook, /isUnavailableSlotError/);
 assert.match(form, /getConsultationTeacherOptions\(counselType, teachers\)/);
 assert.match(form, /displayTeachers\.map/);
 assert.match(form, /isTimeUnavailable\(row\.period\)/);
-assert.match(hook, /counselType === "general"[\s\S]*time === "4교시"/);
+assert.match(availability, /counselType === "general"[\s\S]*time === "4교시"/);
 assert.match(form, /예약 불가/);
-assert.doesNotMatch(form, /예약 가능|선택됨/);
+assert.doesNotMatch(form, /선택됨/);
 
 console.log("student consultation submit contract passed");

@@ -7,7 +7,16 @@ import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitDetail } from "../model/useRecruitDetail.ts";
 
 export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
-  const { item, form, error, formMessage, showMissingForm } = useRecruitDetail(recruitId);
+  const {
+    item,
+    form,
+    error,
+    formLoading,
+    formError,
+    formMessage,
+    retryForm,
+    showMissingForm,
+  } = useRecruitDetail(recruitId);
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
@@ -49,8 +58,24 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
               <p className="mt-3 whitespace-pre-line break-keep leading-8 text-[#667281]">{item.summary || "공고 요약이 없습니다."}</p>
             </section>
 
+            {formError ? (
+              <div role="alert" className="mt-8 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                <p>{formError}</p>
+                <button type="button" onClick={retryForm} className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-brand px-4 font-bold text-white hover:bg-brand-hover">
+                  Retry
+                </button>
+              </div>
+            ) : null}
             <div className="mt-10 grid gap-3 sm:grid-cols-[1fr_auto]">
-              {form ? (
+              {formLoading ? (
+                <button type="button" disabled className="inline-flex h-12 items-center justify-center rounded-xl bg-[#E3E6EA] px-6 font-bold text-[#7A8592]">
+                  신청서 확인 중
+                </button>
+              ) : formError ? (
+                <button type="button" disabled className="inline-flex h-12 items-center justify-center rounded-xl bg-[#E3E6EA] px-6 font-bold text-[#7A8592]">
+                  신청서 확인 불가
+                </button>
+              ) : form ? (
                 <Link href={`/forms/${form.id}`} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</Link>
               ) : (
                 <button type="button" onClick={showMissingForm} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</button>

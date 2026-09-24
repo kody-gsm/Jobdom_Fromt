@@ -21,7 +21,16 @@ import type { HomeConsultationItem } from "../model/overview.ts";
 import { useHomeOverview } from "../model/useHomeOverview.ts";
 
 export const HomeServices = () => {
-  const { overview, loading, error, handleCancel } = useHomeOverview();
+  const {
+    overview,
+    consultationLoading,
+    recruitLoading,
+    consultationError,
+    recruitError,
+    retryConsultations,
+    retryRecruits,
+    handleCancel,
+  } = useHomeOverview();
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [reservationChangeNotice, setReservationChangeNotice] = useState("");
@@ -29,6 +38,7 @@ export const HomeServices = () => {
   const [cancelTarget, setCancelTarget] = useState<HomeConsultationItem | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [homeBanner, setHomeBanner] = useState<HomeBanner | null>(null);
+  const hasConsultationData = overview.upcomingConsultations.length > 0;
   const upcomingConsultations = overview.upcomingConsultations.filter((item) =>
     isConsultationUpcoming(item.date, item.period, now),
   );
@@ -127,8 +137,10 @@ export const HomeServices = () => {
           </div>
 
           <div className="mt-6">
-            {loading ? (
+            {consultationLoading && !hasConsultationData ? (
               <p className="py-8 text-sm text-muted">상담 일정을 불러오는 중입니다.</p>
+            ) : consultationError && !hasConsultationData ? (
+              <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
             ) : consultationPreview.length === 0 ? (
               <div className="rounded-2xl bg-[#F7F8FA] px-5 py-8">
                 <p className="font-semibold text-[#4E5B6B]">예정된 상담이 없습니다.</p>
@@ -149,6 +161,11 @@ export const HomeServices = () => {
                 ))}
               </div>
             )}
+            {consultationError && hasConsultationData ? (
+              <div className="mt-3">
+                <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
+              </div>
+            ) : null}
           </div>
         </ContentCard>
       </div>
@@ -170,8 +187,10 @@ export const HomeServices = () => {
         </div>
 
         <div className="mt-6">
-          {loading ? (
+          {recruitLoading ? (
             <p className="py-8 text-sm text-muted">취업 공고를 불러오는 중입니다.</p>
+          ) : recruitError ? (
+            <HomeLoadError message={recruitError} onRetry={() => void retryRecruits()} />
           ) : overview.recentRecruits.length === 0 ? (
             <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-sm text-[#6B7787]">
               현재 공개된 취업 공고가 없습니다.
@@ -211,7 +230,6 @@ export const HomeServices = () => {
         )}
       </ContentCard>
 
-      {error ? <p role="status" className="text-sm text-[#9A675E]">{error}</p> : null}
       {reservationChangeNotice ? (
         <p role="status" className="text-sm text-[#9A675E]">
           {reservationChangeNotice}
@@ -250,7 +268,13 @@ export const HomeServices = () => {
               </p>
             ) : null}
             <div className="mt-5 space-y-3">
-              {upcomingConsultations.length === 0 ? (
+              {consultationLoading && !hasConsultationData ? (
+                <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-sm text-[#6B7787]">
+                  상담 일정을 불러오는 중입니다.
+                </p>
+              ) : consultationError && !hasConsultationData ? (
+                <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
+              ) : upcomingConsultations.length === 0 ? (
                 <p className="rounded-2xl bg-[#F7F8FA] px-5 py-8 text-sm text-[#6B7787]">
                   예정된 상담이 없습니다.
                 </p>
@@ -268,6 +292,9 @@ export const HomeServices = () => {
                   />
                 ))
               )}
+              {consultationError && hasConsultationData ? (
+                <HomeLoadError message={consultationError} onRetry={() => void retryConsultations()} />
+              ) : null}
             </div>
           </div>
         </div>
@@ -297,3 +324,22 @@ export const HomeServices = () => {
     </section>
   );
 };
+
+const HomeLoadError = ({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) => (
+  <div role="alert" className="rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] px-5 py-6">
+    <p className="text-sm font-semibold text-[#9A4F45]">{message}</p>
+    <button
+      type="button"
+      onClick={onRetry}
+      className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-bold text-[#9A4F45] ring-1 ring-[#E7C6C0] hover:bg-[#FFF0EC]"
+    >
+      다시 시도
+    </button>
+  </div>
+);

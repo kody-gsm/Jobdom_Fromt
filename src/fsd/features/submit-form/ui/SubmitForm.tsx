@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   buildFormAnswers,
@@ -34,33 +34,99 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formLoading, setFormLoading] = useState(true);
+  const [formError, setFormError] = useState("");
+  const [submissionLoading, setSubmissionLoading] = useState(true);
+  const [submissionError, setSubmissionError] = useState("");
+  const formRequestVersion = useRef(0);
+  const formLoadVersion = useRef(0);
+  const submissionLoadVersion = useRef(0);
+  const activeFormId = useRef(formId);
+  const mounted = useRef(false);
 
-  useEffect(() => {
-    Promise.all([
-      formApi.getById(formId),
-      formApi.getMySubmission(formId).catch((caught) =>
-        caught instanceof ApiError && caught.status === 404 ? null : Promise.reject(caught),
-      ),
-    ])
-      .then(([loadedForm, loadedSubmission]) => {
+  const isCurrent = useCallback((requestVersion: number, targetFormId: number) =>
+    mounted.current &&
+    activeFormId.current === targetFormId &&
+    formRequestVersion.current === requestVersion, []);
+
+  const loadForm = useCallback((requestVersion: number, targetFormId: number) => {
+    const loadVersion = ++formLoadVersion.current;
+    setFormLoading(true);
+    setFormError("");
+    void formApi.getById(targetFormId)
+      .then((loadedForm) => {
+        if (!isCurrent(requestVersion, targetFormId) || formLoadVersion.current !== loadVersion) return;
         setForm(loadedForm);
+        setFormError("");
+      })
+      .catch((caught) => {
+        if (!isCurrent(requestVersion, targetFormId) || formLoadVersion.current !== loadVersion) return;
+        setForm(null);
+        setFormError(caught instanceof Error ? caught.message : "폼을 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        if (isCurrent(requestVersion, targetFormId) && formLoadVersion.current === loadVersion) {
+          setFormLoading(false);
+        }
+      });
+  }, [isCurrent]);
+
+  const loadSubmission = useCallback((requestVersion: number, targetFormId: number) => {
+    const loadVersion = ++submissionLoadVersion.current;
+    setSubmissionLoading(true);
+    setSubmissionError("");
+    void formApi.getMySubmission(targetFormId)
+      .then((loadedSubmission) => {
+        if (!isCurrent(requestVersion, targetFormId) || submissionLoadVersion.current !== loadVersion) return;
         setSubmission(loadedSubmission);
-        if (loadedSubmission) {
-          setValues(Object.fromEntries(loadedSubmission.answers.map((answer) => [
-            answer.questionId,
-            answer.fileId
-              ? { fileId: answer.fileId, fileName: answer.fileName ?? "첨부 파일" }
-              : answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
-          ])));
+        setValues(valuesFromSubmission(loadedSubmission));
+      })
+      .catch((caught) => {
+        if (!isCurrent(requestVersion, targetFormId) || submissionLoadVersion.current !== loadVersion) return;
+        if (caught instanceof ApiError && caught.status === 404) {
+          setSubmission(null);
+          setValues({});
+          setSubmissionError("");
+        } else {
+          setSubmission(null);
+          setSubmissionError(caught instanceof Error ? caught.message : "기존 제출 내역을 확인하지 못했습니다.");
         }
       })
-      .catch((caught) =>
-        setMessage({
-          text: caught instanceof Error ? caught.message : "폼을 불러오지 못했습니다.",
-          error: true,
-        }),
-      );
-  }, [formId]);
+      .finally(() => {
+        if (isCurrent(requestVersion, targetFormId) && submissionLoadVersion.current === loadVersion) {
+          setSubmissionLoading(false);
+        }
+      });
+  }, [isCurrent]);
+
+  useEffect(() => {
+    const requestVersion = ++formRequestVersion.current;
+    activeFormId.current = formId;
+    mounted.current = true;
+
+    queueMicrotask(() => {
+      if (!isCurrent(requestVersion, formId)) return;
+      setForm(null);
+      setSubmission(null);
+      setValues({});
+      setEditing(false);
+      setMessage(null);
+      setSubmitting(false);
+      setFormError("");
+      setSubmissionError("");
+      setFormLoading(true);
+      setSubmissionLoading(true);
+      loadForm(requestVersion, formId);
+      loadSubmission(requestVersion, formId);
+    });
+
+    return () => {
+      mounted.current = false;
+    };
+  }, [formId, isCurrent, loadForm, loadSubmission]);
+
+  const retrySubmission = () => loadSubmission(formRequestVersion.current, formId);
+  const retryForm = () => loadForm(formRequestVersion.current, formId);
 
   const setValue = (questionId: number, value: FormValue) => {
     setValues((current) => ({ ...current, [questionId]: value }));
@@ -69,6 +135,9 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form) return;
+    const requestVersion = formRequestVersion.current;
+    const targetFormId = form.id;
+    const isCurrentOperation = () => isCurrent(requestVersion, targetFormId);
 
     const missing = getMissingRequiredQuestion(form.questions, values);
     if (missing) {
@@ -83,17 +152,21 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         if (question.type !== "FILE") continue;
         const value = preparedValues[question.id];
         if (isFormFileValue(value) && value.file && !value.fileId) {
-          const uploaded = await formApi.uploadFile(form.id, value.file);
+          const uploaded = await formApi.uploadFile(targetFormId, value.file);
+          if (!isCurrentOperation()) return;
           const uploadedValue = { fileId: uploaded.id, fileName: uploaded.originalName };
           preparedValues[question.id] = uploadedValue;
           setValues((current) => ({ ...current, [question.id]: uploadedValue }));
         }
       }
     } catch (caught) {
+      if (!isCurrentOperation()) return;
       setMessage({ text: caught instanceof Error ? caught.message : "파일 업로드에 실패했습니다.", error: true });
       setSubmitting(false);
       return;
     }
+
+    if (!isCurrentOperation()) return;
 
     const answers = buildFormAnswers(form.questions, preparedValues);
     if (answers.length === 0) {
@@ -104,13 +177,15 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
 
     try {
       const saved = submission
-        ? await formApi.updateSubmission(form.id, answers)
-        : await formApi.submit(form.id, answers);
+        ? await formApi.updateSubmission(targetFormId, answers)
+        : await formApi.submit(targetFormId, answers);
+      if (!isCurrentOperation()) return;
       setSubmission(saved);
       setValues(valuesFromSubmission(saved));
       setEditing(false);
       setMessage({ text: "응답을 제출했습니다." });
     } catch (caught) {
+      if (!isCurrentOperation()) return;
       setMessage({
         text:
           caught instanceof ApiError && caught.status === 409
@@ -121,14 +196,21 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         error: true,
       });
     } finally {
-      setSubmitting(false);
+      if (isCurrentOperation()) setSubmitting(false);
     }
   };
 
-  if (message?.error && !form) {
-    return <p role="alert" className="rounded-2xl bg-red-50 p-5 text-red-700">{message.text}</p>;
+  if (formError && !form) {
+    return (
+      <div role="alert" className="rounded-2xl bg-red-50 p-5 text-red-700">
+        <p>{formError}</p>
+        <button type="button" onClick={retryForm} className="mt-3 rounded-lg bg-brand px-4 py-2 font-semibold text-white">
+          다시 시도
+        </button>
+      </div>
+    );
   }
-  if (!form) {
+  if (formLoading || !form) {
     return <p className="py-20 text-center text-gray-400">불러오는 중…</p>;
   }
 
@@ -162,6 +244,19 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
             />
           ))
         )}
+        {submissionLoading ? (
+          <p role="status" className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
+            기존 제출 내역을 확인하는 중입니다.
+          </p>
+        ) : null}
+        {submissionError ? (
+          <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p>{submissionError}</p>
+            <button type="button" onClick={retrySubmission} className="mt-3 rounded-lg bg-brand px-4 py-2 font-semibold text-white">
+              제출 내역 다시 시도
+            </button>
+          </div>
+        ) : null}
         {message ? (
           <p
             role="status"
@@ -172,11 +267,12 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
             {message.text}
           </p>
         ) : null}
-        {submission && !editing ? (
+        {submission && !editing && !submissionLoading ? (
           <ActionButton
             type="button"
             onClick={(event) => {
               event.preventDefault();
+              setMessage(null);
               setEditing(true);
             }}
             className="w-full bg-brand hover:bg-brand-hover"
@@ -186,7 +282,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         ) : (
           <ActionButton
             type="submit"
-            disabled={submitting}
+            disabled={submitting || submissionLoading || Boolean(submissionError)}
             className="w-full bg-brand hover:bg-brand-hover"
           >
             {submitting ? "제출 중…" : "제출"}

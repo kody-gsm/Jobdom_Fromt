@@ -24,13 +24,13 @@ assert.equal(toCounselingCategory("career"), "취업");
 assert.equal(toCounselingCategory("general"), "기타");
 assert.deepEqual(getAvailablePeriods("career", "임경원 선생님"), [
   "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시",
-  "6교시", "7교시", "8교시", "저녁시간", "9교시",
+  "6교시", "7교시", "8교시", "9교시", "저녁시간",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "김권예소 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "9교시", "저녁시간",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "새로 추가된 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "9교시", "저녁시간",
 ]);
 assert.deepEqual(getAvailablePeriods("career", null), []);
 assert.deepEqual(getAvailablePeriods("general", null), [
@@ -38,7 +38,7 @@ assert.deepEqual(getAvailablePeriods("general", null), [
 ]);
 
 const weekdays = getNextWeekdays(new Date("2026-09-04T09:00:00+09:00"));
-assert.equal(getNextAvailableDate("2026-09-10", new Date("2026-09-10T16:21:00+09:00")), "2026-09-11");
+assert.equal(getNextAvailableDate("2026-09-10", new Date("2026-09-10T19:30:00+09:00")), "2026-09-11");
 assert.deepEqual(getSelectablePeriods("general", null, new Date("2026-09-04T16:30:00+09:00")), []);
 assert.equal(weekdays.length, 21);
 assert.equal(weekdays[0]?.value, "2026-09-04");

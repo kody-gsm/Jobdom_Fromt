@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getAuthErrorMessage,
@@ -28,11 +28,20 @@ export const useSignupForm = () => {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
-  const verificationCountdown = useCountdown();  const resendCountdown = useCountdown();
+  const verificationCountdown = useCountdown();
+  const resendCountdown = useCountdown();
+  const verificationRequestVersion = useRef(0);
 
   const updateField = (field: keyof SignupFormValues, value: string) => {
     const normalized =
       field === "verificationCode" ? normalizeVerificationCode(value) : value;
+    if (field === "email" && form.email !== normalized) {
+      verificationRequestVersion.current += 1;
+      setIsCodeSent(false);
+      verificationCountdown.reset();
+      resendCountdown.reset();
+      setErrors((current) => ({ ...current, verificationCode: undefined }));
+    }
     setForm((current) => ({ ...current, [field]: normalized }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitError("");
@@ -45,18 +54,23 @@ export const useSignupForm = () => {
       return;
     }
 
+    const requestedEmail = form.email.trim();
+    const requestVersion = ++verificationRequestVersion.current;
     try {
       setIsSendingCode(true);
       setSubmitError("");
-      await sendSignupVerificationCode(form.email.trim());
+      await sendSignupVerificationCode(requestedEmail);
+      if (requestVersion !== verificationRequestVersion.current || form.email.trim() !== requestedEmail) return;
       setIsCodeSent(true);
       verificationCountdown.start(180);
       resendCountdown.start(2);
       setErrors((current) => ({ ...current, email: undefined, verificationCode: undefined }));
     } catch (caught) {
+      if (requestVersion !== verificationRequestVersion.current) return;
       setIsCodeSent(false);
       verificationCountdown.reset();
-      resendCountdown.reset();      setErrors((current) => ({
+      resendCountdown.reset();
+      setErrors((current) => ({
         ...current,
         email: getAuthErrorMessage(
           caught,
@@ -64,7 +78,7 @@ export const useSignupForm = () => {
         ),
       }));
     } finally {
-      setIsSendingCode(false);
+      if (requestVersion === verificationRequestVersion.current) setIsSendingCode(false);
     }
   };
 

@@ -7,7 +7,7 @@ import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitList } from "../model/useRecruitList.ts";
 
 export const RecruitPage = () => {
-  const { items, loading, error } = useRecruitList();
+  const { items, loading, error, retry } = useRecruitList();
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
@@ -23,6 +23,9 @@ export const RecruitPage = () => {
         {error ? (
           <div role="alert" className="mt-6 rounded-2xl border border-[#F0D7D2] bg-[#FFF7F5] p-5 text-sm text-[#9A4F45]">
             {error}
+            <button type="button" onClick={retry} className="ml-4 inline-flex min-h-11 items-center rounded-xl bg-brand px-5 font-bold text-white hover:bg-brand-hover">
+              Retry
+            </button>
             {error.includes("로그인") ? (
               <Link href="/login" className="ml-2 font-bold underline">로그인</Link>
             ) : null}
@@ -32,7 +35,7 @@ export const RecruitPage = () => {
         <section className="mt-6 grid gap-5 md:grid-cols-2" aria-live="polite">
           {loading ? (
             <EmptyState text="취업 공고를 불러오는 중…" />
-          ) : !Array.isArray(items) || items.length === 0 ? (
+          ) : !error && (!Array.isArray(items) || items.length === 0) ? (
             <EmptyState text="현재 공개된 취업 공고가 없습니다." />
           ) : (
             items.map((item) => <RecruitCard key={item.id} item={item} />)

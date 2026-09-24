@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getGsmEmailErrorMessage,
+  getPasswordResetCodeError,
   getPasswordResetError,
   normalizeVerificationCode,
 } from "@fsd/entities/user";
@@ -33,10 +34,17 @@ export const useResetPasswordForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
   const verificationCountdown = useCountdown();
+  const verificationRequestVersion = useRef(0);
 
   const updateField = (field: keyof ResetPasswordFields, value: string) => {
     const normalized =
       field === "verificationCode" ? normalizeVerificationCode(value) : value;
+    if (field === "email" && form.email !== normalized) {
+      verificationRequestVersion.current += 1;
+      setIsCodeSent(false);
+      verificationCountdown.reset();
+      setErrors((current) => ({ ...current, verificationCode: undefined }));
+    }
     setForm((current) => ({ ...current, [field]: normalized }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitError("");
@@ -49,22 +57,26 @@ export const useResetPasswordForm = () => {
       return;
     }
 
+    const requestedEmail = form.email.trim();
+    const requestVersion = ++verificationRequestVersion.current;
     try {
       setIsSendingCode(true);
       setSubmitError("");
-      await sendPasswordResetCode(form.email.trim());
+      await sendPasswordResetCode(requestedEmail);
+      if (requestVersion !== verificationRequestVersion.current || form.email.trim() !== requestedEmail) return;
       setIsCodeSent(true);
       verificationCountdown.start(180);
       setErrors((current) => ({ ...current, email: undefined, verificationCode: undefined }));
-    } catch {
+    } catch (caught) {
+      if (requestVersion !== verificationRequestVersion.current) return;
       setIsCodeSent(false);
       verificationCountdown.reset();
       setErrors((current) => ({
         ...current,
-        email: "가입되지 않은 계정입니다.",
+        email: getPasswordResetCodeError(caught),
       }));
     } finally {
-      setIsSendingCode(false);
+      if (requestVersion === verificationRequestVersion.current) setIsSendingCode(false);
     }
   };
 

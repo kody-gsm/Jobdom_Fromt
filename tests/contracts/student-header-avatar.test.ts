@@ -8,8 +8,11 @@ const userIndex = read("src/fsd/entities/user/index.ts");
 
 assert.match(userIndex, /readProfileAvatar/);
 assert.match(userIndex, /getProfileAvatarUserKey/);
-assert.match(header, /getSession/);
-assert.match(header, /readProfileAvatar/);
+assert.match(userIndex, /useProfileAvatar/);
+assert.match(header, /useProfileAvatar/);
+assert.doesNotMatch(header, /requestWithSession/);
+assert.doesNotMatch(header, /"\/auth\/profile"/);
+assert.doesNotMatch(header, /NEXT_PUBLIC_API_BASE_URL/);
 assert.match(header, /profileAvatar/);
 assert.match(header, /src=\{profileAvatar\}/);
 assert.match(header, /\/profileIcon\.svg/);

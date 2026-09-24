@@ -14,6 +14,9 @@ export const ProfilePage = () => {
     avatarError,
     loading,
     error,
+    reservationLoading,
+    reservationError,
+    retryReservations,
     userRole,
     handleCancel,
     handleAvatarChange,
@@ -89,6 +92,9 @@ export const ProfilePage = () => {
 
             <ProfileConsultations
               reservations={profile.reservations}
+              loading={reservationLoading}
+              error={reservationError}
+              onRetry={() => void retryReservations()}
               onCancel={handleCancel}
             />
           </div>

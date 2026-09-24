@@ -3,40 +3,20 @@ import {
   toProfileConsultation,
 } from "@fsd/entities/consultation";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
-import { getSession, requestWithSession } from "@fsd/entities/user";
+import {
+  getSession,
+  getUserProfile,
+  requestWithSession,
+  resolveProfileImageUrl,
+} from "@fsd/entities/user";
 import { buildUserProfileData } from "../model/buildUserProfileData.ts";
 
 const consultationApi = createConsultationApi(requestWithSession);
 
-type UserProfileResponse = {
-  name: string;
-  email: string;
-  student_number: string;
-  profileImageUrl?: string;
-};
-
-type ProfileImageUploadResponse = { profileImageUrl: string };
-
-export const resolveProfileImageUrl = (imageUrl: string) => {
-  if (/^https?:\/\//.test(imageUrl)) return imageUrl;
-  const basePath = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
-  return `${basePath}/${imageUrl.replace(/^\/+/, "")}`;
-};
-
-export const uploadProfileImage = async (file: File) => {
-  const formData = new FormData();
-  formData.append("image", file);
-  const response = await requestWithSession<ProfileImageUploadResponse>(
-    "/auth/profile/image",
-    { method: "PATCH", body: formData },
-  );
-  return resolveProfileImageUrl(response.profileImageUrl);
-};
-
 export const fetchUserProfile = async () => {
   const session = getSession();
   if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") {
-    const identity = await requestWithSession<UserProfileResponse>("/auth/profile");
+    const identity = await getUserProfile();
     return buildUserProfileData({
       upcomingCourse: [],
       upcomingCommon: [],
@@ -45,15 +25,11 @@ export const fetchUserProfile = async () => {
     });
   }
 
-  const [upcomingCourse, upcomingCommon, identity] = await Promise.all([
-    consultationApi.getUpcoming("course"),
-    consultationApi.getUpcoming("common"),
-    requestWithSession<UserProfileResponse>("/auth/profile"),
-  ]);
+  const identity = await getUserProfile();
 
   return buildUserProfileData({
-    upcomingCourse,
-    upcomingCommon,
+    upcomingCourse: [],
+    upcomingCommon: [],
     session: getSession(),
     profile: {
       ...identity,
@@ -64,17 +40,39 @@ export const fetchUserProfile = async () => {
   });
 };
 
-export const fetchProfileReservations = async (): Promise<ProfileConsultation[]> => {
-  const session = getSession();
-  if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") return [];
+export type ProfileReservationResult = {
+  reservations: ProfileConsultation[];
+  errors: {
+    course?: string;
+    common?: string;
+  };
+};
 
-  const [upcomingCourse, upcomingCommon] = await Promise.all([
+const getReservationErrorMessage = (caught: unknown) =>
+  caught instanceof Error ? caught.message : "상담 예약을 불러오지 못했습니다.";
+
+export const fetchProfileReservations = async (): Promise<ProfileReservationResult> => {
+  const session = getSession();
+  if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") {
+    return { reservations: [], errors: {} };
+  }
+
+  const [courseResult, commonResult] = await Promise.allSettled([
     consultationApi.getUpcoming("course"),
     consultationApi.getUpcoming("common"),
   ]);
 
-  return [
-    ...upcomingCourse.map((item) => toProfileConsultation("course", item)),
-    ...upcomingCommon.map((item) => toProfileConsultation("common", item)),
-  ];
+  const errors: ProfileReservationResult["errors"] = {};
+  const reservations: ProfileConsultation[] = [];
+  if (courseResult.status === "fulfilled") {
+    reservations.push(...courseResult.value.map((item) => toProfileConsultation("course", item)));
+  } else {
+    errors.course = getReservationErrorMessage(courseResult.reason);
+  }
+  if (commonResult.status === "fulfilled") {
+    reservations.push(...commonResult.value.map((item) => toProfileConsultation("common", item)));
+  } else {
+    errors.common = getReservationErrorMessage(commonResult.reason);
+  }
+  return { reservations, errors };
 };
