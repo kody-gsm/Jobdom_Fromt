@@ -94,7 +94,7 @@ const submitForm = read("src/fsd/features/submit-form/ui/SubmitForm.tsx");
 assert.match(submitForm, /formRequestVersion/);
 assert.match(submitForm, /setSubmission\(null\)/);
 assert.match(submitForm, /setValues\(\{\}\)/);
-assert.match(submitForm, /requestVersion !== formRequestVersion\.current/);
+assert.match(submitForm, /formRequestVersion\.current === requestVersion/);
 assert.match(submitForm, /setValues\(valuesFromSubmission\(loadedSubmission\)\)/);
 
 console.log("student resilience regressions contract passed");
