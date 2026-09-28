@@ -57,7 +57,10 @@ const bell = read("src/fsd/features/notifications/ui/NotificationBell.tsx");
 assert.doesNotMatch(authGate, /isAccessTokenExpired|clearSession/);
 assert.match(teacherPage, /canManageHomeBanner/);
 assert.match(teacherPage, /학생 홈 배너/);
-assert.match(home, /readHomeBanner/);
+assert.match(teacherPage, /getTeacherBanner/);
+assert.match(teacherPage, /saveTeacherBanner/);
+assert.match(home, /getStudentBanner/);
+assert.doesNotMatch(home, /readHomeBanner/);
 assert.match(bell, /bg-red-500/);
 assert.match(bell, /unreadCount > 99 \? "99\+" : unreadCount/);
 

@@ -141,7 +141,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 - `/teacher`는 session name을 선생님 이름으로 사용한다.
 - `/teacher`는 임경원·김권예소·정윤기·일반 교사의 네 화면 정책을 이름에 따라 적용한다.
 - 임경원 선생님은 진로상담 1~9교시, 김권예소·정윤기 선생님은 점심·저녁시간만 표시한다.
-- 일반 교사에게만 학생 홈 배너 입력을 표시한다. 현재 배너는 브라우저 로컬 저장이므로 여러 기기 공유에는 서버 API가 필요하다.
+- 일반 교사에게만 학생 홈 배너 입력을 표시하고, `POST /teacher/banner`로 이미지와 선택 정보를 저장한다. 학생 홈은 `GET /student/banner`로 현재 배너를 조회한다.
 - course/common 상담을 탭별로 조회해 날짜+교시 슬롯에 대기·확정 예약을 표시한다.
 - 신청 목록과 시간표에서 학번·제목·내용을 조회하고 담당 교사가 수락할 수 있다.
 - 대기 중인 상담 신청은 담당 교사가 취소(거절)할 수 있다.
@@ -186,6 +186,9 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | POST | `/teacher/recruit/analyze` | 이미지 기반 공고 분석(FormData `image`) |
 | PATCH | `/teacher/recruit/{id}` | 공고 수정 |
 | POST | `/teacher/recruit/{id}/publish` | 공고 공개 |
+| POST | `/teacher/banner` | 교사 홈 배너 저장(FormData `image`, 선택 `title`, `content`, `link`) |
+| GET | `/teacher/banner` | 교사 홈 현재 배너 조회(없으면 204) |
+| GET | `/student/banner` | 학생 홈 현재 배너 조회(없으면 204) |
 | GET | `/form` | 공개 폼 목록 |
 | GET | `/form/{id}` | 공개 폼 상세 |
 | GET | `/teacher/form` | 교사 폼 목록 |

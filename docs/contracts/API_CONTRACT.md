@@ -18,6 +18,9 @@
 
 - `GET /backend/recruit`
 - `GET /backend/form`
+- `POST /backend/teacher/banner`
+- `GET /backend/teacher/banner`
+- `GET /backend/student/banner`
 - `GET /backend/student/course`
 - `GET /backend/teacher/common`
 - `POST /backend/admin/students/sync`
