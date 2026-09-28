@@ -1,8 +1,10 @@
 import { createConsultationApi } from "@fsd/entities/consultation";
 import type { ConsultationKind, CounselingCategory, TeacherSlotStatus } from "@fsd/entities/consultation";
+import { createBannerApi } from "@fsd/entities/banner";
 import { getSession, requestWithSession } from "@fsd/entities/user";
 
 const consultationApi = createConsultationApi(requestWithSession);
+const bannerApi = createBannerApi(requestWithSession);
 
 export const getTeacherConsultations = consultationApi.getTeacher;
 export const getPendingTeacherConsultations = consultationApi.getPendingTeacher;
@@ -21,6 +23,8 @@ export type SimpleStudent = {
 
 export const getTeacherStudents = () =>
     requestWithSession<SimpleStudent[]>("/teacher/students");
+export const getTeacherBanner = bannerApi.getTeacher;
+export const saveTeacherBanner = bannerApi.saveTeacher;
 
 export type ForceReservationInput = {
     studentId: number;

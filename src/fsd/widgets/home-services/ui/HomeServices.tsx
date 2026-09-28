@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { FaBriefcase } from "react-icons/fa";
 import { IoMdChatbubbles } from "react-icons/io";
@@ -10,15 +11,13 @@ import {
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
 import { ConsultationCancelDialog } from "@fsd/features/cancel-consultation";
-import {
-  HOME_BANNER_CHANGED_EVENT,
-  readHomeBanner,
-} from "@fsd/entities/banner";
+import { resolveBannerImageUrl } from "@fsd/entities/banner";
 import type { HomeBanner } from "@fsd/entities/banner";
 import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
 import { getCancelTargetInvalidationNotice } from "../model/cancelTarget.ts";
 import type { HomeConsultationItem } from "../model/overview.ts";
 import { useHomeOverview } from "../model/useHomeOverview.ts";
+import { getStudentBanner } from "../api/banner.ts";
 
 export const HomeServices = () => {
   const { overview, loading, error, handleCancel } = useHomeOverview();
@@ -62,10 +61,15 @@ export const HomeServices = () => {
   }, [cancelTarget, overview.upcomingConsultations]);
 
   useEffect(() => {
-    const syncBanner = () => setHomeBanner(readHomeBanner());
-    syncBanner();
-    window.addEventListener(HOME_BANNER_CHANGED_EVENT, syncBanner);
-    return () => window.removeEventListener(HOME_BANNER_CHANGED_EVENT, syncBanner);
+    let active = true;
+    void getStudentBanner()
+      .then((banner) => {
+        if (active) setHomeBanner(banner);
+      })
+      .catch(() => {
+        if (active) setHomeBanner(null);
+      });
+    return () => { active = false; };
   }, []);
 
   const openCancelDialog = (item: HomeConsultationItem) => {
@@ -202,9 +206,11 @@ export const HomeServices = () => {
 
       <ContentCard className="flex min-h-32 items-center justify-center border-dashed bg-[#F7F8FA] p-7 text-center" aria-label="배너">
         {homeBanner ? (
-          <div>
-            <p className="whitespace-pre-wrap text-base font-bold text-ink">{homeBanner.message}</p>
-            <p className="mt-2 text-xs font-semibold text-[#667281]">{homeBanner.updatedBy} 선생님</p>
+          <div className="w-full">
+            <Image src={resolveBannerImageUrl(homeBanner.imageUrl)} alt={homeBanner.title || "학생 홈 배너"} width={1280} height={360} unoptimized className="max-h-64 w-full rounded-2xl object-cover" />
+            {homeBanner.title ? <p className="mt-4 text-lg font-bold text-ink">{homeBanner.title}</p> : null}
+            {homeBanner.content ? <p className="mt-2 whitespace-pre-wrap text-sm font-semibold text-[#667281]">{homeBanner.content}</p> : null}
+            {homeBanner.link ? <a href={homeBanner.link} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-brand px-4 text-sm font-bold text-white hover:bg-brand-hover">자세히 보기</a> : null}
           </div>
         ) : (
           <p className="text-sm font-semibold text-[#667281]">등록된 배너가 없습니다.</p>
