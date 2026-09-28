@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   buildFormAnswers,
+  FORM_TEXT_LIMITS,
   getMissingRequiredQuestion,
 } from "@fsd/entities/form";
 import type {
@@ -303,6 +304,7 @@ type QuestionFieldProps = {
 
 const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps) => {
   const choices = Array.isArray(value) ? value : [];
+  const textLimit = question.type === "SHORT_TEXT" || question.type === "LONG_TEXT" ? FORM_TEXT_LIMITS[question.type] : null;
   const label = (
     <>
       <span className="mr-2 text-gray-400">{index + 1}.</span>
@@ -323,10 +325,12 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
         {description}
         <textarea
           required={question.required}
+          maxLength={textLimit ?? undefined}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
           className={`${inputClass} min-h-36 resize-y font-normal`}
         />
+        {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
       </label>
     );
   }
@@ -359,11 +363,13 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
         {description}
         <input
           required={question.required}
+          maxLength={textLimit ?? undefined}
           type={inputType}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
           className={`${inputClass} h-12 font-normal`}
         />
+        {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
       </label>
     );
   }

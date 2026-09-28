@@ -11,6 +11,7 @@ import type {
   FormSummary,
   QuestionType,
 } from "@fsd/entities/form";
+import { FORM_TEXT_LIMITS } from "@fsd/entities/form";
 import {
   closeForm,
   createForm,
@@ -253,6 +254,8 @@ function Status({ status }: { status: FormStatus }) {
 }
 
 function QuestionEditor({ question, index, count, update, move, remove }: { question: DraftQuestion; index: number; count: number; update: (changes: Partial<DraftQuestion>) => void; move: (offset: number) => void; remove: () => void }) {
+  const textLimit = question.type === "SHORT_TEXT" || question.type === "LONG_TEXT" ? FORM_TEXT_LIMITS[question.type] : null;
+
   return (
     <article className="rounded-2xl border border-gray-200 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -264,8 +267,11 @@ function QuestionEditor({ question, index, count, update, move, remove }: { ques
         <input aria-label={`질문 ${index + 1} 제목`} required value={question.title} onChange={(event) => update({ title: event.target.value })} className="h-11 rounded-xl border border-gray-200 px-4 outline-none focus:border-[#02C551]" />
       </div>
       <input aria-label={`질문 ${index + 1} 설명`} value={question.description} onChange={(event) => update({ description: event.target.value })} className="mt-3 h-11 w-full rounded-xl border border-gray-200 px-4 outline-none focus:border-[#02C551]" />
-      <label className="mt-3 flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={question.required} onChange={(event) => update({ required: event.target.checked })} className="h-4 w-4 accent-[#02C551]" />필수</label>
+      {textLimit && <p className="mt-2 text-xs text-gray-400">학생 답변은 최대 {textLimit.toLocaleString()}자까지 입력할 수 있습니다.</p>}
       {hasOptions(question.type) && <div className="mt-4 space-y-2">{question.options.map((option, optionIndex) => <div key={optionIndex} className="flex gap-2"><input aria-label={`질문 ${index + 1} 보기 ${optionIndex + 1}`} required value={option} onChange={(event) => update({ options: question.options.map((current, index) => index === optionIndex ? event.target.value : current) })} className="h-10 flex-1 rounded-xl border border-gray-200 px-3 outline-none focus:border-[#02C551]" /><button type="button" onClick={() => update({ options: question.options.filter((_, index) => index !== optionIndex) })} className="px-2 text-sm text-red-600">삭제</button></div>)}<button type="button" onClick={() => update({ options: [...question.options, ""] })} className="text-sm font-semibold text-[#02a946]">보기 추가</button></div>}
+      <div className="mt-4 flex min-h-11 items-center">
+        <label className="inline-flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={question.required} onChange={(event) => update({ required: event.target.checked })} className="h-4 w-4 accent-[#02C551]" />필수</label>
+      </div>
     </article>
   );
 }
