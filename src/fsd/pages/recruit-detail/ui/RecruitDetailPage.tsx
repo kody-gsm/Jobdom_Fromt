@@ -28,6 +28,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
           <ContentCard className="mt-6 py-20 text-center text-muted">공고를 불러오는 중…</ContentCard>
         ) : (
           <ContentCard className="mt-6 p-7 sm:p-10">
+            {item.imageUrl ? <img src={resolveRecruitImageUrl(item.imageUrl)} alt={`${item.companyName || "취업 공고"} 공고 이미지`} className="mb-8 max-h-[620px] w-full rounded-2xl object-contain" /> : null}
             <div className="flex items-center justify-between gap-3">
               <span className="inline-flex rounded-full bg-[#EEF3F8] px-3 py-1 text-xs font-bold text-[#315B83]">공개 공고</span>
               <span className="text-xs font-semibold text-muted">{item.deadline || "마감 별도 확인"}</span>
@@ -63,4 +64,10 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
       </main>
     </div>
   );
+};
+
+const resolveRecruitImageUrl = (imageUrl: string) => {
+  if (/^https?:\/\//.test(imageUrl)) return imageUrl;
+  const basePath = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
+  return `${basePath}/${imageUrl.replace(/^\/+/, "")}`;
 };

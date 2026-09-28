@@ -8,6 +8,11 @@ export type QuestionType =
   | "DATE"
   | "FILE";
 
+export const FORM_TEXT_LIMITS = {
+  SHORT_TEXT: 100,
+  LONG_TEXT: 1000,
+} as const;
+
 export type FormStatus = "DRAFT" | "PUBLISHED" | "CLOSED";
 
 export interface FormSummary {

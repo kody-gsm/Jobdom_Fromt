@@ -5,6 +5,7 @@ export {
   createRecruit,
   deleteRecruit,
   getRecruitDashboard,
+  getTeacherRecruits,
   publishRecruit,
   updateRecruit,
 } from "./api/recruitManagement.ts";

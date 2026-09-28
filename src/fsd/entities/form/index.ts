@@ -13,6 +13,7 @@ export type {
   FormSummary,
   QuestionType,
 } from "./model/types.ts";
+export { FORM_TEXT_LIMITS } from "./model/types.ts";
 export type { FormFileValue, FormValue } from "./model/answers.ts";
 export {
   buildFormAnswers,
