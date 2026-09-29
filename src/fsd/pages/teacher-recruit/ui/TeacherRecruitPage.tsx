@@ -228,7 +228,7 @@ export function TeacherRecruitPage() {
                 </table>
               </div>
 
-              <aside className="bg-[#fbfcfb] p-5 sm:p-6">
+              <aside className="min-w-0 bg-[#fbfcfb] p-5 sm:p-6">
                 {creating ? (
                   <Editor row={null} form={form} setForm={setForm} working={working} cancel={() => { setCreating(false); setEditing(false); }} save={save} analyze={analyze} />
                 ) : !selected ? <div className="grid h-full min-h-64 place-items-center text-center text-sm text-gray-400">왼쪽에서 공고를 선택해주세요.</div> : editing ? (
@@ -244,7 +244,7 @@ export function TeacherRecruitPage() {
                     </dl>
                     <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
                       <p className="text-xs font-bold text-gray-400">연결된 신청 폼</p>
-                      {selected.form ? <><p className="mt-2 font-bold text-gray-800">{selected.form.title}</p><Link href={`/teacher/forms/${selected.form.id}/submissions`} className="mt-3 inline-block text-sm font-bold text-[#02a946]">전체 응답 보기 →</Link></> : <><p className="mt-2 text-sm font-semibold text-amber-700">연결된 폼이 없습니다.</p><p className="mt-1 text-xs leading-5 text-gray-400">폼 제목에 회사명을 포함하면 자동 연결됩니다.</p></>}
+                      {selected.form ? <><p className="mt-2 wrap-anywhere font-bold text-gray-800">{selected.form.title}</p><Link href={`/teacher/forms/${selected.form.id}/submissions`} className="mt-3 inline-block text-sm font-bold text-[#02a946]">전체 응답 보기 →</Link></> : <><p className="mt-2 text-sm font-semibold text-amber-700">연결된 폼이 없습니다.</p><p className="mt-1 text-xs leading-5 text-gray-400">폼 제목에 회사명을 포함하면 자동 연결됩니다.</p></>}
                     </div>
                     <div className="mt-6 flex items-center justify-between"><h3 className="font-bold">지원자</h3><span className="text-sm font-bold text-[#02a946]">{selected.applicants.length}명</span></div>
                     <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
