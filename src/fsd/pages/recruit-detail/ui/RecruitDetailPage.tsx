@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CopyRecruitLinkButton } from "@fsd/features/copy-recruit-link";
+import { formatDeadlineDate, isDeadlinePassed } from "@fsd/shared/lib";
 import { ContentCard } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitDetail } from "../model/useRecruitDetail.ts";
@@ -17,6 +18,8 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
     retryForm,
     showMissingForm,
   } = useRecruitDetail(recruitId);
+  const isExpired = item ? isDeadlinePassed(item.deadline) : false;
+  const deadlineLabel = item?.deadline ? formatDeadlineDate(item.deadline) : "마감 별도 확인";
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
@@ -39,14 +42,16 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
           <ContentCard className="mt-6 min-w-0 p-7 sm:p-10">
             {item.imageUrl ? <img src={resolveRecruitImageUrl(item.imageUrl)} alt={`${item.companyName || "취업 공고"} 공고 이미지`} className="mb-8 max-h-[620px] w-full rounded-2xl object-contain" /> : null}
             <div className="flex items-center justify-between gap-3">
-              <span className="inline-flex rounded-full bg-[#EEF3F8] px-3 py-1 text-xs font-bold text-[#315B83]">공개 공고</span>
-              <span className="min-w-0 wrap-anywhere text-right text-xs font-semibold text-muted">{item.deadline || "마감 별도 확인"}</span>
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${isExpired ? "bg-[#FFF0EC] text-[#9A4F45]" : "bg-[#EEF3F8] text-[#315B83]"}`}>
+                {isExpired ? "마감된 공고" : "공개 공고"}
+              </span>
+              <span className="min-w-0 wrap-anywhere text-right text-xs font-semibold text-muted">{deadlineLabel}</span>
             </div>
 
             <dl className="mt-7 grid gap-4 rounded-2xl bg-[#F7F8FA] p-5 sm:grid-cols-2">
               <div className="min-w-0 wrap-anywhere">
                 <dt className="text-xs font-semibold text-muted">지원 마감</dt>
-                <dd className="mt-2 font-bold text-ink">{item.deadline || "별도 확인"}</dd>
+                <dd className="mt-2 font-bold text-ink">{deadlineLabel}</dd>
               </div>
               <div className="min-w-0 wrap-anywhere">
                 <dt className="text-xs font-semibold text-muted">면접 일정</dt>
@@ -68,7 +73,11 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
               </div>
             ) : null}
             <div className="mt-10 grid gap-3 sm:grid-cols-[1fr_auto]">
-              {formLoading ? (
+              {isExpired ? (
+                <button type="button" disabled className="inline-flex h-12 items-center justify-center rounded-xl bg-[#E3E6EA] px-6 font-bold text-[#7A8592]">
+                  마감된 공고
+                </button>
+              ) : formLoading ? (
                 <button type="button" disabled className="inline-flex h-12 items-center justify-center rounded-xl bg-[#E3E6EA] px-6 font-bold text-[#7A8592]">
                   신청서 확인 중
                 </button>
@@ -83,6 +92,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
               )}
               <CopyRecruitLinkButton recruitId={recruitId} />
             </div>
+            {isExpired ? <p role="status" className="mt-3 text-sm font-semibold text-[#9A4F45]">제출 기한이 지나 신청할 수 없습니다.</p> : null}
             {formMessage ? <p role="status" className="mt-3 text-sm font-semibold text-[#D93025]">{formMessage}</p> : null}
           </ContentCard>
         )}
