@@ -231,7 +231,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           <time>{formatFormDeadline(form.deadline)}</time>
         </div>
       </header>
-      <div className="space-y-5 p-6 sm:p-9">
+      <div className="min-w-0 space-y-5 p-6 sm:p-9">
         {submission && !editing ? (
           <SubmittedAnswers submission={submission} />
         ) : (
@@ -313,7 +313,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
     </>
   );
   const description = question.description ? (
-    <p className="mt-2 text-sm font-normal text-gray-500">{question.description}</p>
+    <p className="mt-2 min-w-0 wrap-anywhere text-sm font-normal text-gray-500">{question.description}</p>
   ) : null;
   const inputClass =
     "mt-3 min-w-0 w-full rounded-xl border border-border px-4 py-3 outline-none focus:border-brand";
@@ -411,7 +411,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
               : [option.id];
 
           return (
-            <label key={option.id} className="flex min-h-11 items-center gap-3 rounded-xl px-2 text-sm text-gray-700">
+            <label key={option.id} className="flex min-h-11 min-w-0 items-center gap-3 rounded-xl px-2 text-sm text-gray-700">
               <input
                 required={question.required && question.type !== "MULTIPLE_CHOICE" && choices.length === 0}
                 type={question.type === "MULTIPLE_CHOICE" ? "checkbox" : "radio"}
@@ -420,7 +420,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
                 onChange={(event) => onChange(nextValue(event.target.checked))}
                 className="h-4 w-4 accent-brand"
               />
-              {option.label}
+              <span className="min-w-0 wrap-anywhere">{option.label}</span>
             </label>
           );
         })}
@@ -443,13 +443,13 @@ const formatFormDeadline = (deadline: string | null) => {
 };
 
 const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
-  <section>
+  <section className="min-w-0">
     <h2 className="text-xl font-bold">제출한 응답</h2>
     <div className="mt-5 space-y-4">
       {submission.answers.map((answer) => (
         <div key={answer.questionId} className="min-w-0 wrap-anywhere rounded-2xl bg-gray-50 p-5">
-          <h3 className="text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
-          <p className="mt-2 whitespace-pre-line text-gray-900">
+          <h3 className="min-w-0 wrap-anywhere text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
+          <p className="mt-2 min-w-0 wrap-anywhere whitespace-pre-line text-gray-900">
             {answer.fileName
               ? `첨부 파일: ${answer.fileName}`
               : answer.selectedOptionLabels.length
