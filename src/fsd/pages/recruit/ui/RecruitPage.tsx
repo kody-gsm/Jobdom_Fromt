@@ -47,22 +47,22 @@ export const RecruitPage = () => {
 };
 
 const RecruitCard = ({ item }: { item: Recruit }) => (
-  <ContentCard className="flex min-h-[320px] flex-col p-7 sm:p-8">
+  <ContentCard className="flex min-h-[320px] min-w-0 flex-col p-7 sm:p-8">
       <div className="flex items-center gap-4">
         <span className="text-xs font-bold text-brand-accent">채용 공고</span>
         <span className="hidden text-xs font-semibold text-muted">
           마감 {item.deadline || "별도 확인"}
         </span>
       </div>
-      <h2 className="mt-5 break-keep text-2xl font-bold tracking-[-0.02em] text-ink">
+      <h2 className="mt-5 wrap-anywhere break-keep text-2xl font-bold tracking-[-0.02em] text-ink">
         {item.companyName || "회사명 확인 중"}
       </h2>
-      <p className="mt-3 line-clamp-3 flex-1 whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
+      <p className="mt-3 line-clamp-3 flex-1 wrap-anywhere whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
         {item.summary || "공고 요약이 없습니다."}
       </p>
       <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-[#E8EBEF] pt-5 text-sm">
-        <div><dt className="text-xs text-muted">지원 마감</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.deadline || "별도 확인"}</dd></div>
-        <div><dt className="text-xs text-muted">면접 일정</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.interviewDate || "별도 확인"}</dd></div>
+        <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">지원 마감</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.deadline || "별도 확인"}</dd></div>
+        <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">면접 일정</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.interviewDate || "별도 확인"}</dd></div>
       </dl>
       <Link href={`/recruit/${item.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover">
         공고 상세 보기

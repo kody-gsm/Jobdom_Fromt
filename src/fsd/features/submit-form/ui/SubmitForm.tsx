@@ -219,9 +219,9 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
     <form onSubmit={submitForm}>
       <ContentCard className="overflow-hidden p-0">
       <header className="bg-brand p-7 text-white sm:p-9">
-        <h1 className="break-keep text-3xl font-bold">{form.title}</h1>
+        <h1 className="wrap-anywhere break-keep text-3xl font-bold">{form.title}</h1>
         {form.description ? (
-          <p className="mt-3 whitespace-pre-line break-keep text-sm leading-6 text-white/85">
+          <p className="mt-3 wrap-anywhere whitespace-pre-line break-keep text-sm leading-6 text-white/85">
             {form.description}
           </p>
         ) : null}
@@ -261,7 +261,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         {message ? (
           <p
             role="status"
-            className={`rounded-xl px-4 py-3 text-sm ${
+            className={`wrap-anywhere rounded-xl px-4 py-3 text-sm ${
               message.error ? "bg-red-50 text-red-700" : "bg-[#EAF9F0] text-[#027A35]"
             }`}
           >
@@ -316,11 +316,11 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
     <p className="mt-2 text-sm font-normal text-gray-500">{question.description}</p>
   ) : null;
   const inputClass =
-    "mt-3 w-full rounded-xl border border-border px-4 py-3 outline-none focus:border-brand";
+    "mt-3 min-w-0 w-full rounded-xl border border-border px-4 py-3 outline-none focus:border-brand";
 
   if (question.type === "LONG_TEXT") {
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <textarea
@@ -338,7 +338,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
   if (question.type === "FILE") {
     const fileValue = isFormFileValue(value) ? value : undefined;
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <input
@@ -358,7 +358,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
   if (["SHORT_TEXT", "NUMBER", "DATE"].includes(question.type)) {
     const inputType = question.type === "NUMBER" ? "number" : question.type === "DATE" ? "date" : "text";
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <input
@@ -376,7 +376,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
 
   if (question.type === "DROPDOWN") {
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <select
@@ -397,8 +397,8 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
   }
 
   return (
-    <fieldset className="rounded-2xl border border-gray-100 p-5">
-      <legend className="px-1 font-semibold">{label}</legend>
+    <fieldset className="min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+      <legend className="max-w-full wrap-anywhere px-1 font-semibold">{label}</legend>
       {description}
       <div className="mt-3 space-y-3">
         {question.options.map((option) => {
@@ -447,7 +447,7 @@ const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
     <h2 className="text-xl font-bold">제출한 응답</h2>
     <div className="mt-5 space-y-4">
       {submission.answers.map((answer) => (
-        <div key={answer.questionId} className="rounded-2xl bg-gray-50 p-5">
+        <div key={answer.questionId} className="min-w-0 wrap-anywhere rounded-2xl bg-gray-50 p-5">
           <h3 className="text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
           <p className="mt-2 whitespace-pre-line text-gray-900">
             {answer.fileName
