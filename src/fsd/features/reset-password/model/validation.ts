@@ -33,3 +33,13 @@ export const validateResetPasswordForm = (
   }
   return errors;
 };
+
+export const getFirstResetPasswordErrorField = (
+  errors: ResetPasswordFormErrors,
+): Exclude<keyof ResetPasswordFormValues, "isCodeExpired"> | null => {
+  if (errors.email) return "email";
+  if (errors.verificationCode) return "verificationCode";
+  if (errors.password) return "password";
+  if (errors.confirmPassword) return "confirmPassword";
+  return null;
+};

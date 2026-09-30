@@ -15,7 +15,7 @@ import {
 } from "@fsd/entities/user";
 import { ApiError, request } from "@fsd/shared/api";
 import { login } from "../api/login.ts";
-import { validateLoginForm } from "./validation.ts";
+import { getFirstLoginErrorField, validateLoginForm } from "./validation.ts";
 import type { LoginFormErrors, LoginFormValues } from "./validation.ts";
 
 type LoginState = LoginFormValues & { rememberLogin: boolean };
@@ -28,6 +28,7 @@ export const useLoginForm = () => {
     return { email: preference.email, password: "", rememberLogin: preference.enabled };
   });
   const [errors, setErrors] = useState<LoginFormErrors>({});
+  const [errorField, setErrorField] = useState<keyof LoginFormValues | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,12 +69,14 @@ export const useLoginForm = () => {
   const setEmail = (email: string) => {
     setForm((current) => ({ ...current, email }));
     setErrors((current) => ({ ...current, email: undefined }));
+    setErrorField(null);
     setSubmitError("");
   };
 
   const setPassword = (password: string) => {
     setForm((current) => ({ ...current, password }));
     setErrors((current) => ({ ...current, password: undefined }));
+    setErrorField(null);
     setSubmitError("");
   };
 
@@ -90,6 +93,7 @@ export const useLoginForm = () => {
 
     const nextErrors = validateLoginForm(effectiveForm);
     setErrors(nextErrors);
+    setErrorField(getFirstLoginErrorField(nextErrors));
     setSubmitError("");
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -113,6 +117,7 @@ export const useLoginForm = () => {
   return {
     form,
     errors,
+    errorField,
     submitError,
     isSubmitting,
     setEmail,

@@ -10,7 +10,10 @@ import {
 } from "@fsd/entities/user";
 import { useCountdown } from "@fsd/shared/lib";
 import { resetPassword, sendPasswordResetCode } from "../api/resetPassword.ts";
-import { validateResetPasswordForm } from "./validation.ts";
+import {
+  getFirstResetPasswordErrorField,
+  validateResetPasswordForm,
+} from "./validation.ts";
 import type {
   ResetPasswordFormErrors,
   ResetPasswordFormValues,
@@ -29,6 +32,7 @@ export const useResetPasswordForm = () => {
   const router = useRouter();
   const [form, setForm] = useState<ResetPasswordFields>(INITIAL_VALUES);
   const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
+  const [errorField, setErrorField] = useState<Exclude<keyof ResetPasswordFields, "isCodeExpired"> | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,6 +52,7 @@ export const useResetPasswordForm = () => {
     }
     setForm((current) => ({ ...current, [field]: normalized }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+    setErrorField(null);
     setSubmitError("");
   };
 
@@ -55,6 +60,7 @@ export const useResetPasswordForm = () => {
     const emailError = getGsmEmailErrorMessage(form.email);
     if (emailError) {
       setErrors((current) => ({ ...current, email: emailError }));
+      setErrorField("email");
       return;
     }
 
@@ -68,6 +74,7 @@ export const useResetPasswordForm = () => {
       setIsCodeSent(true);
       verificationCountdown.start(180);
       setErrors((current) => ({ ...current, email: undefined, verificationCode: undefined }));
+      setErrorField(null);
     } catch (caught) {
       if (requestVersion !== verificationRequestVersion.current) return;
       setIsCodeSent(false);
@@ -76,6 +83,7 @@ export const useResetPasswordForm = () => {
         ...current,
         email: getPasswordResetCodeError(caught),
       }));
+      setErrorField("email");
     } finally {
       if (requestVersion === verificationRequestVersion.current) setIsSendingCode(false);
     }
@@ -85,6 +93,7 @@ export const useResetPasswordForm = () => {
     const codeExpired = isCodeSent && verificationCountdown.isExpired;
     const nextErrors = validateResetPasswordForm({ ...form, isCodeExpired: codeExpired });
     setErrors(nextErrors);
+    setErrorField(getFirstResetPasswordErrorField(nextErrors));
     setSubmitError("");
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -99,21 +108,22 @@ export const useResetPasswordForm = () => {
     } catch (caught) {
       const result = getPasswordResetError(caught);
       if (result.field === "form") setSubmitError(result.message);
-      else setErrors((current) => ({ ...current, [result.field]: result.message }));
+      else {
+        setErrors((current) => ({ ...current, [result.field]: result.message }));
+        setErrorField(result.field);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const codeExpired = isCodeSent && verificationCountdown.isExpired;
-  const canSubmit =
-    Object.values(form).every((value) => value.trim() !== "") &&
-    !isSubmitting &&
-    !codeExpired;
+  const canSubmit = !isSubmitting;
 
   return {
     form,
     errors,
+    errorField,
     submitError,
     isSendingCode,
     isSubmitting,
