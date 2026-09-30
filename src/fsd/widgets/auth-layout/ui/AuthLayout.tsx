@@ -11,15 +11,17 @@ export const AuthLayout = ({ title, description, children }: AuthLayoutProps) =>
   <main className="student-auth grid min-h-screen bg-[#F4F6F5] lg:grid-cols-[42%_58%]">
     <section className="relative hidden overflow-hidden bg-[#0F1F2D] px-12 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-16 xl:py-16">
       <div>
-        <Image
-          src="/JobdamIcon.svg"
-          alt="잡담"
-          width={132}
-          height={68}
-          priority
-          className="h-auto w-[132px]"
-          style={{ height: 68 }}
-        />
+        <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white">
+          <Image
+            src="/JobdamIcon.svg"
+            alt="잡담"
+            width={132}
+            height={68}
+            priority
+            className="h-auto w-[132px]"
+            style={{ height: 68 }}
+          />
+        </div>
 
         <div className="mt-24 max-w-[440px]">
           <h2 className="mt-5 text-[42px] font-bold leading-[1.2] tracking-[-0.035em]">
