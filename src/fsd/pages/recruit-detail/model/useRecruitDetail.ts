@@ -64,7 +64,7 @@ export const useRecruitDetail = (recruitId: number) => {
             setForm(findRecruitForm(data.formId ?? null, formsRef.current));
           }
           setItem(data);
-          document.title = `${data.companyName || "취업 공고"} | 잡담`;
+          document.title = `잡담 | ${data.companyName || "취업 공고"}`;
         })
         .catch((caught) => {
           if (active) setError(caught instanceof Error ? caught.message : "공고를 불러오지 못했습니다.");
