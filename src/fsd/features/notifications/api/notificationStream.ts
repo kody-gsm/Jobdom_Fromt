@@ -18,7 +18,13 @@ export function subscribeNotifications(
   const reconnect = () => {
     stream?.close();
     stream = null;
-    if (!signal.aborted) retry = setTimeout(() => void connect(), 3000);
+    clearTimeout(retry);
+    if (!signal.aborted) {
+      retry = setTimeout(() => {
+        retry = undefined;
+        void connect();
+      }, 3000);
+    }
   };
   const connect = async () => {
     if (signal.aborted) return;
