@@ -37,6 +37,7 @@ export const useSignupForm = () => {
       field === "verificationCode" ? normalizeVerificationCode(value) : value;
     if (field === "email" && form.email !== normalized) {
       verificationRequestVersion.current += 1;
+      setIsSendingCode(false);
       setIsCodeSent(false);
       verificationCountdown.reset();
       resendCountdown.reset();

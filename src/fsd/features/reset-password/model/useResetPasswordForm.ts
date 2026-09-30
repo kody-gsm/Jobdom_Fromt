@@ -41,6 +41,7 @@ export const useResetPasswordForm = () => {
       field === "verificationCode" ? normalizeVerificationCode(value) : value;
     if (field === "email" && form.email !== normalized) {
       verificationRequestVersion.current += 1;
+      setIsSendingCode(false);
       setIsCodeSent(false);
       verificationCountdown.reset();
       setErrors((current) => ({ ...current, verificationCode: undefined }));

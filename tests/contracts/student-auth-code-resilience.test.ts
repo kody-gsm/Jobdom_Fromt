@@ -6,14 +6,24 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8"
 const signup = read("src/fsd/features/signup/model/useSignupForm.ts");
 const reset = read("src/fsd/features/reset-password/model/useResetPasswordForm.ts");
 const errors = read("src/fsd/entities/user/model/auth-errors.ts");
+const signupEmailChange = signup.slice(
+  signup.indexOf('if (field === "email"'),
+  signup.indexOf('setForm((current)', signup.indexOf('if (field === "email"')),
+);
+const resetEmailChange = reset.slice(
+  reset.indexOf('if (field === "email"'),
+  reset.indexOf('setForm((current)', reset.indexOf('if (field === "email"')),
+);
 
 assert.match(signup, /field === "email"/);
 assert.match(signup, /verificationCountdown\.reset/);
 assert.match(signup, /resendCountdown\.reset/);
 assert.match(signup, /verificationRequestVersion/);
+assert.match(signupEmailChange, /setIsSendingCode\(false\)/);
 assert.match(reset, /field === "email"/);
 assert.match(reset, /verificationCountdown\.reset/);
 assert.match(reset, /verificationRequestVersion/);
+assert.match(resetEmailChange, /setIsSendingCode\(false\)/);
 assert.match(reset, /getPasswordResetCodeError/);
 assert.match(errors, /getPasswordResetCodeError/);
 assert.match(errors, /429/);
