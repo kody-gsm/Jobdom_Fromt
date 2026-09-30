@@ -13,3 +13,8 @@ export const validateLoginForm = ({ email, password }: LoginFormValues): LoginFo
   if (password.trim() === "") errors.password = getRequiredMessage("비밀번호를");
   return errors;
 };
+
+export const getFirstLoginErrorField = (
+  errors: LoginFormErrors,
+): keyof LoginFormValues | null =>
+  errors.email ? "email" : errors.password ? "password" : null;

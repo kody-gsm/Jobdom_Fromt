@@ -26,3 +26,13 @@ export const validateSignupForm = (values: SignupFormValues): SignupFormErrors =
   }
   return errors;
 };
+
+export const getFirstSignupErrorField = (
+  errors: SignupFormErrors,
+): keyof SignupFormValues | null => {
+  if (errors.email) return "email";
+  if (errors.verificationCode) return "verificationCode";
+  if (errors.password) return "password";
+  if (errors.confirmPassword) return "confirmPassword";
+  return null;
+};
