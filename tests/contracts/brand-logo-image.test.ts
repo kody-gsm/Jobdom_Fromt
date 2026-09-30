@@ -12,7 +12,8 @@ assert.match(logo, /viewBox="0 0 256 128"/);
 assert.match(logo, /href="data:image\/png;base64,/);
 assert.doesNotMatch(logo, /<path\b|<rect\b|<circle\b/);
 assert.match(favicon, /<circle\b/);
-assert.match(favicon, /JobdamIcon\.svg/);
+assert.match(favicon, /data:image\/png;base64,/);
+assert.doesNotMatch(favicon, /href="\/JobdamIcon\.svg"/);
 assert.notEqual(refs.trim(), "");
 
 console.log("brand logo asset contract passed");
