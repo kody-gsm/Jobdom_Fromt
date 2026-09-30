@@ -9,7 +9,7 @@ const resetPage = readFileSync("src/fsd/pages/forgot-password/ui/ForgotPasswordP
 assert.match(layout, /lg:grid-cols-\[42%_58%\]/);
 assert.match(layout, /bg-\[#0F1F2D\]/);
 assert.match(layout, /src="\/JobdamIcon\.svg"/);
-assert.match(layout, /rounded-full bg-white/);
+assert.doesNotMatch(layout, /rounded-full bg-white/);
 assert.match(layout, /className="h-auto w-\[132px\]"/);
 assert.doesNotMatch(layout, /brightness-0 invert/);
 assert.doesNotMatch(layout, /JOBDAM FOR GSM/);
