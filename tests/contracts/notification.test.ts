@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { mock } from "node:test";
+import { readFileSync } from "node:fs";
 
 await import("./api-contract.test.ts");
 const bell = await import("node:fs").then(({ readFileSync }) => readFileSync("src/fsd/features/notifications/ui/NotificationBell.tsx", "utf8"));
@@ -8,12 +9,22 @@ assert.match(bell, /open \? "text-brand"/);
 const api = await import("../../src/fsd/features/notifications/api/notifications.ts");
 const { clearSession } = await import("../../src/fsd/entities/user/index.ts");
 const { subscribeNotifications } = await import("../../src/fsd/features/notifications/api/notificationStream.ts");
+const { getSafeInternalPath, getSafeLinkUrl } = await import("../../src/fsd/shared/lib/safeUrl.ts");
+const homeServices = readFileSync("src/fsd/widgets/home-services/ui/HomeServices.tsx", "utf8");
 clearSession();
+assert.equal(getSafeInternalPath("/recruit/7"), "/recruit/7");
+assert.equal(getSafeInternalPath("https://example.com"), null);
+assert.equal(getSafeInternalPath("//example.com"), null);
+assert.equal(getSafeLinkUrl("https://example.com/path"), "https://example.com/path");
+assert.equal(getSafeLinkUrl("javascript:alert(1)"), null);
 assert.equal(api.getNotificationTargetUrl("/teacher/course/7"), "/teacher");
 assert.equal(api.getNotificationTargetUrl("/student/common/7"), "/");
 assert.equal(api.getNotificationTargetUrl("/form/7"), "/forms/7");
 assert.equal(api.getNotificationTargetUrl("/recruit/7"), "/recruit/7");
+assert.equal(api.getNotificationTargetUrl("https://example.com"), null);
+assert.equal(api.getNotificationTargetUrl("javascript:alert(1)"), null);
 assert.equal(api.getNotificationTargetUrl(null), null);
+assert.match(homeServices, /getSafeLinkUrl/);
 const calls: { url: string; method: string; authorization: string | null }[] = [];
 globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
   calls.push({ url: String(url), method: init?.method || "GET", authorization: new Headers(init?.headers).get("Authorization") });
@@ -82,6 +93,7 @@ try {
   assert.equal(reservationEvents.length, 1);
   assert.equal((reservationEvents[0] as { action: string }).action, "EXPIRED");
   assert.equal(connected, 1);
+  first.dispatchEvent(new Event("error"));
   first.dispatchEvent(new Event("error"));
   assert.equal(first.closed, true);
   mock.timers.tick(3000);
