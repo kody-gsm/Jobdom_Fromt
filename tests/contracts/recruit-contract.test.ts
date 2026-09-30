@@ -28,7 +28,7 @@ assert.equal(
   "https://jobdam.example/recruit/7/apply",
 );
 
-assert.match(read("app/page.tsx"), /title: \"대시보드\"/);
+assert.match(read("app/page.tsx"), /absolute: \"잡담 \| 대시보드\"/);
 assert.match(read("app/recruit/[id]/layout.tsx"), /title: \"취업 공고\"/);
 
 const listRoute = read("app/recruit/page.tsx");

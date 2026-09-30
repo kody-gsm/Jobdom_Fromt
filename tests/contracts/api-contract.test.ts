@@ -88,3 +88,11 @@ globalThis.fetch = (async () => new Response("Internal Server Error", { status: 
 await assert.rejects(recruitApi.getAll(), (error) =>
   error instanceof ApiError && error.status === 500 && error.message === "백엔드 서버에 연결할 수 없습니다."
 );
+
+globalThis.fetch = (async () => new Response(
+  JSON.stringify({ code: "FORM_CLOSED", message: "마감된 폼입니다." }),
+  { status: 404, headers: { "Content-Type": "application/json" } },
+)) as typeof fetch;
+await assert.rejects(request("/form/1"), (error) =>
+  error instanceof ApiError && error.status === 404 && error.code === "FORM_CLOSED"
+);

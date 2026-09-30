@@ -6,7 +6,9 @@ import { FiFileText, FiUploadCloud } from "react-icons/fi";
 import {
   buildFormAnswers,
   FORM_TEXT_LIMITS,
+  getFormErrorMessage,
   getMissingRequiredQuestion,
+  isFormClosed,
 } from "@fsd/entities/form";
 import type {
   DynamicForm,
@@ -16,7 +18,7 @@ import type {
   FormValue,
 } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
-import { formatDeadlineDate, isDeadlinePassed } from "@fsd/shared/lib";
+import { formatDeadlineDate } from "@fsd/shared/lib";
 import { ActionButton, ContentCard } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
@@ -67,7 +69,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
       .catch((caught) => {
         if (!isCurrent(requestVersion, targetFormId) || formLoadVersion.current !== loadVersion) return;
         setForm(null);
-        setFormError(caught instanceof Error ? caught.message : "폼을 불러오지 못했습니다.");
+        setFormError(getFormErrorMessage(caught, "폼을 불러오지 못했습니다."));
       })
       .finally(() => {
         if (isCurrent(requestVersion, targetFormId) && formLoadVersion.current === loadVersion) {
@@ -140,8 +142,13 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form) return;
-    if (isDeadlinePassed(form.deadline)) {
-      setMessage({ text: "제출 기한이 지나 이 신청서는 더 이상 제출할 수 없습니다.", error: true });
+    if (isFormClosed(form)) {
+      setMessage({
+        text: form.status === "CLOSED"
+          ? "마감된 폼입니다. 더 이상 응답을 받지 않습니다."
+          : "제출 기한이 지나 이 신청서는 더 이상 제출할 수 없습니다.",
+        error: true,
+      });
       return;
     }
     const requestVersion = formRequestVersion.current;
@@ -170,7 +177,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
       }
     } catch (caught) {
       if (!isCurrentOperation()) return;
-      setMessage({ text: caught instanceof Error ? caught.message : "파일 업로드에 실패했습니다.", error: true });
+      setMessage({ text: getFormErrorMessage(caught, "파일 업로드에 실패했습니다."), error: true });
       setSubmitting(false);
       return;
     }
@@ -199,9 +206,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         text:
           caught instanceof ApiError && caught.status === 409
             ? "이미 제출한 폼입니다."
-            : caught instanceof Error
-              ? caught.message
-              : "제출하지 못했습니다.",
+            : getFormErrorMessage(caught, "제출하지 못했습니다."),
         error: true,
       });
     } finally {
@@ -222,7 +227,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   if (formLoading || !form) {
     return <p className="py-20 text-center text-gray-400">불러오는 중…</p>;
   }
-  const isExpired = isDeadlinePassed(form.deadline);
+  const isExpired = isFormClosed(form);
 
   return (
     <form onSubmit={submitForm}>
