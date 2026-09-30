@@ -36,8 +36,8 @@ export const getAvailablePeriods = (
   type: ConsultationType,
   teacher: ConsultationTeacher | null,
 ): string[] => {
-  if (type === "general") return GENERAL_PERIODS;
   if (!teacher) return [];
+  if (type === "general") return GENERAL_PERIODS;
   // Career teachers are supplied by the backend by role. Keep every slot in
   // the shared schedule; reservations/locks are applied through the status API.
   return CONSULTATION_SCHEDULE.map(({ period }) => period);
