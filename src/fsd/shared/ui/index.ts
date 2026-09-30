@@ -11,3 +11,5 @@ export { TextAreaField } from "./TextAreaField.tsx";
 export { TextField } from "./TextField.tsx";
 export { PasswordField } from "./PasswordField.tsx";
 export { SummaryActionCard } from "./SummaryActionCard.tsx";
+export { ListFilterMenu } from "./ListFilterMenu.tsx";
+export type { ListFilterOption } from "./ListFilterMenu.tsx";
