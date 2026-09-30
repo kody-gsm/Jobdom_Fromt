@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { DragEvent, FormEvent } from "react";
+import { FiFileText, FiUploadCloud } from "react-icons/fi";
 import {
   buildFormAnswers,
   FORM_TEXT_LIMITS,
@@ -20,6 +21,8 @@ import { ActionButton, ContentCard } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
 type Message = { text: string; error?: boolean };
+
+const FORM_FILE_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.gif,.zip,.doc,.docx,.ppt,.pptx,.hwp,.hwpx,.txt,.md";
 
 const valuesFromSubmission = (submission: FormSubmission): Record<number, FormValue> =>
   Object.fromEntries(submission.answers.map((answer) => [
@@ -249,6 +252,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
               index={index}
               value={values[question.id]}
               onChange={(value) => setValue(question.id, value)}
+              disabled={isExpired || submitting}
             />
           ))
         )}
@@ -291,7 +295,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
             disabled={isExpired}
             className="w-full bg-brand hover:bg-brand-hover"
           >
-            {isExpired ? "제출 마감" : "응답 재응답"}
+            {isExpired ? "제출 마감" : "재응답"}
           </ActionButton>
         ) : (
           <ActionButton
@@ -313,12 +317,16 @@ type QuestionFieldProps = {
   index: number;
   value?: FormValue;
   onChange: (value: FormValue) => void;
+  disabled?: boolean;
 };
 
-const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps) => {
+const QuestionField = ({ question, index, value, onChange, disabled = false }: QuestionFieldProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const choices = Array.isArray(value) ? value : [];
   const textLimit = question.type === "SHORT_TEXT" || question.type === "LONG_TEXT" ? FORM_TEXT_LIMITS[question.type] : null;
-  const label = (
+  const inputId = `question-${question.id}`;
+  const questionTitle = (
     <>
       <span className="mr-2 text-gray-400">{index + 1}.</span>
       {question.title}
@@ -333,69 +341,115 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
 
   if (question.type === "LONG_TEXT") {
     return (
-      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
-        {label}
+      <div className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+        <label htmlFor={inputId} className="block font-semibold">{questionTitle}</label>
         {description}
         <textarea
+          id={inputId}
           required={question.required}
           maxLength={textLimit ?? undefined}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
+          disabled={disabled}
           className={`${inputClass} min-h-36 resize-y font-normal`}
         />
         {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
-      </label>
+      </div>
     );
   }
 
   if (question.type === "FILE") {
     const fileValue = isFormFileValue(value) ? value : undefined;
+    const selectFile = (file?: File) => {
+      if (!file || disabled) return;
+      onChange({ file, fileName: file.name });
+      setIsDragging(false);
+    };
+    const handleDrop = (event: DragEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      selectFile(event.dataTransfer.files?.[0]);
+    };
+
     return (
-      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
-        {label}
+      <div className="min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+        <div className="font-semibold">{questionTitle}</div>
         {description}
         <input
-          required={question.required && !fileValue}
+          ref={fileInputRef}
           type="file"
+          accept={FORM_FILE_ACCEPT}
           onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) onChange({ file, fileName: file.name });
+            selectFile(event.target.files?.[0]);
+            event.currentTarget.value = "";
           }}
-          className={`${inputClass} file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-2 file:font-semibold file:text-white`}
+          disabled={disabled}
+          className="sr-only"
         />
-        {fileValue ? <p className="mt-2 text-sm font-normal text-gray-500">{fileValue.fileName}</p> : null}
-      </label>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(event) => {
+            event.preventDefault();
+            if (!disabled) setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          className={`mt-4 flex min-h-44 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-5 py-8 text-center transition-colors ${
+            isDragging
+              ? "border-brand bg-green-50 text-brand"
+              : "border-indigo-200 bg-slate-50 text-gray-500 hover:border-brand hover:bg-green-50"
+          } disabled:cursor-not-allowed disabled:opacity-60`}
+        >
+          <FiUploadCloud aria-hidden size={34} className="text-gray-400" />
+          <span className="text-sm font-semibold text-gray-600">
+            {fileValue ? "파일을 바꾸려면 클릭하거나 새 파일을 드래그하세요" : "파일을 드래그하거나 클릭해서 업로드하세요"}
+          </span>
+          <span className="text-xs font-normal text-gray-400">최대 10MB · PDF, PNG, JPG, ZIP, DOC, PPT, HWP, TXT, MD</span>
+          <span className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white">파일 선택</span>
+        </button>
+        {fileValue ? (
+          <p className="mt-3 flex min-w-0 items-center gap-2 text-sm font-normal text-gray-600">
+            <FiFileText aria-hidden className="shrink-0 text-brand" />
+            <span className="min-w-0 truncate">{fileValue.fileName}</span>
+          </p>
+        ) : null}
+      </div>
     );
   }
 
   if (["SHORT_TEXT", "NUMBER", "DATE"].includes(question.type)) {
     const inputType = question.type === "NUMBER" ? "number" : question.type === "DATE" ? "date" : "text";
     return (
-      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
-        {label}
+      <div className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+        <label htmlFor={inputId} className="block font-semibold">{questionTitle}</label>
         {description}
         <input
+          id={inputId}
           required={question.required}
           maxLength={textLimit ?? undefined}
           type={inputType}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
+          disabled={disabled}
           className={`${inputClass} h-12 font-normal`}
         />
         {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
-      </label>
+      </div>
     );
   }
 
   if (question.type === "DROPDOWN") {
     return (
-      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
-        {label}
+      <div className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+        <label htmlFor={inputId} className="block font-semibold">{questionTitle}</label>
         {description}
         <select
+          id={inputId}
           required={question.required}
           value={choices[0] || ""}
           onChange={(event) => onChange(event.target.value ? [Number(event.target.value)] : [])}
+          disabled={disabled}
           className={`${inputClass} h-12 bg-white font-normal`}
         >
           <option value="">선택</option>
@@ -405,13 +459,13 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
             </option>
           ))}
         </select>
-      </label>
+      </div>
     );
   }
 
   return (
-    <fieldset className="min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
-      <legend className="max-w-full wrap-anywhere px-1 font-semibold">{label}</legend>
+    <fieldset disabled={disabled} className="min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+      <legend className="max-w-full wrap-anywhere px-1 font-semibold">{questionTitle}</legend>
       {description}
       <div className="mt-3 space-y-3">
         {question.options.map((option) => {
