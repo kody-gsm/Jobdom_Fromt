@@ -83,6 +83,7 @@ try {
   assert.equal((reservationEvents[0] as { action: string }).action, "EXPIRED");
   assert.equal(connected, 1);
   first.dispatchEvent(new Event("error"));
+  first.dispatchEvent(new Event("error"));
   assert.equal(first.closed, true);
   mock.timers.tick(3000);
   await flush();
