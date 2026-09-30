@@ -6,9 +6,9 @@ import { AuthGate } from "@fsd/app/auth-gate";
 export const metadata: Metadata = {
   title: { default: "잡담 | 홈", template: "잡담 | %s" },
   icons: {
-    icon: "/JobdamIcon.svg",
-    shortcut: "/JobdamIcon.svg",
-    apple: "/JobdamIcon.svg",
+    icon: "/JobdamFavicon.svg",
+    shortcut: "/JobdamFavicon.svg",
+    apple: "/JobdamFavicon.svg",
   },
 };
 
