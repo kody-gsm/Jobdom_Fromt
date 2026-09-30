@@ -13,7 +13,7 @@ import {
 import { ConsultationCancelDialog } from "@fsd/features/cancel-consultation";
 import { resolveBannerImageUrl } from "@fsd/entities/banner";
 import type { HomeBanner } from "@fsd/entities/banner";
-import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
+import { ContentCard, SummaryActionCard, SummaryMarkdown } from "@fsd/shared/ui";
 import { getSafeLinkUrl } from "@fsd/shared/lib";
 import { getCancelTargetInvalidationNotice } from "../model/cancelTarget.ts";
 import type { HomeConsultationItem } from "../model/overview.ts";
@@ -212,9 +212,7 @@ export const HomeServices = () => {
                   <p className="truncate font-bold text-ink">
                     {item.companyName || "회사명 확인 중"}
                   </p>
-                  <p className="mt-1 line-clamp-1 text-sm text-[#7A8592]">
-                    {item.summary || "공고 요약이 없습니다."}
-                  </p>
+                  <SummaryMarkdown text={item.summary || "공고 요약이 없습니다."} className="mt-1 line-clamp-1 text-sm text-[#7A8592]" />
                   <p className="mt-3 text-xs font-semibold text-[#607089]">
                     {item.deadline || "마감 별도 확인"}
                   </p>

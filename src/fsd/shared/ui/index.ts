@@ -13,3 +13,4 @@ export { PasswordField } from "./PasswordField.tsx";
 export { SummaryActionCard } from "./SummaryActionCard.tsx";
 export { ListFilterMenu } from "./ListFilterMenu.tsx";
 export type { ListFilterOption } from "./ListFilterMenu.tsx";
+export { SummaryMarkdown } from "./SummaryMarkdown.tsx";
