@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Recruit } from "@fsd/entities/recruit";
 import { formatDeadlineDate } from "@fsd/shared/lib";
-import { ContentCard, ListFilterMenu } from "@fsd/shared/ui";
+import { ContentCard, ListFilterMenu, SummaryMarkdown } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { isRecruitClosed } from "../model/recruitFilters.ts";
 import { useRecruitList } from "../model/useRecruitList.ts";
@@ -97,9 +97,7 @@ const RecruitCard = ({ item }: { item: Recruit }) => {
       <h2 className="mt-5 wrap-anywhere break-keep text-2xl font-bold tracking-[-0.02em] text-ink">
         {item.companyName || "회사명 확인 중"}
       </h2>
-      <p className="mt-3 line-clamp-3 flex-1 wrap-anywhere whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
-        {item.summary || "공고 요약이 없습니다."}
-      </p>
+      <SummaryMarkdown text={item.summary || "공고 요약이 없습니다."} className="mt-3 line-clamp-3 flex-1 text-sm leading-7 text-[#667281]" />
       <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-[#E8EBEF] pt-5 text-sm">
         <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">지원 마감</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{deadlineLabel}</dd></div>
         <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">면접 일정</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.interviewDate || "별도 확인"}</dd></div>
