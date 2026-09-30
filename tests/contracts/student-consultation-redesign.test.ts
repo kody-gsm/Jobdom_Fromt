@@ -19,7 +19,7 @@ assert.match(form, /TextAreaField/);
 assert.match(form, /ContentCard/);
 assert.match(form, /ActionButton/);
 assert.match(form, /useConsultationForm/);
-assert.doesNotMatch(form, /useEffect|submitConsultation|getUpcomingConsultations/);
+assert.doesNotMatch(form, /submitConsultation|getUpcomingConsultations/);
 assert.match(hook, /useState/);
 assert.match(hook, /submitConsultation/);
 assert.match(hook, /getConsultationTeachers/);

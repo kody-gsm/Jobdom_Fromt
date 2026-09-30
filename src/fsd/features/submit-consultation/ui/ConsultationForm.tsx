@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getAvailablePeriods,
   type ConsultationType,
@@ -24,10 +24,24 @@ import { getTimetableSubject } from "../model/timetablePresentation.ts";
 
 const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
 const CATEGORY_OPTIONS = ["학업", "취업", "진학", "생활", "기타"] as const;
+const getKoreaCalendarParts = (date: Date) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+  const getPart = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  return { year: Number(getPart("year")), month: Number(getPart("month")) };
+};
+
+const createCalendarDate = (year: number, month: number, day = 1) =>
+  new Date(Date.UTC(year, month, day, 12));
+
 const toDateValue = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -47,6 +61,9 @@ export const ConsultationForm = ({
     selectedTeacher,
     selectedDate,
     selectedTime,
+    availabilityStatus,
+    availabilityError,
+    retryAvailability,
     submitting,
     toast,
     errorTarget,
@@ -70,19 +87,33 @@ export const ConsultationForm = ({
   const scheduleRows = CONSULTATION_SCHEDULE_ROWS.filter(({ period }) =>
     availablePeriods.includes(period),
   );
-  const [calendarDate, setCalendarDate] = useState(() => new Date());
+  const [calendarDate, setCalendarDate] = useState(() => {
+    const { year, month } = getKoreaCalendarParts(new Date());
+    return createCalendarDate(year, month - 1);
+  });
+  useEffect(() => {
+    if (!selectedDate) return;
+    const [year, month] = selectedDate.split("-").map(Number);
+    queueMicrotask(() => {
+      setCalendarDate((current) =>
+        current.getUTCFullYear() === year && current.getUTCMonth() === month - 1
+          ? current
+          : createCalendarDate(year, month - 1),
+      );
+    });
+  }, [selectedDate]);
   const availableDateValues = useMemo(
     () => new Set(dates.map((item) => item.value)),
     [dates],
   );
   const calendarCells = useMemo(() => {
-    const year = calendarDate.getFullYear();
-    const month = calendarDate.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDate = new Date(year, month + 1, 0).getDate();
+    const year = calendarDate.getUTCFullYear();
+    const month = calendarDate.getUTCMonth();
+    const firstDay = createCalendarDate(year, month, 1).getUTCDay();
+    const lastDate = createCalendarDate(year, month + 1, 0).getUTCDate();
     return [
       ...Array.from({ length: firstDay }, () => null),
-      ...Array.from({ length: lastDate }, (_, index) => new Date(year, month, index + 1)),
+      ...Array.from({ length: lastDate }, (_, index) => createCalendarDate(year, month, index + 1)),
     ];
   }, [calendarDate]);
   const isDateAvailable = (date: Date) => availableDateValues.has(toDateValue(date));
@@ -160,7 +191,7 @@ export const ConsultationForm = ({
               label="상담 제목"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="고민거리 한 줄 요약을 적어주세요"
+              placeholder="상담 제목을 작성해주세요"
             />
 
             <div className="space-y-2">
@@ -217,9 +248,9 @@ export const ConsultationForm = ({
               }`}
             >
               <div className="mb-3 flex items-center justify-between">
-                <button type="button" onClick={() => setCalendarDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">이전 달</button>
-                <strong className="text-base text-[#111827]">{calendarDate.toLocaleString("ko-KR", { month: "long", year: "numeric" })}</strong>
-                <button type="button" onClick={() => setCalendarDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">다음 달</button>
+                <button type="button" onClick={() => setCalendarDate((date) => createCalendarDate(date.getUTCFullYear(), date.getUTCMonth() - 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">이전 달</button>
+                <strong className="text-base text-[#111827]">{calendarDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "long", year: "numeric" })}</strong>
+                <button type="button" onClick={() => setCalendarDate((date) => createCalendarDate(date.getUTCFullYear(), date.getUTCMonth() + 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">다음 달</button>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-muted">
                 {WEEKDAY_HEADERS.map((day, index) => <span key={`${day}-${index}`} className={`py-2 ${index === 0 ? "text-blue-600" : index === 6 ? "text-red-600" : ""}`}>{day}</span>)}
@@ -227,7 +258,7 @@ export const ConsultationForm = ({
                   if (!date) return <span key={`empty-${index}`} className="h-10" />;
                   const value = toDateValue(date);
                   const available = isDateAvailable(date);
-                  const weekendColor = date.getDay() === 0 ? "text-blue-600" : date.getDay() === 6 ? "text-red-600" : "text-[#C4C9D0]";
+                  const weekendColor = date.getUTCDay() === 0 ? "text-blue-600" : date.getUTCDay() === 6 ? "text-red-600" : "text-[#C4C9D0]";
                   return (
                     <button
                       key={value}
@@ -242,7 +273,7 @@ export const ConsultationForm = ({
                             : "text-[#27364A] hover:bg-[#EAF9F0]"
                       }`}
                     >
-                      {date.getDate()}
+                      {date.getUTCDate()}
                     </button>
                   );
                 })}
@@ -258,6 +289,18 @@ export const ConsultationForm = ({
                 errorTarget === "period" ? "ring-1 ring-[#E53935]" : ""
               }`}
             >
+              {availabilityStatus === "loading" ? (
+                <p role="status" className="rounded-xl bg-[#F5F6F7] px-4 py-3 text-sm font-semibold text-muted">
+                  예약 가능 시간을 확인하는 중입니다.
+                </p>
+              ) : availabilityStatus === "error" ? (
+                <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <p>{availabilityError || "예약 가능 시간을 확인하지 못했습니다."}</p>
+                  <button type="button" onClick={retryAvailability} className="mt-3 rounded-lg bg-brand px-4 py-2 font-semibold text-white">
+                    다시 시도
+                  </button>
+                </div>
+              ) : null}
               {scheduleRows.map((row) => {
                 const unavailable = isTimeUnavailable(row.period);
                 return (

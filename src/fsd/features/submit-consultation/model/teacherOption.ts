@@ -1,7 +1,7 @@
 import {
   getConsultationTeacherLabel,
   type ConsultationType,
-} from "../../../entities/consultation/index.ts";
+} from "@fsd/entities/consultation";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
 
 export { getConsultationTeacherLabel };

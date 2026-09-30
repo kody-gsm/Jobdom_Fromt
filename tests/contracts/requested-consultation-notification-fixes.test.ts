@@ -11,13 +11,13 @@ import {
 import { formatNotificationTime } from "../../src/fsd/features/notifications/model/time.ts";
 
 assert.deepEqual(getAvailablePeriods("career", "임경원 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "9교시", "저녁시간",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "김권예소 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "9교시", "저녁시간",
 ]);
 assert.deepEqual(getAvailablePeriods("career", "정윤기 선생님"), [
-  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "저녁시간", "9교시",
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "9교시", "저녁시간",
 ]);
 assert.equal(getTeacherWorkspaceVariant("임경원 선생님"), "im-gyeongwon");
 assert.equal(getTeacherWorkspaceVariant("김권예소"), "kim-gwon-yeso");
@@ -57,7 +57,10 @@ const bell = read("src/fsd/features/notifications/ui/NotificationBell.tsx");
 assert.doesNotMatch(authGate, /isAccessTokenExpired|clearSession/);
 assert.match(teacherPage, /canManageHomeBanner/);
 assert.match(teacherPage, /학생 홈 배너/);
-assert.match(home, /readHomeBanner/);
+assert.match(teacherPage, /getTeacherBanner/);
+assert.match(teacherPage, /saveTeacherBanner/);
+assert.match(home, /getStudentBanner/);
+assert.doesNotMatch(home, /readHomeBanner/);
 assert.match(bell, /bg-red-500/);
 assert.match(bell, /unreadCount > 99 \? "99\+" : unreadCount/);
 

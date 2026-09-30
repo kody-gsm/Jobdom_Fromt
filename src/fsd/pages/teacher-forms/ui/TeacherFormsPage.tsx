@@ -11,6 +11,7 @@ import type {
   FormSummary,
   QuestionType,
 } from "@fsd/entities/form";
+import { FORM_TEXT_LIMITS } from "@fsd/entities/form";
 import {
   closeForm,
   createForm,
@@ -214,9 +215,9 @@ export function TeacherFormsPage() {
               </div>
             </aside>
 
-            <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
+            <section className="min-w-0 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-2xl font-bold">{selectedId ? title || "폼" : "새 폼"}</h2>
+                <h2 className="min-w-0 wrap-anywhere text-2xl font-bold">{selectedId ? title || "폼" : "새 폼"}</h2>
                 <div className="flex items-center gap-3"><Status status={status} />{selectedId && <Link href={`/teacher/forms/${selectedId}/submissions`} className="text-sm font-semibold text-[#02C551]">응답 보기</Link>}</div>
               </div>
 
@@ -232,7 +233,7 @@ export function TeacherFormsPage() {
                 <button type="button" onClick={() => setQuestions((current) => [...current, newQuestion()])} className="h-11 w-full rounded-xl border border-dashed border-[#02C551] font-semibold text-[#02a946]">질문 추가</button>
               </fieldset>
 
-              {message && <p role="status" className={`mt-6 rounded-xl px-4 py-3 text-sm ${message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{message.text}</p>}
+              {message && <p role="status" className={`mt-6 wrap-anywhere rounded-xl px-4 py-3 text-sm ${message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{message.text}</p>}
               <div className="mt-7 flex flex-wrap justify-end gap-3">
                 {status === "PUBLISHED" && <button type="button" onClick={copyLink} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">링크 복사</button>}
                 {status === "PUBLISHED" && <button type="button" disabled={working} onClick={close} className="h-12 rounded-xl bg-gray-800 px-6 font-semibold text-white">마감</button>}
@@ -253,19 +254,24 @@ function Status({ status }: { status: FormStatus }) {
 }
 
 function QuestionEditor({ question, index, count, update, move, remove }: { question: DraftQuestion; index: number; count: number; update: (changes: Partial<DraftQuestion>) => void; move: (offset: number) => void; remove: () => void }) {
+  const textLimit = question.type === "SHORT_TEXT" || question.type === "LONG_TEXT" ? FORM_TEXT_LIMITS[question.type] : null;
+
   return (
     <article className="rounded-2xl border border-gray-200 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <strong>질문 {index + 1}</strong>
         <div className="flex gap-2 text-sm"><button type="button" aria-label="질문 위로 이동" disabled={index === 0} onClick={() => move(-1)} className="disabled:text-gray-300">↑</button><button type="button" aria-label="질문 아래로 이동" disabled={index === count - 1} onClick={() => move(1)} className="disabled:text-gray-300">↓</button><button type="button" onClick={remove} className="text-red-600">삭제</button></div>
       </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-[180px_1fr]">
+      <div className="mt-4 grid gap-4 sm:grid-cols-[180px_minmax(0,1fr)]">
         <select aria-label={`질문 ${index + 1} 유형`} value={question.type} onChange={(event) => update({ type: event.target.value as QuestionType, options: hasOptions(event.target.value as QuestionType) ? question.options.length ? question.options : [""] : [] })} className="h-11 rounded-xl border border-gray-200 bg-white px-3 outline-none focus:border-[#02C551]">{questionTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</select>
-        <input aria-label={`질문 ${index + 1} 제목`} required value={question.title} onChange={(event) => update({ title: event.target.value })} className="h-11 rounded-xl border border-gray-200 px-4 outline-none focus:border-[#02C551]" />
+        <input aria-label={`질문 ${index + 1} 제목`} required value={question.title} onChange={(event) => update({ title: event.target.value })} className="h-11 min-w-0 rounded-xl border border-gray-200 px-4 outline-none focus:border-[#02C551]" />
       </div>
       <input aria-label={`질문 ${index + 1} 설명`} value={question.description} onChange={(event) => update({ description: event.target.value })} className="mt-3 h-11 w-full rounded-xl border border-gray-200 px-4 outline-none focus:border-[#02C551]" />
-      <label className="mt-3 flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={question.required} onChange={(event) => update({ required: event.target.checked })} className="h-4 w-4 accent-[#02C551]" />필수</label>
-      {hasOptions(question.type) && <div className="mt-4 space-y-2">{question.options.map((option, optionIndex) => <div key={optionIndex} className="flex gap-2"><input aria-label={`질문 ${index + 1} 보기 ${optionIndex + 1}`} required value={option} onChange={(event) => update({ options: question.options.map((current, index) => index === optionIndex ? event.target.value : current) })} className="h-10 flex-1 rounded-xl border border-gray-200 px-3 outline-none focus:border-[#02C551]" /><button type="button" onClick={() => update({ options: question.options.filter((_, index) => index !== optionIndex) })} className="px-2 text-sm text-red-600">삭제</button></div>)}<button type="button" onClick={() => update({ options: [...question.options, ""] })} className="text-sm font-semibold text-[#02a946]">보기 추가</button></div>}
+      {textLimit && <p className="mt-2 text-xs text-gray-400">학생 답변은 최대 {textLimit.toLocaleString()}자까지 입력할 수 있습니다.</p>}
+      {hasOptions(question.type) && <div className="mt-4 space-y-2">{question.options.map((option, optionIndex) => <div key={optionIndex} className="flex gap-2"><input aria-label={`질문 ${index + 1} 보기 ${optionIndex + 1}`} required value={option} onChange={(event) => update({ options: question.options.map((current, index) => index === optionIndex ? event.target.value : current) })} className="h-10 min-w-0 flex-1 rounded-xl border border-gray-200 px-3 outline-none focus:border-[#02C551]" /><button type="button" onClick={() => update({ options: question.options.filter((_, index) => index !== optionIndex) })} className="px-2 text-sm text-red-600">삭제</button></div>)}<button type="button" onClick={() => update({ options: [...question.options, ""] })} className="text-sm font-semibold text-[#02a946]">보기 추가</button></div>}
+      <div className="mt-4 flex min-h-11 items-center">
+        <label className="inline-flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={question.required} onChange={(event) => update({ required: event.target.checked })} className="h-4 w-4 accent-[#02C551]" />필수</label>
+      </div>
     </article>
   );
 }

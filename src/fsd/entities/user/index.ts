@@ -23,6 +23,7 @@ export {
   getAuthErrorMessage,
   getLoginErrorMessage,
   getPasswordResetError,
+  getPasswordResetCodeError,
   getSignupError,
 } from "./model/auth-errors.ts";
 export { decodeUserRole, getRoleHomePath } from "./model/role.ts";
@@ -33,6 +34,11 @@ export {
   saveSession,
 } from "./model/lifecycle.ts";
 export { requestWithSession } from "./api/sessionRequest.ts";
+export {
+  getUserProfile,
+  resolveProfileImageUrl,
+} from "./api/profile.ts";
+export { useProfileAvatar } from "./model/useProfileAvatar.ts";
 export { normalizeVerificationCode } from "./model/credentials.ts";
 export {
   MAX_PROFILE_AVATAR_BYTES,

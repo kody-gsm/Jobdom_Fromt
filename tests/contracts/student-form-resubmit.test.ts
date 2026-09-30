@@ -9,4 +9,10 @@ assert.match(
   "re-response must not submit the form while switching into editing mode",
 );
 
+assert.match(
+  source,
+  /event\.preventDefault\(\);[\s\S]{0,120}setMessage\(null\);[\s\S]{0,120}setEditing\(true\)/,
+  "re-response must clear the previous submission message before editing",
+);
+
 console.log("student form resubmit contract passed");

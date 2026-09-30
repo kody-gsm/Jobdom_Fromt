@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
   buildFormAnswers,
+  FORM_TEXT_LIMITS,
   getMissingRequiredQuestion,
 } from "@fsd/entities/form";
 import type {
@@ -14,6 +15,7 @@ import type {
   FormValue,
 } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
+import { formatDeadlineDate, isDeadlinePassed } from "@fsd/shared/lib";
 import { ActionButton, ContentCard } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
@@ -34,33 +36,99 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formLoading, setFormLoading] = useState(true);
+  const [formError, setFormError] = useState("");
+  const [submissionLoading, setSubmissionLoading] = useState(true);
+  const [submissionError, setSubmissionError] = useState("");
+  const formRequestVersion = useRef(0);
+  const formLoadVersion = useRef(0);
+  const submissionLoadVersion = useRef(0);
+  const activeFormId = useRef(formId);
+  const mounted = useRef(false);
 
-  useEffect(() => {
-    Promise.all([
-      formApi.getById(formId),
-      formApi.getMySubmission(formId).catch((caught) =>
-        caught instanceof ApiError && caught.status === 404 ? null : Promise.reject(caught),
-      ),
-    ])
-      .then(([loadedForm, loadedSubmission]) => {
+  const isCurrent = useCallback((requestVersion: number, targetFormId: number) =>
+    mounted.current &&
+    activeFormId.current === targetFormId &&
+    formRequestVersion.current === requestVersion, []);
+
+  const loadForm = useCallback((requestVersion: number, targetFormId: number) => {
+    const loadVersion = ++formLoadVersion.current;
+    setFormLoading(true);
+    setFormError("");
+    void formApi.getById(targetFormId)
+      .then((loadedForm) => {
+        if (!isCurrent(requestVersion, targetFormId) || formLoadVersion.current !== loadVersion) return;
         setForm(loadedForm);
+        setFormError("");
+      })
+      .catch((caught) => {
+        if (!isCurrent(requestVersion, targetFormId) || formLoadVersion.current !== loadVersion) return;
+        setForm(null);
+        setFormError(caught instanceof Error ? caught.message : "폼을 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        if (isCurrent(requestVersion, targetFormId) && formLoadVersion.current === loadVersion) {
+          setFormLoading(false);
+        }
+      });
+  }, [isCurrent]);
+
+  const loadSubmission = useCallback((requestVersion: number, targetFormId: number) => {
+    const loadVersion = ++submissionLoadVersion.current;
+    setSubmissionLoading(true);
+    setSubmissionError("");
+    void formApi.getMySubmission(targetFormId)
+      .then((loadedSubmission) => {
+        if (!isCurrent(requestVersion, targetFormId) || submissionLoadVersion.current !== loadVersion) return;
         setSubmission(loadedSubmission);
-        if (loadedSubmission) {
-          setValues(Object.fromEntries(loadedSubmission.answers.map((answer) => [
-            answer.questionId,
-            answer.fileId
-              ? { fileId: answer.fileId, fileName: answer.fileName ?? "첨부 파일" }
-              : answer.selectedOptionIds.length ? answer.selectedOptionIds : answer.textValue ?? "",
-          ])));
+        setValues(valuesFromSubmission(loadedSubmission));
+      })
+      .catch((caught) => {
+        if (!isCurrent(requestVersion, targetFormId) || submissionLoadVersion.current !== loadVersion) return;
+        if (caught instanceof ApiError && caught.status === 404) {
+          setSubmission(null);
+          setValues({});
+          setSubmissionError("");
+        } else {
+          setSubmission(null);
+          setSubmissionError(caught instanceof Error ? caught.message : "기존 제출 내역을 확인하지 못했습니다.");
         }
       })
-      .catch((caught) =>
-        setMessage({
-          text: caught instanceof Error ? caught.message : "폼을 불러오지 못했습니다.",
-          error: true,
-        }),
-      );
-  }, [formId]);
+      .finally(() => {
+        if (isCurrent(requestVersion, targetFormId) && submissionLoadVersion.current === loadVersion) {
+          setSubmissionLoading(false);
+        }
+      });
+  }, [isCurrent]);
+
+  useEffect(() => {
+    const requestVersion = ++formRequestVersion.current;
+    activeFormId.current = formId;
+    mounted.current = true;
+
+    queueMicrotask(() => {
+      if (!isCurrent(requestVersion, formId)) return;
+      setForm(null);
+      setSubmission(null);
+      setValues({});
+      setEditing(false);
+      setMessage(null);
+      setSubmitting(false);
+      setFormError("");
+      setSubmissionError("");
+      setFormLoading(true);
+      setSubmissionLoading(true);
+      loadForm(requestVersion, formId);
+      loadSubmission(requestVersion, formId);
+    });
+
+    return () => {
+      mounted.current = false;
+    };
+  }, [formId, isCurrent, loadForm, loadSubmission]);
+
+  const retrySubmission = () => loadSubmission(formRequestVersion.current, formId);
+  const retryForm = () => loadForm(formRequestVersion.current, formId);
 
   const setValue = (questionId: number, value: FormValue) => {
     setValues((current) => ({ ...current, [questionId]: value }));
@@ -69,6 +137,13 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form) return;
+    if (isDeadlinePassed(form.deadline)) {
+      setMessage({ text: "제출 기한이 지나 이 신청서는 더 이상 제출할 수 없습니다.", error: true });
+      return;
+    }
+    const requestVersion = formRequestVersion.current;
+    const targetFormId = form.id;
+    const isCurrentOperation = () => isCurrent(requestVersion, targetFormId);
 
     const missing = getMissingRequiredQuestion(form.questions, values);
     if (missing) {
@@ -83,17 +158,21 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         if (question.type !== "FILE") continue;
         const value = preparedValues[question.id];
         if (isFormFileValue(value) && value.file && !value.fileId) {
-          const uploaded = await formApi.uploadFile(form.id, value.file);
+          const uploaded = await formApi.uploadFile(targetFormId, value.file);
+          if (!isCurrentOperation()) return;
           const uploadedValue = { fileId: uploaded.id, fileName: uploaded.originalName };
           preparedValues[question.id] = uploadedValue;
           setValues((current) => ({ ...current, [question.id]: uploadedValue }));
         }
       }
     } catch (caught) {
+      if (!isCurrentOperation()) return;
       setMessage({ text: caught instanceof Error ? caught.message : "파일 업로드에 실패했습니다.", error: true });
       setSubmitting(false);
       return;
     }
+
+    if (!isCurrentOperation()) return;
 
     const answers = buildFormAnswers(form.questions, preparedValues);
     if (answers.length === 0) {
@@ -104,13 +183,15 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
 
     try {
       const saved = submission
-        ? await formApi.updateSubmission(form.id, answers)
-        : await formApi.submit(form.id, answers);
+        ? await formApi.updateSubmission(targetFormId, answers)
+        : await formApi.submit(targetFormId, answers);
+      if (!isCurrentOperation()) return;
       setSubmission(saved);
       setValues(valuesFromSubmission(saved));
       setEditing(false);
       setMessage({ text: "응답을 제출했습니다." });
     } catch (caught) {
+      if (!isCurrentOperation()) return;
       setMessage({
         text:
           caught instanceof ApiError && caught.status === 409
@@ -121,34 +202,43 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         error: true,
       });
     } finally {
-      setSubmitting(false);
+      if (isCurrentOperation()) setSubmitting(false);
     }
   };
 
-  if (message?.error && !form) {
-    return <p role="alert" className="rounded-2xl bg-red-50 p-5 text-red-700">{message.text}</p>;
+  if (formError && !form) {
+    return (
+      <div role="alert" className="rounded-2xl bg-red-50 p-5 text-red-700">
+        <p>{formError}</p>
+        <button type="button" onClick={retryForm} className="mt-3 rounded-lg bg-brand px-4 py-2 font-semibold text-white">
+          다시 시도
+        </button>
+      </div>
+    );
   }
-  if (!form) {
+  if (formLoading || !form) {
     return <p className="py-20 text-center text-gray-400">불러오는 중…</p>;
   }
+  const isExpired = isDeadlinePassed(form.deadline);
 
   return (
     <form onSubmit={submitForm}>
       <ContentCard className="overflow-hidden p-0">
       <header className="bg-brand p-7 text-white sm:p-9">
-        <h1 className="break-keep text-3xl font-bold">{form.title}</h1>
+        <h1 className="wrap-anywhere break-keep text-3xl font-bold">{form.title}</h1>
         {form.description ? (
-          <p className="mt-3 whitespace-pre-line break-keep text-sm leading-6 text-white/85">
+          <p className="mt-3 wrap-anywhere whitespace-pre-line break-keep text-sm leading-6 text-white/85">
             {form.description}
           </p>
         ) : null}
         <div className="mt-5 flex flex-wrap items-center gap-2 text-sm font-semibold text-white/90">
           <span>제한 기한</span>
           <span aria-hidden="true">·</span>
-          <time>{formatFormDeadline(form.deadline)}</time>
+          <time>{formatDeadlineDate(form.deadline)}</time>
+          {isExpired ? <span className="rounded-full bg-white/15 px-2 py-1 text-xs text-white">마감됨</span> : null}
         </div>
       </header>
-      <div className="space-y-5 p-6 sm:p-9">
+      <div className="min-w-0 space-y-5 p-6 sm:p-9">
         {submission && !editing ? (
           <SubmittedAnswers submission={submission} />
         ) : (
@@ -162,34 +252,54 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
             />
           ))
         )}
+        {submissionLoading ? (
+          <p role="status" className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
+            기존 제출 내역을 확인하는 중입니다.
+          </p>
+        ) : null}
+        {submissionError ? (
+          <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p>{submissionError}</p>
+            <button type="button" onClick={retrySubmission} className="mt-3 rounded-lg bg-brand px-4 py-2 font-semibold text-white">
+              제출 내역 다시 시도
+            </button>
+          </div>
+        ) : null}
+        {isExpired ? (
+          <p role="status" className="rounded-xl bg-[#FFF0EC] px-4 py-3 text-sm font-semibold text-[#9A4F45]">
+            제출 기한이 지나 이 신청서는 더 이상 제출할 수 없습니다.
+          </p>
+        ) : null}
         {message ? (
           <p
             role="status"
-            className={`rounded-xl px-4 py-3 text-sm ${
+            className={`wrap-anywhere rounded-xl px-4 py-3 text-sm ${
               message.error ? "bg-red-50 text-red-700" : "bg-[#EAF9F0] text-[#027A35]"
             }`}
           >
             {message.text}
           </p>
         ) : null}
-        {submission && !editing ? (
+        {submission && !editing && !submissionLoading ? (
           <ActionButton
             type="button"
             onClick={(event) => {
               event.preventDefault();
+              setMessage(null);
               setEditing(true);
             }}
+            disabled={isExpired}
             className="w-full bg-brand hover:bg-brand-hover"
           >
-            응답 재응답
+            {isExpired ? "제출 마감" : "응답 재응답"}
           </ActionButton>
         ) : (
           <ActionButton
             type="submit"
-            disabled={submitting}
+            disabled={isExpired || submitting || submissionLoading || Boolean(submissionError)}
             className="w-full bg-brand hover:bg-brand-hover"
           >
-            {submitting ? "제출 중…" : "제출"}
+            {isExpired ? "제출 마감" : submitting ? "제출 중…" : "제출"}
           </ActionButton>
         )}
       </div>
@@ -207,6 +317,7 @@ type QuestionFieldProps = {
 
 const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps) => {
   const choices = Array.isArray(value) ? value : [];
+  const textLimit = question.type === "SHORT_TEXT" || question.type === "LONG_TEXT" ? FORM_TEXT_LIMITS[question.type] : null;
   const label = (
     <>
       <span className="mr-2 text-gray-400">{index + 1}.</span>
@@ -215,22 +326,24 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
     </>
   );
   const description = question.description ? (
-    <p className="mt-2 text-sm font-normal text-gray-500">{question.description}</p>
+    <p className="mt-2 min-w-0 wrap-anywhere text-sm font-normal text-gray-500">{question.description}</p>
   ) : null;
   const inputClass =
-    "mt-3 w-full rounded-xl border border-border px-4 py-3 outline-none focus:border-brand";
+    "mt-3 min-w-0 w-full rounded-xl border border-border px-4 py-3 outline-none focus:border-brand";
 
   if (question.type === "LONG_TEXT") {
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <textarea
           required={question.required}
+          maxLength={textLimit ?? undefined}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
           className={`${inputClass} min-h-36 resize-y font-normal`}
         />
+        {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
       </label>
     );
   }
@@ -238,7 +351,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
   if (question.type === "FILE") {
     const fileValue = isFormFileValue(value) ? value : undefined;
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <input
@@ -258,23 +371,25 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
   if (["SHORT_TEXT", "NUMBER", "DATE"].includes(question.type)) {
     const inputType = question.type === "NUMBER" ? "number" : question.type === "DATE" ? "date" : "text";
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <input
           required={question.required}
+          maxLength={textLimit ?? undefined}
           type={inputType}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
           className={`${inputClass} h-12 font-normal`}
         />
+        {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
       </label>
     );
   }
 
   if (question.type === "DROPDOWN") {
     return (
-      <label className="block rounded-2xl border border-gray-100 p-5 font-semibold">
+      <label className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5 font-semibold">
         {label}
         {description}
         <select
@@ -295,8 +410,8 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
   }
 
   return (
-    <fieldset className="rounded-2xl border border-gray-100 p-5">
-      <legend className="px-1 font-semibold">{label}</legend>
+    <fieldset className="min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+      <legend className="max-w-full wrap-anywhere px-1 font-semibold">{label}</legend>
       {description}
       <div className="mt-3 space-y-3">
         {question.options.map((option) => {
@@ -309,7 +424,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
               : [option.id];
 
           return (
-            <label key={option.id} className="flex min-h-11 items-center gap-3 rounded-xl px-2 text-sm text-gray-700">
+            <label key={option.id} className="flex min-h-11 min-w-0 items-center gap-3 rounded-xl px-2 text-sm text-gray-700">
               <input
                 required={question.required && question.type !== "MULTIPLE_CHOICE" && choices.length === 0}
                 type={question.type === "MULTIPLE_CHOICE" ? "checkbox" : "radio"}
@@ -318,7 +433,7 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
                 onChange={(event) => onChange(nextValue(event.target.checked))}
                 className="h-4 w-4 accent-brand"
               />
-              {option.label}
+              <span className="min-w-0 wrap-anywhere">{option.label}</span>
             </label>
           );
         })}
@@ -327,27 +442,14 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
   );
 };
 
-const formatFormDeadline = (deadline: string | null) => {
-  if (!deadline) return "제한 없음";
-  const date = new Date(deadline);
-  if (Number.isNaN(date.getTime())) return deadline;
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-};
-
 const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
-  <section>
+  <section className="min-w-0">
     <h2 className="text-xl font-bold">제출한 응답</h2>
     <div className="mt-5 space-y-4">
       {submission.answers.map((answer) => (
-        <div key={answer.questionId} className="rounded-2xl bg-gray-50 p-5">
-          <h3 className="text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
-          <p className="mt-2 whitespace-pre-line text-gray-900">
+        <div key={answer.questionId} className="min-w-0 wrap-anywhere rounded-2xl bg-gray-50 p-5">
+          <h3 className="min-w-0 wrap-anywhere text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
+          <p className="mt-2 min-w-0 wrap-anywhere whitespace-pre-line text-gray-900">
             {answer.fileName
               ? `첨부 파일: ${answer.fileName}`
               : answer.selectedOptionLabels.length

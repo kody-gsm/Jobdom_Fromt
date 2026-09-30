@@ -7,24 +7,15 @@ const form = readFileSync(
   "utf8",
 );
 
-assert.doesNotMatch(form, />상담 내용 작성</);
-assert.doesNotMatch(form, /상담받고 싶은 내용을 편하게 작성해주세요\./);
-assert.match(form, />상담 유형</);
-assert.match(form, />상담 선생님</);
+assert.match(form, /SegmentedTabs/);
 assert.match(form, /label="상담 제목"/);
-assert.match(form, /label="구체적인 고민 내용"/);
-assert.doesNotMatch(form, />일정 예약</);
-assert.match(form, />상담 희망일/);
-assert.match(form, />상담 교시/);
-assert.match(form, /lg:grid-cols-\[minmax\(0,1fr\)_520px\]/);
-assert.match(form, /min-h-\[320px\]/);
-assert.match(form, /min-h-\[720px\]/);
-assert.match(form, /bg-brand/);
-assert.doesNotMatch(form, /bg-\[#10243E\]|hover:bg-\[#1B3555\]/);
-assert.doesNotMatch(form, /수업 담당 선생님의 허가를 먼저 받아주세요|예약 가능|선택됨/);
-
-assert.doesNotMatch(form, /수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요\.<\/p>/);
-assert.doesNotMatch(form, /bg-blue-600/);
-assert.match(form, /bg-brand-soft text-brand-accent/);
+assert.match(form, /placeholder="상담 제목을 작성해주세요"/);
+assert.match(form, /scheduleRows\.map/);
+assert.match(form, /disabled=\{!available\}/);
+assert.match(form, /availabilityStatus/);
+assert.match(form, /retryAvailability/);
+assert.match(form, /setCalendarDate/);
+assert.match(form, /\[selectedDate\]/);
+assert.doesNotMatch(form, /수업 담당 선생님의 허가를 먼저 받아주세요/);
 
 console.log("student consultation third-pass contract passed");

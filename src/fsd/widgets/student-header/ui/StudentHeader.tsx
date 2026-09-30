@@ -5,51 +5,15 @@ import { NotificationBell } from "@fsd/features/notifications";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { FiLogOut } from "react-icons/fi";
-import {
-  getProfileAvatarUserKey,
-  getSession,
-  PROFILE_AVATAR_CHANGED_EVENT,
-  readProfileAvatar,
-  requestWithSession,
-} from "@fsd/entities/user";
+import { useProfileAvatar } from "@fsd/entities/user";
 import { logout } from "@fsd/features/logout";
 import { STUDENT_NAV_ITEMS, isStudentNavActive } from "../model/navigation.ts";
 
 export const StudentHeader = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
-
-  useEffect(() => {
-    const session = getSession();
-    const userKey = getProfileAvatarUserKey({
-      email: session?.email,
-      name: session?.name,
-    });
-    const syncAvatar = () => {
-      const cachedAvatar = readProfileAvatar(userKey);
-      if (cachedAvatar) setProfileAvatar(cachedAvatar);
-
-      void requestWithSession<{ profileImageUrl?: string }>("/auth/profile")
-        .then((profile) => {
-          if (!profile.profileImageUrl) return;
-          const imageUrl = /^https?:\/\//.test(profile.profileImageUrl)
-            ? profile.profileImageUrl
-            : `${(process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "")}/${profile.profileImageUrl.replace(/^\/+/, "")}`;
-          setProfileAvatar(imageUrl);
-        })
-        .catch(() => {
-          // The cached avatar, if present, remains usable when the profile request fails.
-        });
-    };
-
-    syncAvatar();    window.addEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
-    return () => {
-      window.removeEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
-    };
-  }, []);
+  const profileAvatar = useProfileAvatar();
 
   const handleLogout = async () => {
     try {

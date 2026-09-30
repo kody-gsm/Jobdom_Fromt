@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getSession } from "../../../entities/user/index.ts";
+import { getSession } from "@fsd/entities/user";
 import { getAuthRedirect } from "../model/routePolicy.ts";
 
 export const AuthGate = ({ children }: { children: React.ReactNode }) => {

@@ -74,3 +74,18 @@ export const getPasswordResetError = (error: unknown): AuthFieldError => {
   }
   return { field: "form", message };
 };
+
+export const getPasswordResetCodeError = (error: unknown) => {
+  const current = asError(error);
+  const raw = rawMessage(error);
+  if (current.status === 404 || raw === "User not found." || raw === "Account not found.") {
+    return "가입되지 않은 계정입니다.";
+  }
+  if (current.status === 429) {
+    return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
+  }
+  return getAuthErrorMessage(
+    error,
+    "인증코드를 발송하지 못했습니다. 잠시 후 다시 시도해주세요.",
+  );
+};

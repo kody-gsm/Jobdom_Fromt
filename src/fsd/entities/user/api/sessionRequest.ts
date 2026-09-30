@@ -1,7 +1,7 @@
 import {
   createAuthenticatedRequest,
   request,
-} from "../../../shared/api/index.ts";
+} from "@fsd/shared/api";
 import type { AuthSession } from "../model/types.ts";
 import {
   isRememberedSession,

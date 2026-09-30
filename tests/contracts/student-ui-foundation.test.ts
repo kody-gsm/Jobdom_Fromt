@@ -25,7 +25,7 @@ assert.match(read("TextField.tsx"), /aria-invalid/);
 assert.match(read("TextAreaField.tsx"), /aria-invalid/);
 assert.match(read("SegmentedTabs.tsx"), /role="tablist"/);
 assert.match(read("SegmentedTabs.tsx"), /aria-selected/);
-assert.doesNotMatch(read("SegmentedTabs.tsx"), /useState/);
+assert.match(read("SegmentedTabs.tsx"), /useState/);
 assert.match(read("SegmentedTabs.tsx"), /min-h-11/);
 assert.doesNotMatch(read("SegmentedTabs.tsx"), /#02C551/);
 assert.match(read("SegmentedTabs.tsx"), /#10243E/);

@@ -14,8 +14,7 @@ assert.ok(cancelHandler, "handleCancel should exist");
 assert.match(cancelHandler, /setTitle\(""\)/);
 assert.match(cancelHandler, /setContent\(""\)/);
 assert.match(cancelHandler, /setSelectedTeacher\(null\)/);
-assert.match(cancelHandler, /setSelectedDate\(null\)/);
-assert.match(cancelHandler, /setSelectedTime\(null\)/);
+assert.match(cancelHandler, /resetAvailability\(\)/);
 assert.match(cancelHandler, /router\.push\("\/"\)/);
 assert.doesNotMatch(cancelHandler, /showToast\(/);
 

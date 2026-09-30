@@ -13,7 +13,7 @@ assert.deepEqual([...getUnavailablePeriods([
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 const api = read("src/fsd/features/submit-consultation/api/consultation.ts");
-const hook = read("src/fsd/features/submit-consultation/model/useConsultationForm.ts");
+const hook = read("src/fsd/features/submit-consultation/model/useConsultationAvailability.ts");
 
 assert.match(api, /ConsultationSlotStatus/);
 assert.match(api, /getConsultationSlotStatus/);

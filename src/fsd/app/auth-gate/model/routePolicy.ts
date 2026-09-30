@@ -1,4 +1,4 @@
-import type { UserRole } from "../../../entities/user/index.ts";
+import type { UserRole } from "@fsd/entities/user";
 
 const PUBLIC_ROUTES = new Set(["/login", "/signup", "/forgot-password"]);
 

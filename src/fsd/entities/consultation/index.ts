@@ -16,6 +16,7 @@ export {
   createReservationInput,
   getAvailablePeriods,
   getSelectablePeriods,
+  getSelectableConsultationDates,
   getNextAvailableDate,
   getNextWeekdays,
   toConsultationKind,

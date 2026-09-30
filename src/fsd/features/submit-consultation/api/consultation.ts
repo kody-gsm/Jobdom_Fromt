@@ -12,6 +12,15 @@ export type StudentTimetableItem = {
   classroom: string | null;
 };
 
+export type StudentScheduleItem = {
+  date: string;
+  name: string | null;
+  content: string | null;
+  holidayType: string | null;
+  holiday: boolean;
+  grades: number[];
+};
+
 export type ConsultationTeacherOption = {
   id: number;
   name: string;
@@ -36,6 +45,11 @@ export const getConsultationTeachers = (kind: ConsultationKind) =>
 
 export const getStudentTimetable = (from: string, to: string) => {
   return requestWithSession<StudentTimetableItem[]>(createTimetablePath(from, to));
+};
+
+export const getStudentSchedules = (from: string, to: string) => {
+  const query = new URLSearchParams({ from, to });
+  return requestWithSession<StudentScheduleItem[]>(`/schedules?${query.toString()}`);
 };
 
 export const getConsultationSlotStatus = (

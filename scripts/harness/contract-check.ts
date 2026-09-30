@@ -18,7 +18,13 @@ const runCli = () => {
   for (const file of files) {
     const result = spawnSync(
       process.execPath,
-      ["--no-warnings", "--experimental-strip-types", join(root, file)],
+      [
+        "--import",
+        "./scripts/harness/register-fsd-alias.mjs",
+        "--no-warnings",
+        "--experimental-strip-types",
+        join(root, file),
+      ],
       { stdio: "inherit" },
     );
     if (result.status !== 0) {

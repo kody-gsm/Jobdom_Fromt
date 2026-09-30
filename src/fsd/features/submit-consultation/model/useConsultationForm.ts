@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   createReservationInput,
-  getNextAvailableDate,
-  getNextWeekdays,
-  getSelectablePeriods,
   getConsultationScheduleItem,
   toConsultationKind,
   validateConsultationDraft,
@@ -16,15 +13,12 @@ import type {
 } from "@fsd/entities/consultation";
 import { ApiError } from "@fsd/shared/api";
 import {
-  getConsultationSlotStatus,
   getConsultationTeachers,
-  getStudentTimetable,
   submitConsultation,
 } from "../api/consultation.ts";
 import type { ConsultationTeacherOption } from "../api/consultation.ts";
 import { getConsultationTeacherLabel } from "./teacherOption.ts";
-import { getUnavailablePeriods } from "./slotAvailability.ts";
-import type { StudentTimetableItem } from "./timetablePresentation.ts";
+import { useConsultationAvailability } from "./useConsultationAvailability.ts";
 
 export type ConsultationToast = {
   message: string;
@@ -42,10 +36,6 @@ export type ConsultationErrorTarget =
 const MAX_CONSULTATION_CONTENT_LENGTH = 500;
 
 export type ConsultationTeacherStatus = "loading" | "ready" | "error";
-
-const getKoreaDate = () => new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Seoul",
-}).format(new Date());
 
 const getConsultationErrorTarget = (
   message: string,
@@ -74,9 +64,6 @@ const focusConsultationError = (target: ConsultationErrorTarget) => {
   });
 };
 
-const getSlotKey = (teacherId: number, date: string, period: string) =>
-  `${teacherId}:${date}:${period}`;
-
 const isUnavailableSlotError = (error: ApiError) =>
   /예약한 시간|누군가 예약|이미 예약|잠긴 날짜|잠긴 시간/.test(error.message);
 
@@ -87,35 +74,28 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [content, setContentState] = useState("");
   const [category, setCategory] = useState<CounselingCategory | null>(null);
   const [teachers, setTeachers] = useState<ConsultationTeacherOption[]>([]);
-  const [timetable, setTimetable] = useState<StudentTimetableItem[]>([]);
   const [teacherStatus, setTeacherStatus] = useState<ConsultationTeacherStatus>("loading");
   const [selectedTeacher, setSelectedTeacher] = useState<ConsultationTeacherOption | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(() => {
-    const today = new Date();
-    return today.getDay() === 0 || today.getDay() === 6
-      ? null
-      : getNextWeekdays(today, 1)[0]?.value ?? null;
-  });
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [serverUnavailablePeriods, setServerUnavailablePeriods] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [unavailableSlotKeys, setUnavailableSlotKeys] = useState<Set<string>>(
-    () => new Set(),
-  );
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<ConsultationToast | null>(null);
   const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
   const toastTimer = useRef<number | null>(null);
 
-  const dates = useMemo(() => getNextWeekdays(), []);
-
-  useEffect(() => {
-    const from = dates[0]?.value;
-    const to = dates.at(-1)?.value;
-    if (!from || !to) return;
-    void getStudentTimetable(from, to).then(setTimetable).catch(() => setTimetable([]));
-  }, [dates]);
+  const {
+    timetable,
+    selectedDate,
+    selectedTime,
+    availabilityStatus,
+    availabilityError,
+    retryAvailability,
+    dates,
+    toggleDate: toggleAvailabilityDate,
+    toggleTime: toggleAvailabilityTime,
+    isTimeUnavailable,
+    clearPeriodSelection,
+    markUnavailableSlot,
+    reset: resetAvailability,
+  } = useConsultationAvailability({ counselType, selectedTeacher });
 
   useEffect(() => {
     let active = true;
@@ -123,6 +103,11 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       .then((items) => {
         if (!active) return;
         setTeachers(items);
+        setSelectedTeacher((current) =>
+          current !== null && items.some((item) => item.id === current.id)
+            ? current
+            : null,
+        );
         setTeacherStatus("ready");
       })
       .catch(() => {
@@ -133,43 +118,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       active = false;
     };
   }, [counselType]);
-
-  useEffect(() => {
-    if (selectedTeacher === null || selectedDate === null) return;
-
-    let active = true;
-    void getConsultationSlotStatus(
-      toConsultationKind(counselType),
-      selectedTeacher.id,
-      selectedDate,
-    )
-      .then((items) => {
-        if (!active) return;
-        const unavailable = getUnavailablePeriods(items);
-        setServerUnavailablePeriods(unavailable);
-        setSelectedTime((current) =>
-          current !== null && unavailable.has(current) ? null : current,
-        );
-      })
-      .catch(() => {
-        if (active) {
-          setServerUnavailablePeriods(new Set());
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [counselType, selectedTeacher, selectedDate]);
-
-  useEffect(() => {
-    const advanceAfterLastPeriod = () => {
-      setSelectedDate((current) => current ? getNextAvailableDate(current, new Date()) : current);
-    };
-    const timer = window.setInterval(advanceAfterLastPeriod, 30_000);
-    advanceAfterLastPeriod();
-    return () => window.clearInterval(timer);
-  }, []);
 
   useEffect(
     () => () => {
@@ -201,9 +149,10 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const handleTabChange = (type: ConsultationType) => {
     setCounselType(type);
+    setTeachers([]);
+    setTeacherStatus("loading");
     setSelectedTeacher(null);
-    setSelectedTime(null);
-    setServerUnavailablePeriods(new Set());
+    clearPeriodSelection();
     setErrorTarget(null);
     setCategory(null);
   };
@@ -211,29 +160,17 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const toggleTeacher = (teacher: ConsultationTeacherOption) => {
     const isSelected = selectedTeacher?.id === teacher.id;
     setSelectedTeacher(isSelected ? null : teacher);
-    setSelectedTime(null);
-    setServerUnavailablePeriods(new Set());
+    clearPeriodSelection();
     if (errorTarget === "teacher") setErrorTarget(null);
   };
 
   const toggleDate = (date: string) => {
-    setSelectedDate((current) => current === date ? null : date);
-    setSelectedTime(null);
-    setServerUnavailablePeriods(new Set());
+    toggleAvailabilityDate(date);
     if (errorTarget === "date") setErrorTarget(null);
   };
 
-  const isTimeUnavailable = (time: string) =>
-    (counselType === "general" && time === "4교시") ||
-    (selectedDate === getKoreaDate() &&
-      !getSelectablePeriods(counselType, selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null).includes(time)) ||
-    serverUnavailablePeriods.has(time) ||
-    (selectedTeacher !== null &&
-      selectedDate !== null &&
-      unavailableSlotKeys.has(getSlotKey(selectedTeacher.id, selectedDate, time)));
-
   const toggleTime = (time: string) => {
-    if (isTimeUnavailable(time)) return;
+    if (!toggleAvailabilityTime(time)) return;
     const scheduleItem = getConsultationScheduleItem(time);
     if (
       counselType === "career" &&
@@ -245,7 +182,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         showToast("수업 결손을 줄이기 위해 공강시간을 우선 선택해 주세요.", "info");
       }
     }
-    setSelectedTime((current) => current === time ? null : time);
     if (errorTarget === "period") setErrorTarget(null);
   };
 
@@ -253,8 +189,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     setTitle("");
     setContent("");
     setSelectedTeacher(null);
-    setSelectedDate(null);
-    setSelectedTime(null);
+    resetAvailability();
     setErrorTarget(null);
     router.push("/");
   };
@@ -324,9 +259,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         selectedDate &&
         selectedTime
       ) {
-        const key = getSlotKey(teacherId, selectedDate, selectedTime);
-        setUnavailableSlotKeys((current) => new Set(current).add(key));
-        setSelectedTime(null);
+        markUnavailableSlot(teacherId, selectedDate, selectedTime);
         setErrorTarget("period");
         focusConsultationError("period");
       }
@@ -349,6 +282,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     selectedTeacher,
     selectedDate,
     selectedTime,
+    availabilityStatus,
+    availabilityError,
+    retryAvailability,
     submitting,
     toast,
     errorTarget,

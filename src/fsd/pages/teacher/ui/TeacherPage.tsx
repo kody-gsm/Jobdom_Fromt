@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type { ConsultationKind, TeacherReservation } from "@fsd/entities/consultation";
 import type { UserRole } from "@fsd/entities/user";
-import { readHomeBanner, saveHomeBanner } from "@fsd/entities/banner";
-import { approveConsultation, forceCreateConsultation, getSession, getTeacherConsultations, getPendingTeacherConsultations, getTeacherSlotStatus, getTeacherStudents, lockConsultation, rejectConsultation, unlockConsultation } from "../api/teacher";
+import type { HomeBanner } from "@fsd/entities/banner";
+import { resolveBannerImageUrl } from "@fsd/entities/banner";
+import { approveConsultation, forceCreateConsultation, getSession, getTeacherBanner, getTeacherConsultations, getPendingTeacherConsultations, getTeacherSlotStatus, getTeacherStudents, lockConsultation, rejectConsultation, saveTeacherBanner, unlockConsultation } from "../api/teacher";
 import type { SimpleStudent } from "../api/teacher";
 import { dateKey, formatPeriod, getWeek, reservationSlot, WEEKLY_CLASS_SCHEDULE } from "../model/calendar";
 import {
@@ -48,10 +50,16 @@ export function TeacherPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [processingSlot, setProcessingSlot] = useState<string | null>(null);
     const [selection, setSelection] = useState<SelectedRequest | null>(null);
+    const [currentBanner, setCurrentBanner] = useState<HomeBanner | null>(null);
+    const [bannerTitle, setBannerTitle] = useState("");
     const [bannerMessage, setBannerMessage] = useState("");
+    const [bannerLink, setBannerLink] = useState("");
+    const [bannerImage, setBannerImage] = useState<File | null>(null);
     const [bannerStatus, setBannerStatus] = useState("");
+    const [isBannerSaving, setIsBannerSaving] = useState(false);
     const dialog = useRef<HTMLDialogElement>(null);
     const forceDialog = useRef<HTMLDialogElement>(null);
+    const bannerImageInput = useRef<HTMLInputElement>(null);
     const requestVersion = useRef(0);
     const slotRequestVersion = useRef(0);
 
@@ -84,6 +92,7 @@ export function TeacherPage() {
     }, [kind, teacherRole]);
 
     useEffect(() => {
+        let active = true;
         queueMicrotask(() => {
             const session = getSession();
             const name = session?.name || "선생님";
@@ -94,9 +103,20 @@ export function TeacherPage() {
             const [authorizedKind] = getTeacherConsultationKinds(role);
             if (authorizedKind) setKind(authorizedKind);
             if (canManageHomeBanner(name)) {
-                setBannerMessage(readHomeBanner()?.message ?? "");
+                void getTeacherBanner()
+                    .then((banner) => {
+                        if (!active || !banner) return;
+                        setCurrentBanner(banner);
+                        setBannerTitle(banner.title ?? "");
+                        setBannerMessage(banner.content ?? "");
+                        setBannerLink(banner.link ?? "");
+                    })
+                    .catch(() => {
+                        if (active) setBannerStatus("기존 배너를 불러오지 못했습니다.");
+                    });
             }
         });
+        return () => { active = false; };
     }, []);
 
     useEffect(() => {
@@ -250,15 +270,30 @@ export function TeacherPage() {
             setProcessingSlot(null);
         }
     };
-    const handleBannerSave = () => {
-        const message = bannerMessage.trim();
-        if (!canManageBanner || !message) {
-            setBannerStatus("배너 문구를 입력해 주세요.");
+    const handleBannerSave = async () => {
+        if (!canManageBanner || !bannerImage) {
+            setBannerStatus("배너 이미지를 선택해 주세요.");
             return;
         }
-        saveHomeBanner({ message, updatedBy: teacherName.replace(/ 선생님$/, "") });
-        setBannerMessage(message);
-        setBannerStatus("학생 홈 배너를 저장했습니다.");
+        try {
+            setIsBannerSaving(true);
+            const saved = await saveTeacherBanner(bannerImage, {
+                title: bannerTitle,
+                content: bannerMessage,
+                link: bannerLink,
+            });
+            setCurrentBanner(saved);
+            setBannerTitle(saved.title ?? "");
+            setBannerMessage(saved.content ?? "");
+            setBannerLink(saved.link ?? "");
+            setBannerImage(null);
+            if (bannerImageInput.current) bannerImageInput.current.value = "";
+            setBannerStatus("학생 홈 배너를 저장했습니다.");
+        } catch (error) {
+            setBannerStatus(error instanceof Error ? error.message : "학생 홈 배너를 저장하지 못했습니다.");
+        } finally {
+            setIsBannerSaving(false);
+        }
     };
 
     const loadStudents = useCallback(async () => {
@@ -376,19 +411,54 @@ export function TeacherPage() {
                 {canManageBanner ? (
                     <section aria-labelledby="banner-title" className="mt-6 border-t border-border pt-5">
                         <h2 id="banner-title" className="font-bold">학생 홈 배너</h2>
-                        <p className="mt-1 text-xs leading-5 text-secondary-text">일반 교사만 학생 대시보드의 안내 문구를 등록할 수 있습니다.</p>
+                        <p className="mt-1 text-xs leading-5 text-secondary-text">일반 교사만 학생 대시보드의 배너를 등록할 수 있습니다. 이미지는 필수입니다.</p>
+                        <input
+                            aria-label="배너 이미지"
+                            ref={bannerImageInput}
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/gif"
+                            onChange={(event) => {
+                                setBannerImage(event.target.files?.[0] ?? null);
+                                setBannerStatus("");
+                            }}
+                            className="mt-3 block w-full text-sm text-secondary-text file:mr-3 file:rounded-lg file:border-0 file:bg-brand-soft file:px-3 file:py-2 file:font-bold file:text-brand-accent"
+                        />
+                        {currentBanner ? <Image src={resolveBannerImageUrl(currentBanner.imageUrl)} alt="현재 학생 홈 배너" width={640} height={360} unoptimized className="mt-3 max-h-40 w-full rounded-xl object-cover" /> : null}
+                        <input
+                            aria-label="배너 제목"
+                            value={bannerTitle}
+                            maxLength={100}
+                            onChange={(event) => {
+                                setBannerTitle(event.target.value);
+                                setBannerStatus("");
+                            }}
+                            placeholder="배너 제목 (선택)"
+                            className="mt-3 h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-brand"
+                        />
                         <textarea
                             value={bannerMessage}
-                            maxLength={160}
+                            maxLength={500}
                             onChange={(event) => {
                                 setBannerMessage(event.target.value);
                                 setBannerStatus("");
                             }}
-                            placeholder="학생에게 안내할 내용을 입력하세요."
+                            placeholder="학생에게 안내할 내용을 입력하세요. (선택)"
                             className="mt-3 min-h-24 w-full resize-none rounded-xl border border-border p-3 text-sm outline-none focus:border-brand"
                         />
-                        <button type="button" onClick={handleBannerSave} className="mt-2 min-h-11 w-full rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-hover">
-                            배너 저장
+                        <input
+                            aria-label="배너 링크"
+                            type="url"
+                            value={bannerLink}
+                            maxLength={2048}
+                            onChange={(event) => {
+                                setBannerLink(event.target.value);
+                                setBannerStatus("");
+                            }}
+                            placeholder="배너 링크 (선택)"
+                            className="mt-3 h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-brand"
+                        />
+                        <button type="button" disabled={isBannerSaving} onClick={() => void handleBannerSave()} className="mt-2 min-h-11 w-full rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-hover disabled:opacity-50">
+                            {isBannerSaving ? "배너 저장 중…" : "배너 저장"}
                         </button>
                         {bannerStatus ? <p role="status" className="mt-2 text-xs font-semibold text-brand-accent">{bannerStatus}</p> : null}
                     </section>
