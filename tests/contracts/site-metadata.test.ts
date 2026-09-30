@@ -12,9 +12,9 @@ const home = read("app/page.tsx");
 const apply = read("app/recruit/[id]/apply/page.tsx");
 
 assert.match(layout, /template: "잡담 \| %s"/);
-assert.match(layout, /icon:\s*"\/JobdamFavicon\.svg"/);
-assert.match(layout, /shortcut:\s*"\/JobdamFavicon\.svg"/);
-assert.match(layout, /apple:\s*"\/JobdamFavicon\.svg"/);
+assert.match(layout, /icon:\s*"\/JobdamFavicon\.png"/);
+assert.match(layout, /shortcut:\s*"\/JobdamFavicon\.png"/);
+assert.match(layout, /apple:\s*"\/JobdamFavicon\.png"/);
 assert.match(recruitDetailHook, /document\.title = `잡담 \|/);
 assert.match(login, /title: "로그인"/);
 assert.match(signup, /title: "회원가입"/);
