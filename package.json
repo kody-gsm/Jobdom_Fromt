@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check:unit": "node --no-warnings --experimental-strip-types tests/unit/timetablePresentation.test.ts && node --no-warnings --experimental-strip-types tests/unit/studentDeadline.test.ts",
+    "check:unit": "node --no-warnings --experimental-strip-types tests/unit/timetablePresentation.test.ts && node --no-warnings --experimental-strip-types tests/unit/studentDeadline.test.ts && node --import ./scripts/harness/register-fsd-alias.mjs --no-warnings --experimental-strip-types tests/unit/recruitFilters.test.ts && node --import ./scripts/harness/register-fsd-alias.mjs --no-warnings --experimental-strip-types tests/unit/formFilters.test.ts && node --no-warnings --experimental-strip-types tests/unit/recruitSummary.test.ts && node --import ./scripts/harness/register-fsd-alias.mjs --no-warnings --experimental-strip-types tests/unit/authValidationPresentation.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "check:forms": "node --no-warnings --experimental-strip-types tests/contracts/form-answers.test.ts",
     "check:api": "node --import ./scripts/harness/register-fsd-alias.mjs --no-warnings --experimental-strip-types tests/contracts/api-contract.test.ts",

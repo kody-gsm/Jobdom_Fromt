@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Recruit } from "@fsd/entities/recruit";
-import { createStudentFormApi, type FormSummary } from "@fsd/entities/form";
+import { createStudentFormApi, getFormErrorMessage, type FormSummary } from "@fsd/entities/form";
+import { getRecruitErrorMessage } from "@fsd/entities/recruit";
 import { requestWithSession } from "@fsd/entities/user";
 import { getRecruit } from "../api/recruit.ts";
 import { findRecruitForm } from "./formMatching.ts";
@@ -35,7 +36,7 @@ export const useRecruitDetail = (recruitId: number) => {
       .catch((caught) => {
         if (formRequestVersion.current !== version) return;
         setForm(null);
-        setFormError(caught instanceof Error ? caught.message : "연결된 신청 폼을 확인할 수 없습니다.");
+        setFormError(getFormErrorMessage(caught, "연결된 신청 폼을 확인할 수 없습니다."));
       })
       .finally(() => {
         if (formRequestVersion.current === version) setFormLoading(false);
@@ -64,10 +65,10 @@ export const useRecruitDetail = (recruitId: number) => {
             setForm(findRecruitForm(data.formId ?? null, formsRef.current));
           }
           setItem(data);
-          document.title = `${data.companyName || "취업 공고"} | 잡담`;
+          document.title = `잡담 | ${data.companyName || "취업 공고"}`;
         })
         .catch((caught) => {
-          if (active) setError(caught instanceof Error ? caught.message : "공고를 불러오지 못했습니다.");
+          if (active) setError(getRecruitErrorMessage(caught, "공고를 불러오지 못했습니다."));
         });
 
       loadForms();

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { SummaryMarkdown } from "@fsd/shared/ui";
+import { indentSummaryList } from "@fsd/shared/lib";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { ApiError } from "@fsd/shared/api";
@@ -214,7 +216,7 @@ export function TeacherRecruitPage() {
                           className={`cursor-pointer border-b border-gray-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#02C551] ${active ? "bg-[#effbf3]" : "hover:bg-gray-50"}`}
                         >
                           <Td className="font-mono text-xs text-gray-400">{String(index + 1).padStart(2, "0")}</Td>
-                          <Td><strong className="block max-w-52 truncate text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><span className="mt-1 block max-w-52 truncate text-xs text-gray-400">{row.recruit.summary || "공고 요약 없음"}</span></Td>
+                          <Td><strong className="block max-w-52 truncate text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><SummaryMarkdown text={row.recruit.summary || "공고 요약 없음"} className="mt-1 max-w-52 line-clamp-1 text-xs text-gray-400" /></Td>
                           <Td><Status status={row.recruit.status} /></Td>
                           <Td>{row.recruit.deadline || "—"}</Td>
                           <Td>{row.recruit.interviewDate || "—"}</Td>
@@ -284,7 +286,7 @@ function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: R
   const update = (key: keyof RecruitUpdate, value: string) => setForm((current) => ({ ...current, [key]: value }));
   const isDraft = row === null || row.recruit.status === "DRAFT";
   const isClosed = row?.recruit.status === "CLOSED";
-  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "공고 수정" : "공고 작성"}</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><label className={`mt-5 block cursor-pointer rounded-xl border border-dashed border-[#02C551] bg-[#effbf3] p-4 ${working ? "pointer-events-none opacity-60" : ""}`}><span className="block text-sm font-bold text-[#02a946]">이미지로 AI 초안 채우기 <span className="font-normal text-gray-500">(선택)</span></span><span className="mt-1 block text-xs leading-5 text-gray-500">이미지 없이 직접 작성해도 됩니다. 이미지를 넣으면 AI가 공고 내용을 읽어 초안을 만듭니다.</span><span className="mt-3 inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-bold text-[#02a946]">공고 이미지 선택</span><input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" /></label><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><label className="block text-xs font-bold text-gray-500">공고 요약<textarea value={form.summary || ""} onChange={(event) => update("summary", event.target.value)} className="mt-2 min-h-36 w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#02C551]" /></label></div>{isDraft && row?.form && <Link href={`/teacher/forms?formId=${row.form.id}`} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
+  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "공고 수정" : "공고 작성"}</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><label className={`mt-5 block cursor-pointer rounded-xl border border-dashed border-[#02C551] bg-[#effbf3] p-4 ${working ? "pointer-events-none opacity-60" : ""}`}><span className="block text-sm font-bold text-[#02a946]">이미지로 AI 초안 채우기 <span className="font-normal text-gray-500">(선택)</span></span><span className="mt-1 block text-xs leading-5 text-gray-500">이미지 없이 직접 작성해도 됩니다. 이미지를 넣으면 AI가 공고 내용을 읽어 초안을 만듭니다.</span><span className="mt-3 inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-bold text-[#02a946]">공고 이미지 선택</span><input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" /></label><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><SummaryEditor value={form.summary || ""} onChange={(value) => update("summary", value)} /></div>{isDraft && row?.form && <Link href={`/teacher/forms?formId=${row.form.id}`} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
@@ -295,3 +297,26 @@ function Th({ children, className = "" }: { children: React.ReactNode; className
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <td className={`border-r border-gray-100 px-3 py-3 align-middle ${className}`}>{children}</td>; }
 function EmptyRow({ text }: { text: string }) { return <tr><td colSpan={8} className="px-6 py-28 text-center text-sm text-gray-400">{text}</td></tr>; }
 function formatDate(value: string, time = false) { return new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit", ...(time ? { hour: "2-digit", minute: "2-digit" } : {}) }).format(new Date(value)); }
+
+function SummaryEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return <div>
+    <label className="block text-xs font-bold text-gray-500">공고 요약
+      <textarea value={value} onChange={(event) => onChange(event.target.value)} aria-describedby="recruit-summary-help"
+        onKeyDown={(event) => {
+          if (event.key !== "Tab" || event.ctrlKey || event.altKey || event.metaKey) return;
+          const input = event.currentTarget;
+          const result = indentSummaryList(input.value, input.selectionStart, input.selectionEnd, event.shiftKey);
+          if (!result) return;
+          event.preventDefault();
+          onChange(result.text);
+          requestAnimationFrame(() => input.setSelectionRange(result.start, result.end));
+        }}
+        className="mt-2 min-h-36 w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#02C551]" />
+    </label>
+    <p id="recruit-summary-help" className="mt-2 text-xs leading-5 text-gray-500">**강조**, - 목록을 사용할 수 있습니다. 목록에서 Tab 또는 공백 두 칸으로 하위 목록을 만들고, Shift+Tab으로 들여쓰기를 줄입니다.</p>
+    {value && <div className="mt-3 rounded-xl bg-gray-50 p-3" aria-label="공고 요약 미리보기">
+      <p className="mb-2 text-xs font-bold text-gray-500">미리보기</p>
+      <SummaryMarkdown text={value} className="text-sm leading-6 text-gray-700" />
+    </div>}
+  </div>;
+}

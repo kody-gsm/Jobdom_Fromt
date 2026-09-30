@@ -14,7 +14,12 @@
 /coverage
 /playwright-report/
 /test-results/
-/tests/
+/tests/*
+!/tests/unit/
+/tests/unit/*
+!/tests/unit/recruitSummary.test.ts
+!/tests/unit/recruitFilters.test.ts
+!/tests/unit/formFilters.test.ts
 
 # next.js
 /.next/

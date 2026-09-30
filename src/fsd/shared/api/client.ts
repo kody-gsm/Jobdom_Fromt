@@ -3,22 +3,28 @@ import { ApiError } from "./ApiError.ts";
 const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
 
-const parseErrorMessage = async (response: Response) => {
+type ParsedApiError = { message: string; code?: string };
+
+const parseError = async (response: Response): Promise<ParsedApiError> => {
   if ([502, 503, 504].includes(response.status)) {
-    return "백엔드 서버에 연결할 수 없습니다.";
+    return { message: "백엔드 서버에 연결할 수 없습니다." };
   }
 
   const text = await response.text();
   if (response.status === 500 && text.trim() === "Internal Server Error") {
-    return "백엔드 서버에 연결할 수 없습니다.";
+    return { message: "백엔드 서버에 연결할 수 없습니다." };
   }
-  if (!text) return `요청에 실패했습니다. (${response.status})`;
+  if (!text) return { message: `요청에 실패했습니다. (${response.status})` };
 
   try {
-    const data = JSON.parse(text) as { message?: string; error?: string };
-    return data.message || data.error || text;
+    const data = JSON.parse(text) as { code?: unknown; message?: unknown; error?: unknown };
+    const message = [data.message, data.error].find(
+      (value): value is string => typeof value === "string" && value.length > 0,
+    ) ?? text;
+    const code = typeof data.code === "string" && data.code.length > 0 ? data.code : undefined;
+    return { message, code };
   } catch {
-    return text;
+    return { message: text };
   }
 };
 
@@ -48,7 +54,8 @@ export const request = async <T>(
   }
 
   if (!response.ok) {
-    throw new ApiError(await parseErrorMessage(response), response.status);
+    const error = await parseError(response);
+    throw new ApiError(error.message, response.status, error.code);
   }
   if (response.status === 204) return undefined as T;
 

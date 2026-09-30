@@ -10,7 +10,7 @@ import {
 } from "@fsd/entities/user";
 import { useCountdown } from "@fsd/shared/lib";
 import { sendSignupVerificationCode, signup } from "../api/signup.ts";
-import { validateSignupForm } from "./validation.ts";
+import { getFirstSignupErrorField, validateSignupForm } from "./validation.ts";
 import type { SignupFormErrors, SignupFormValues } from "./validation.ts";
 
 const INITIAL_VALUES: SignupFormValues = {
@@ -24,6 +24,7 @@ export const useSignupForm = () => {
   const router = useRouter();
   const [form, setForm] = useState<SignupFormValues>(INITIAL_VALUES);
   const [errors, setErrors] = useState<SignupFormErrors>({});
+  const [errorField, setErrorField] = useState<keyof SignupFormValues | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +46,7 @@ export const useSignupForm = () => {
     }
     setForm((current) => ({ ...current, [field]: normalized }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+    setErrorField(null);
     setSubmitError("");
   };
 
@@ -52,6 +54,7 @@ export const useSignupForm = () => {
     const emailError = getGsmEmailErrorMessage(form.email);
     if (emailError) {
       setErrors((current) => ({ ...current, email: emailError }));
+      setErrorField("email");
       return;
     }
 
@@ -66,6 +69,7 @@ export const useSignupForm = () => {
       verificationCountdown.start(180);
       resendCountdown.start(2);
       setErrors((current) => ({ ...current, email: undefined, verificationCode: undefined }));
+      setErrorField(null);
     } catch (caught) {
       if (requestVersion !== verificationRequestVersion.current) return;
       setIsCodeSent(false);
@@ -78,6 +82,7 @@ export const useSignupForm = () => {
           "인증코드를 발송하지 못했습니다. 잠시 후 다시 시도해주세요.",
         ),
       }));
+      setErrorField("email");
     } finally {
       if (requestVersion === verificationRequestVersion.current) setIsSendingCode(false);
     }
@@ -89,6 +94,7 @@ export const useSignupForm = () => {
       nextErrors.verificationCode = "인증코드가 만료되었습니다. 재발송해주세요.";
     }
     setErrors(nextErrors);
+    setErrorField(getFirstSignupErrorField(nextErrors));
     setSubmitError("");
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -101,22 +107,24 @@ export const useSignupForm = () => {
       });
       router.push("/login");
     } catch (caught) {
-      const result = getSignupError(caught);      if (result.field === "form") setSubmitError(result.message);
-      else setErrors((current) => ({ ...current, [result.field]: result.message }));
+      const result = getSignupError(caught);
+      if (result.field === "form") setSubmitError(result.message);
+      else {
+        setErrors((current) => ({ ...current, [result.field]: result.message }));
+        setErrorField(result.field);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const codeExpired = isCodeSent && verificationCountdown.isExpired;
-  const canSubmit =
-    Object.values(form).every((value) => value.trim() !== "") &&
-    !isSubmitting &&
-    !codeExpired;
+  const canSubmit = !isSubmitting;
 
   return {
     form,
     errors,
+    errorField,
     submitError,
     isSendingCode,
     isSubmitting,

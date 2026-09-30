@@ -14,6 +14,8 @@ export type {
   QuestionType,
 } from "./model/types.ts";
 export { FORM_TEXT_LIMITS } from "./model/types.ts";
+export { getFormErrorMessage } from "./model/errors.ts";
+export { isFormClosed } from "./model/status.ts";
 export type { FormFileValue, FormValue } from "./model/answers.ts";
 export {
   buildFormAnswers,

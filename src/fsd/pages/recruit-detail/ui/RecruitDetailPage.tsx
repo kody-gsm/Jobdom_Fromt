@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { isRecruitClosed } from "@fsd/entities/recruit";
 import { CopyRecruitLinkButton } from "@fsd/features/copy-recruit-link";
-import { formatDeadlineDate, isDeadlinePassed } from "@fsd/shared/lib";
-import { ContentCard } from "@fsd/shared/ui";
+import { formatDeadlineDate } from "@fsd/shared/lib";
+import { ContentCard, SummaryMarkdown } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitDetail } from "../model/useRecruitDetail.ts";
 
@@ -18,7 +19,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
     retryForm,
     showMissingForm,
   } = useRecruitDetail(recruitId);
-  const isExpired = item ? isDeadlinePassed(item.deadline) : false;
+  const isExpired = item ? isRecruitClosed(item) : false;
   const deadlineLabel = item?.deadline ? formatDeadlineDate(item.deadline) : "마감 별도 확인";
 
   return (
@@ -61,7 +62,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
 
             <section className="mt-8">
               <h2 className="text-lg font-bold text-ink">공고 내용</h2>
-              <p className="mt-3 wrap-anywhere whitespace-pre-line break-keep leading-8 text-[#667281]">{item.summary || "공고 요약이 없습니다."}</p>
+              <SummaryMarkdown text={item.summary || "공고 요약이 없습니다."} className="mt-3 leading-8 text-[#667281]" />
             </section>
 
             {formError ? (

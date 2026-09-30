@@ -8,15 +8,6 @@ import { useResetPasswordForm } from "../model/useResetPasswordForm.ts";
 
 export const ResetPasswordForm = () => {
   const resetForm = useResetPasswordForm();
-  const firstErrorField = resetForm.errors.email
-    ? "email"
-    : resetForm.codeExpired || resetForm.errors.verificationCode
-      ? "verificationCode"
-      : resetForm.errors.password
-        ? "password"
-        : resetForm.errors.confirmPassword
-          ? "confirmPassword"
-          : null;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,7 +21,7 @@ export const ResetPasswordForm = () => {
         type="email"
         autoComplete="email"
         value={resetForm.form.email}
-        error={firstErrorField === "email" ? resetForm.errors.email : undefined}
+        error={resetForm.errorField === "email" ? resetForm.errors.email : undefined}
         onChange={(event) => resetForm.updateField("email", event.target.value)}
         placeholder="s123@gsm.hs.kr"
       />
@@ -56,9 +47,9 @@ export const ResetPasswordForm = () => {
         maxLength={6}
         value={resetForm.form.verificationCode}
         error={
-          firstErrorField === "verificationCode" && resetForm.codeExpired
+          resetForm.errorField === "verificationCode" && resetForm.codeExpired
             ? "인증코드가 만료되었습니다. 재발송해주세요."
-            : firstErrorField === "verificationCode"
+            : resetForm.errorField === "verificationCode"
               ? resetForm.errors.verificationCode
               : undefined
         }
@@ -78,7 +69,7 @@ export const ResetPasswordForm = () => {
         label="새 비밀번호"
         autoComplete="new-password"
         value={resetForm.form.password}
-        error={firstErrorField === "password" ? resetForm.errors.password : undefined}
+        error={resetForm.errorField === "password" ? resetForm.errors.password : undefined}
         onChange={(event) => resetForm.updateField("password", event.target.value)}
         placeholder="영문, 숫자, 특수문자 포함 10자 이상"
       />
@@ -87,7 +78,7 @@ export const ResetPasswordForm = () => {
         label="비밀번호 확인"
         autoComplete="new-password"
         value={resetForm.form.confirmPassword}
-        error={firstErrorField === "confirmPassword" ? resetForm.errors.confirmPassword : undefined}
+        error={resetForm.errorField === "confirmPassword" ? resetForm.errors.confirmPassword : undefined}
         onChange={(event) => resetForm.updateField("confirmPassword", event.target.value)}
         placeholder="비밀번호 재입력"
       />
