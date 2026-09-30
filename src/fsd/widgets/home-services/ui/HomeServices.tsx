@@ -38,6 +38,7 @@ export const HomeServices = () => {
   const [cancelTarget, setCancelTarget] = useState<HomeConsultationItem | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [homeBanner, setHomeBanner] = useState<HomeBanner | null>(null);
+  const [bannerImageError, setBannerImageError] = useState(false);
   const safeBannerLink = getSafeLinkUrl(homeBanner?.link);
   const hasConsultationData = overview.upcomingConsultations.length > 0;
   const upcomingConsultations = overview.upcomingConsultations.filter((item) =>
@@ -76,7 +77,10 @@ export const HomeServices = () => {
     let active = true;
     void getStudentBanner()
       .then((banner) => {
-        if (active) setHomeBanner(banner);
+        if (active) {
+          setHomeBanner(banner);
+          setBannerImageError(false);
+        }
       })
       .catch(() => {
         if (active) setHomeBanner(null);
@@ -226,7 +230,25 @@ export const HomeServices = () => {
       <ContentCard className="flex min-h-32 items-center justify-center border-dashed bg-[#F7F8FA] p-7 text-center" aria-label="배너">
         {homeBanner ? (
           <div className="w-full">
-            <Image src={resolveBannerImageUrl(homeBanner.imageUrl)} alt={homeBanner.title || "학생 홈 배너"} width={1280} height={360} unoptimized className="max-h-64 w-full rounded-2xl object-cover" />
+            {bannerImageError ? (
+              <div
+                role="img"
+                aria-label="배너 이미지를 불러오지 못했습니다."
+                className="flex min-h-48 items-center justify-center rounded-2xl bg-[#F1F3F5] px-5 text-sm font-semibold text-[#667281]"
+              >
+                배너 이미지를 불러오지 못했습니다.
+              </div>
+            ) : (
+              <Image
+                src={resolveBannerImageUrl(homeBanner.imageUrl)}
+                alt={homeBanner.title || "학생 홈 배너"}
+                width={1280}
+                height={360}
+                unoptimized
+                onError={() => setBannerImageError(true)}
+                className="max-h-64 w-full rounded-2xl object-cover"
+              />
+            )}
             {homeBanner.title ? <p className="mt-4 text-lg font-bold text-ink">{homeBanner.title}</p> : null}
             {homeBanner.content ? <p className="mt-2 whitespace-pre-wrap text-sm font-semibold text-[#667281]">{homeBanner.content}</p> : null}
             {safeBannerLink ? <a href={safeBannerLink} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-brand px-4 text-sm font-bold text-white hover:bg-brand-hover">자세히 보기</a> : null}
