@@ -1,4 +1,5 @@
 import { requestWithSession as request } from "@fsd/entities/user";
+import { getSafeInternalPath } from "@fsd/shared/lib";
 
 export type NotificationType =
   | "RECRUIT_PUBLISHED"
@@ -43,10 +44,11 @@ export interface SseTicketResponse {
 }
 
 export const getNotificationTargetUrl = (url: string | null) => {
-  if (!url) return null;
-  if (/^\/teacher\/(course|common)\/\d+$/.test(url)) return "/teacher";
-  if (/^\/student\/(course|common)\/\d+$/.test(url)) return "/";
-  return url.replace(/^\/form\/(\d+)$/, "/forms/$1");
+  const safePath = getSafeInternalPath(url);
+  if (!safePath) return null;
+  if (/^\/teacher\/(course|common)\/\d+$/.test(safePath)) return "/teacher";
+  if (/^\/student\/(course|common)\/\d+$/.test(safePath)) return "/";
+  return safePath.replace(/^\/form\/(\d+)$/, "/forms/$1");
 };
 
 export const getNotifications = (page = 0, size = 20) =>
