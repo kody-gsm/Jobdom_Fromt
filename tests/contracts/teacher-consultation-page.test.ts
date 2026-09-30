@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { getTeacherConsultationKinds } from "../../src/fsd/pages/teacher/model/workspace.ts";
+import { getTeacherAvailablePeriods, getTeacherConsultationKinds } from "../../src/fsd/pages/teacher/model/workspace.ts";
 
 assert.deepEqual(getTeacherConsultationKinds("TEACHER"), ["course"]);
 assert.deepEqual(getTeacherConsultationKinds("WEE_TEACHER"), ["common"]);
 assert.deepEqual(getTeacherConsultationKinds("STUDENT"), []);
 assert.deepEqual(getTeacherConsultationKinds("ADMIN"), []);
+
+const generalTeacherPeriods = ["1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시"];
+assert.deepEqual(getTeacherAvailablePeriods("common", "일반 교사"), generalTeacherPeriods);
+assert.deepEqual(getTeacherAvailablePeriods("common", "임경원"), generalTeacherPeriods);
+assert.deepEqual(getTeacherAvailablePeriods("course", "일반 교사"), generalTeacherPeriods);
+assert.deepEqual(getTeacherAvailablePeriods("course", "임경원"), [...generalTeacherPeriods, "8교시", "9교시", "저녁시간"]);
 
 const read = (path: string) => readFileSync(path, "utf8");
 const route = read("app/teacher/page.tsx");
