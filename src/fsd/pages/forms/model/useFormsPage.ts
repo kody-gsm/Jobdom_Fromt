@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormSummary } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
 import { createRequestVersionGuard } from "@fsd/shared/lib";
 import { formsApi } from "../api/forms.ts";
+import { filterForms, type FormListFilter } from "./formFilters.ts";
 
 export const useFormsPage = () => {
   const [forms, setForms] = useState<FormSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState<FormListFilter>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const requests = useRef(createRequestVersionGuard());
   const mounted = useRef(true);
 
@@ -50,5 +53,20 @@ export const useFormsPage = () => {
     };
   }, [loadForms]);
 
-  return { forms, loading, error, retry: () => loadForms() };
+  const visibleForms = useMemo(
+    () => filterForms(forms, filter, searchQuery),
+    [filter, forms, searchQuery],
+  );
+
+  return {
+    forms,
+    loading,
+    error,
+    retry: () => loadForms(),
+    filter,
+    setFilter,
+    searchQuery,
+    setSearchQuery,
+    visibleForms,
+  };
 };

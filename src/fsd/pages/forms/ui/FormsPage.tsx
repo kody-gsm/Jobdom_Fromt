@@ -1,23 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { formatDeadlineDate, isDeadlinePassed } from "@fsd/shared/lib";
-import { ContentCard } from "@fsd/shared/ui";
+import { formatDeadlineDate } from "@fsd/shared/lib";
+import { ContentCard, ListFilterMenu } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
+import { isFormClosed } from "../model/formFilters.ts";
 import { useFormsPage } from "../model/useFormsPage.ts";
 
+const FORM_FILTER_OPTIONS = [
+  { value: "ALL", label: "모든 폼" },
+  { value: "OPEN", label: "모집중인 폼" },
+  { value: "CLOSED", label: "마감된 폼" },
+] as const;
+
 export const FormsPage = () => {
-  const { forms, loading, error, retry } = useFormsPage();
+  const {
+    forms,
+    loading,
+    error,
+    retry,
+    filter,
+    setFilter,
+    searchQuery,
+    setSearchQuery,
+    visibleForms,
+  } = useFormsPage();
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
       <StudentHeader />
       <main className="mx-auto w-full max-w-[1180px] px-6 py-10 lg:px-10 lg:py-12">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">신청 폼</h1>
-          <Link href="/recruit" className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft">
-            취업 공고 보기
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="relative min-w-0 sm:w-64">
+              <span className="sr-only">신청 폼 검색</span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="제목·내용 검색"
+                className="h-11 w-full rounded-xl border border-[#E1E6EB] bg-white px-4 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-brand"
+              />
+            </label>
+            <ListFilterMenu
+              value={filter}
+              options={FORM_FILTER_OPTIONS}
+              onChange={setFilter}
+              ariaLabel="신청 폼 필터 열기"
+            />
+            <Link href="/recruit" className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft">
+              취업 공고 보기
+            </Link>
+          </div>
         </div>
 
         <section className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
@@ -25,11 +60,11 @@ export const FormsPage = () => {
             <Empty text="불러오는 중…" />
           ) : error ? (
             <LoadError message={error} onRetry={() => void retry()} />
-          ) : forms.length === 0 ? (
-            <Empty text="공개된 폼이 없습니다." />
+          ) : visibleForms.length === 0 ? (
+            <Empty text={forms.length === 0 ? "공개된 폼이 없습니다." : "조건에 맞는 폼이 없습니다."} />
           ) : (
-            forms.map((form) => {
-              const isExpired = isDeadlinePassed(form.deadline);
+            visibleForms.map((form) => {
+              const isExpired = isFormClosed(form);
 
               return (
                 <ContentCard key={form.id} className="flex min-h-[330px] min-w-0 flex-col p-7">
