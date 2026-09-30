@@ -15,6 +15,7 @@ export const useRecruitDetail = (recruitId: number) => {
   const [formError, setFormError] = useState("");
   const [formMessage, setFormMessage] = useState("");
   const recruitRef = useRef<Recruit | null>(null);
+  const formsRef = useRef<FormSummary[] | null>(null);
   const formRequestVersion = useRef(0);
 
   const loadForms = useCallback(() => {
@@ -27,8 +28,9 @@ export const useRecruitDetail = (recruitId: number) => {
     void studentFormApi.getAll()
       .then((forms) => {
         if (formRequestVersion.current !== version) return;
+        formsRef.current = forms;
         const data = recruitRef.current;
-        setForm(data ? findRecruitForm(data.formId ?? null, forms) : null);
+        if (data) setForm(findRecruitForm(data.formId ?? null, forms));
       })
       .catch((caught) => {
         if (formRequestVersion.current !== version) return;
@@ -46,6 +48,7 @@ export const useRecruitDetail = (recruitId: number) => {
       if (!active) return;
       formRequestVersion.current += 1;
       recruitRef.current = null;
+      formsRef.current = null;
       setItem(null);
       setError("");
       setForm(null);
@@ -57,6 +60,9 @@ export const useRecruitDetail = (recruitId: number) => {
         .then((data) => {
           if (!active) return;
           recruitRef.current = data;
+          if (formsRef.current) {
+            setForm(findRecruitForm(data.formId ?? null, formsRef.current));
+          }
           setItem(data);
           document.title = `${data.companyName || "취업 공고"} | 잡담`;
         })
