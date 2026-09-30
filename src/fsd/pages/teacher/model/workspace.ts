@@ -38,7 +38,7 @@ export const getTeacherAvailablePeriods = (
   name: string,
 ) => {
   if (kind === "common" || canManageHomeBanner(name)) {
-    const periods = getAvailablePeriods("general", null);
+    const periods = getAvailablePeriods("general", `${normalizeTeacherName(name)} 선생님`);
     if (periods.includes("4교시")) return periods;
 
     const lunchIndex = periods.indexOf("점심시간");
