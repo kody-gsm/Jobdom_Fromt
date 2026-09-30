@@ -15,6 +15,7 @@ import type {
   FormValue,
 } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
+import { formatDeadlineDate, isDeadlinePassed } from "@fsd/shared/lib";
 import { ActionButton, ContentCard } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
@@ -136,6 +137,10 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form) return;
+    if (isDeadlinePassed(form.deadline)) {
+      setMessage({ text: "제출 기한이 지나 이 신청서는 더 이상 제출할 수 없습니다.", error: true });
+      return;
+    }
     const requestVersion = formRequestVersion.current;
     const targetFormId = form.id;
     const isCurrentOperation = () => isCurrent(requestVersion, targetFormId);
@@ -214,6 +219,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   if (formLoading || !form) {
     return <p className="py-20 text-center text-gray-400">불러오는 중…</p>;
   }
+  const isExpired = isDeadlinePassed(form.deadline);
 
   return (
     <form onSubmit={submitForm}>
@@ -228,7 +234,8 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
         <div className="mt-5 flex flex-wrap items-center gap-2 text-sm font-semibold text-white/90">
           <span>제한 기한</span>
           <span aria-hidden="true">·</span>
-          <time>{formatFormDeadline(form.deadline)}</time>
+          <time>{formatDeadlineDate(form.deadline)}</time>
+          {isExpired ? <span className="rounded-full bg-white/15 px-2 py-1 text-xs text-white">마감됨</span> : null}
         </div>
       </header>
       <div className="min-w-0 space-y-5 p-6 sm:p-9">
@@ -258,6 +265,11 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
             </button>
           </div>
         ) : null}
+        {isExpired ? (
+          <p role="status" className="rounded-xl bg-[#FFF0EC] px-4 py-3 text-sm font-semibold text-[#9A4F45]">
+            제출 기한이 지나 이 신청서는 더 이상 제출할 수 없습니다.
+          </p>
+        ) : null}
         {message ? (
           <p
             role="status"
@@ -276,17 +288,18 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
               setMessage(null);
               setEditing(true);
             }}
+            disabled={isExpired}
             className="w-full bg-brand hover:bg-brand-hover"
           >
-            응답 재응답
+            {isExpired ? "제출 마감" : "응답 재응답"}
           </ActionButton>
         ) : (
           <ActionButton
             type="submit"
-            disabled={submitting || submissionLoading || Boolean(submissionError)}
+            disabled={isExpired || submitting || submissionLoading || Boolean(submissionError)}
             className="w-full bg-brand hover:bg-brand-hover"
           >
-            {submitting ? "제출 중…" : "제출"}
+            {isExpired ? "제출 마감" : submitting ? "제출 중…" : "제출"}
           </ActionButton>
         )}
       </div>
@@ -427,19 +440,6 @@ const QuestionField = ({ question, index, value, onChange }: QuestionFieldProps)
       </div>
     </fieldset>
   );
-};
-
-const formatFormDeadline = (deadline: string | null) => {
-  if (!deadline) return "제한 없음";
-  const date = new Date(deadline);
-  if (Number.isNaN(date.getTime())) return deadline;
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
 };
 
 const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (

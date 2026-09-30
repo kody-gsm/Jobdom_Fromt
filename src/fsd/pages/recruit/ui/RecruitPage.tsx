@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { Recruit } from "@fsd/entities/recruit";
+import { formatDeadlineDate, isDeadlinePassed } from "@fsd/shared/lib";
 import { ContentCard } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitList } from "../model/useRecruitList.ts";
@@ -46,13 +47,17 @@ export const RecruitPage = () => {
   );
 };
 
-const RecruitCard = ({ item }: { item: Recruit }) => (
-  <ContentCard className="flex min-h-[320px] min-w-0 flex-col p-7 sm:p-8">
+const RecruitCard = ({ item }: { item: Recruit }) => {
+  const isExpired = isDeadlinePassed(item.deadline);
+  const deadlineLabel = item.deadline ? formatDeadlineDate(item.deadline) : "별도 확인";
+
+  return (
+    <ContentCard className="flex min-h-[320px] min-w-0 flex-col p-7 sm:p-8">
       <div className="flex items-center gap-4">
-        <span className="text-xs font-bold text-brand-accent">채용 공고</span>
-        <span className="hidden text-xs font-semibold text-muted">
-          마감 {item.deadline || "별도 확인"}
+        <span className={`text-xs font-bold ${isExpired ? "text-[#9A4F45]" : "text-brand-accent"}`}>
+          {isExpired ? "마감된 공고" : "채용 공고"}
         </span>
+        <span className="hidden text-xs font-semibold text-muted">마감 {deadlineLabel}</span>
       </div>
       <h2 className="mt-5 wrap-anywhere break-keep text-2xl font-bold tracking-[-0.02em] text-ink">
         {item.companyName || "회사명 확인 중"}
@@ -61,14 +66,15 @@ const RecruitCard = ({ item }: { item: Recruit }) => (
         {item.summary || "공고 요약이 없습니다."}
       </p>
       <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-[#E8EBEF] pt-5 text-sm">
-        <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">지원 마감</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.deadline || "별도 확인"}</dd></div>
+        <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">지원 마감</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{deadlineLabel}</dd></div>
         <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">면접 일정</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{item.interviewDate || "별도 확인"}</dd></div>
       </dl>
       <Link href={`/recruit/${item.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover">
         공고 상세 보기
       </Link>
     </ContentCard>
-);
+  );
+};
 
 const EmptyState = ({ text }: { text: string }) => (
   <ContentCard className="col-span-full px-6 py-20 text-center text-muted">{text}</ContentCard>
