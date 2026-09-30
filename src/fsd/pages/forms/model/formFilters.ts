@@ -1,12 +1,9 @@
 import type { FormSummary } from "@fsd/entities/form";
-import { isDeadlinePassed } from "@fsd/shared/lib";
+import { isFormClosed } from "@fsd/entities/form";
 
 export type FormListFilter = "ALL" | "OPEN" | "CLOSED";
 
-export const isFormClosed = (
-  form: Pick<FormSummary, "deadline" | "status">,
-  now = new Date(),
-) => form.status === "CLOSED" || isDeadlinePassed(form.deadline, now);
+export { isFormClosed } from "@fsd/entities/form";
 
 export const filterForms = (
   forms: FormSummary[],

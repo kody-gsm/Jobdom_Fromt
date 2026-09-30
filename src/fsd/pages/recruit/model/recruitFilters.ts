@@ -1,12 +1,9 @@
 import type { Recruit } from "@fsd/entities/recruit";
-import { isDeadlinePassed } from "@fsd/shared/lib";
+import { isRecruitClosed } from "@fsd/entities/recruit";
 
 export type RecruitListFilter = "ALL" | "OPEN" | "CLOSED";
 
-export const isRecruitClosed = (
-  recruit: Pick<Recruit, "deadline" | "status">,
-  now = new Date(),
-) => recruit.status === "CLOSED" || isDeadlinePassed(recruit.deadline, now);
+export { isRecruitClosed } from "@fsd/entities/recruit";
 
 export const filterRecruits = (
   recruits: Recruit[],
