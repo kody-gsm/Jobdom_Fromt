@@ -9,7 +9,7 @@ export const useRecruitList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<RecruitListFilter>("ALL");
-  const [fieldFilter, setFieldFilter] = useState<RecruitField | "ALL">("ALL");
+  const [fieldFilters, setFieldFilters] = useState<RecruitField[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const requestVersion = useRef(0);
 
@@ -49,8 +49,8 @@ export const useRecruitList = () => {
   }, [load]);
 
   const visibleItems = useMemo(
-    () => filterRecruits(items, filter, searchQuery, new Date(), fieldFilter),
-    [filter, fieldFilter, items, searchQuery],
+    () => filterRecruits(items, filter, searchQuery, new Date(), fieldFilters),
+    [filter, fieldFilters, items, searchQuery],
   );
 
   return {
@@ -60,8 +60,8 @@ export const useRecruitList = () => {
     retry: load,
     filter,
     setFilter,
-    fieldFilter,
-    setFieldFilter,
+    fieldFilters,
+    setFieldFilters,
     searchQuery,
     setSearchQuery,
     visibleItems,

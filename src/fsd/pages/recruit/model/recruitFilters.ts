@@ -10,14 +10,15 @@ export const filterRecruits = (
   filter: RecruitListFilter,
   query: string,
   now = new Date(),
-  field: RecruitField | "ALL" = "ALL",
+  fields: readonly RecruitField[] = [],
 ) => {
   const normalizedQuery = query.trim().toLowerCase();
+  const selectedFields = new Set(fields);
 
   return recruits.filter((recruit) => {
     const isClosed = isRecruitClosed(recruit, now);
     const matchesFilter = filter === "ALL" || (filter === "CLOSED" ? isClosed : !isClosed);
-    const matchesField = field === "ALL" || recruit.fields?.includes(field);
+    const matchesField = selectedFields.size === 0 || (recruit.fields ?? []).some((field) => selectedFields.has(field));
     const searchableText = [recruit.companyName, recruit.summary, formatRecruitFields(recruit.fields)]
       .filter((value): value is string => Boolean(value))
       .join(" ")

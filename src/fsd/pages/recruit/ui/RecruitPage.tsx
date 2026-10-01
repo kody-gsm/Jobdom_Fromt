@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Recruit } from "@fsd/entities/recruit";
 import { formatRecruitFields, RECRUIT_FIELD_OPTIONS } from "@fsd/entities/recruit";
 import { formatDeadlineDate } from "@fsd/shared/lib";
-import { ContentCard, ListFilterMenu, SummaryMarkdown } from "@fsd/shared/ui";
+import { ContentCard, ListFilterMenu, ListMultiFilterMenu, SummaryMarkdown } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { isRecruitClosed } from "../model/recruitFilters.ts";
 import { useRecruitList } from "../model/useRecruitList.ts";
@@ -14,7 +14,7 @@ const RECRUIT_FILTER_OPTIONS = [
   { value: "OPEN", label: "모집중인 공고" },
   { value: "CLOSED", label: "마감된 공고" },
 ] as const;
-const FIELD_FILTER_OPTIONS = [{ value: "ALL", label: "모든 분야" }, ...RECRUIT_FIELD_OPTIONS] as const;
+const FIELD_FILTER_OPTIONS = RECRUIT_FIELD_OPTIONS;
 
 export const RecruitPage = () => {
   const {
@@ -24,8 +24,8 @@ export const RecruitPage = () => {
     retry,
     filter,
     setFilter,
-    fieldFilter,
-    setFieldFilter,
+    fieldFilters,
+    setFieldFilters,
     searchQuery,
     setSearchQuery,
     visibleItems,
@@ -44,7 +44,7 @@ export const RecruitPage = () => {
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="회사명·분야·내용 검색"
+                placeholder="회사명·직무·내용 검색"
                 className="h-11 w-full rounded-xl border border-[#E1E6EB] bg-white px-4 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-brand"
               />
             </label>
@@ -54,7 +54,7 @@ export const RecruitPage = () => {
               onChange={setFilter}
               ariaLabel="공고 필터 열기"
             />
-            <ListFilterMenu value={fieldFilter} options={FIELD_FILTER_OPTIONS} onChange={setFieldFilter} ariaLabel="공고 분야 필터 열기" />
+            <ListMultiFilterMenu value={fieldFilters} options={FIELD_FILTER_OPTIONS} onChange={setFieldFilters} ariaLabel="공고 직무 필터 열기" allLabel="모든 직무" />
             <Link href="/forms" className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-bold text-brand-accent transition-colors hover:bg-brand-soft">
               신청 폼 보기
             </Link>
@@ -102,7 +102,7 @@ const RecruitCard = ({ item }: { item: Recruit }) => {
       <h2 className="mt-5 wrap-anywhere break-keep text-2xl font-bold tracking-[-0.02em] text-ink">
         {item.companyName || "회사명 확인 중"}
       </h2>
-      <p className="mt-2 text-xs font-semibold text-brand-accent">분야 · {formatRecruitFields(item.fields)}</p>
+      <p className="mt-2 text-xs font-semibold text-brand-accent">직무 · {formatRecruitFields(item.fields)}</p>
       <SummaryMarkdown text={item.summary || "공고 요약이 없습니다."} className="mt-3 line-clamp-3 flex-1 text-sm leading-7 text-[#667281]" />
       <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-[#E8EBEF] pt-5 text-sm">
         <div className="min-w-0 wrap-anywhere"><dt className="text-xs text-muted">지원 마감</dt><dd className="mt-1 font-semibold text-[#4E5B6B]">{deadlineLabel}</dd></div>
