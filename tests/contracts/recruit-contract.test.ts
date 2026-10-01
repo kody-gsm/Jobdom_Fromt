@@ -37,6 +37,7 @@ const applyRoute = read("app/recruit/[id]/apply/page.tsx");
 const listPage = read("src/fsd/pages/recruit/ui/RecruitPage.tsx");
 const detailPage = read("src/fsd/pages/recruit-detail/ui/RecruitDetailPage.tsx");
 const listHook = read("src/fsd/pages/recruit/model/useRecruitList.ts");
+const multiFilter = read("src/fsd/shared/ui/ListMultiFilterMenu.tsx");
 
 assert.match(listRoute, /@fsd\/pages\/recruit/);
 assert.match(listRoute, /title: "취업 공고"/);
@@ -47,6 +48,10 @@ assert.match(applyRoute, /params: Promise<\{ id: string \}>/);
 assert.match(applyRoute, /redirect\(`\/recruit\/\$\{id\}`\)/);
 assert.match(listHook, /로그인 후 취업 공고를 확인할 수 있습니다\./);
 assert.match(listPage, /href="\/forms"/);
+assert.match(listPage, /직무 ·/);
+assert.match(listPage, /ListMultiFilterMenu/);
+assert.match(multiFilter, /role="menuitemcheckbox"/);
+assert.match(multiFilter, /적용/);
 assert.match(detailPage, /@fsd\/features\/copy-recruit-link/);
 assert.match(detailPage, /href=\{`\/forms\/\$\{form\.id\}`\}/);
 assert.match(detailPage, /formMessage[\s\S]*text-\[#D93025\]/);

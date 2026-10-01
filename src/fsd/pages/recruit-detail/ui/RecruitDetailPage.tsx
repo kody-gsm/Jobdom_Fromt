@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { isRecruitClosed } from "@fsd/entities/recruit";
+import { formatRecruitFields, isRecruitClosed } from "@fsd/entities/recruit";
 import { CopyRecruitLinkButton } from "@fsd/features/copy-recruit-link";
 import { formatDeadlineDate } from "@fsd/shared/lib";
 import { ContentCard, SummaryMarkdown } from "@fsd/shared/ui";
@@ -50,6 +50,10 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
             </div>
 
             <dl className="mt-7 grid gap-4 rounded-2xl bg-[#F7F8FA] p-5 sm:grid-cols-2">
+              <div className="min-w-0 wrap-anywhere sm:col-span-2">
+                <dt className="text-xs font-semibold text-muted">분야</dt>
+                <dd className="mt-2 font-bold text-ink">{formatRecruitFields(item.fields)}</dd>
+              </div>
               <div className="min-w-0 wrap-anywhere">
                 <dt className="text-xs font-semibold text-muted">지원 마감</dt>
                 <dd className="mt-2 font-bold text-ink">{deadlineLabel}</dd>

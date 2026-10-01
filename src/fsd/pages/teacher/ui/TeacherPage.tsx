@@ -421,7 +421,7 @@ export function TeacherPage() {
                                 setBannerImage(event.target.files?.[0] ?? null);
                                 setBannerStatus("");
                             }}
-                            className="mt-3 block w-full text-sm text-secondary-text file:mr-3 file:rounded-lg file:border-0 file:bg-brand-soft file:px-3 file:py-2 file:font-bold file:text-brand-accent"
+                            className="mt-3 block w-full cursor-pointer text-sm text-secondary-text file:cursor-pointer file:mr-3 file:rounded-lg file:border-0 file:bg-brand-soft file:px-3 file:py-2 file:font-bold file:text-brand-accent"
                         />
                         {currentBanner ? <Image src={resolveBannerImageUrl(currentBanner.imageUrl)} alt="현재 학생 홈 배너" width={640} height={360} unoptimized className="mt-3 max-h-40 w-full rounded-xl object-cover" /> : null}
                         <input
