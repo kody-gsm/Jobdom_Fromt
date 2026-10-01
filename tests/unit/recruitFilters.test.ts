@@ -26,7 +26,15 @@ assert.equal(RECRUIT_FIELD_OPTIONS.length, 8);
 assert.equal(formatRecruitFields(["FRONTEND", "BACKEND"]), "프론트엔드, 백엔드");
 assert.equal(formatRecruitFields([]), "미정");
 assert.equal(formatRecruitFields(undefined), "미정");
-assert.deepEqual(filterRecruits(withFields, "ALL", "", now, "BACKEND").map((item) => item.id), [1]);
-assert.equal(filterRecruits(withFields, "OPEN", "", now, "AI").length, 0);
+assert.deepEqual(filterRecruits(withFields, "ALL", "", now, ["BACKEND"]).map((item) => item.id), [1]);
+assert.equal(filterRecruits(withFields, "OPEN", "", now, ["AI"]).length, 0);
 assert.equal(filterRecruits(withFields, "ALL", "백엔드", now).length, 1);
-assert.equal(filterRecruits(withFields, "ALL", "alpha", now, "FRONTEND").length, 1);
+assert.equal(filterRecruits(withFields, "ALL", "alpha", now, ["FRONTEND"]).length, 1);
+assert.deepEqual(
+  filterRecruits(withFields, "ALL", "", now, ["FRONTEND", "AI"]).map((item) => item.id),
+  [1, 2],
+);
+assert.deepEqual(
+  filterRecruits(withFields, "ALL", "", now, []).map((item) => item.id),
+  [1, 2, 3, 4],
+);
