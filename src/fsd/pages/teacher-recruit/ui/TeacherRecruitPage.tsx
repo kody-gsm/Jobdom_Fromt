@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatRecruitFields, RECRUIT_FIELD_OPTIONS } from "@fsd/entities/recruit";
 import { SummaryMarkdown } from "@fsd/shared/ui";
 import { indentSummaryList } from "@fsd/shared/lib";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
@@ -18,7 +19,7 @@ import {
   type RecruitUpdate,
 } from "@fsd/features/manage-recruit";
 
-const blank: RecruitUpdate = { companyName: "", interviewDate: "", deadline: "", summary: "" };
+const blank: RecruitUpdate = { companyName: "", interviewDate: "", deadline: "", summary: "", fields: [] };
 
 export function TeacherRecruitPage() {
   const [rows, setRows] = useState<RecruitDashboardRow[]>([]);
@@ -69,7 +70,7 @@ export function TeacherRecruitPage() {
     const word = query.trim().toLowerCase();
     return rows.filter(({ recruit, form, applicants }) =>
       (status === "ALL" || recruit.status === status)
-      && (!word || [recruit.companyName, form?.title, ...applicants.flatMap((applicant) => [applicant.userName, applicant.studentNumber])]
+      && (!word || [recruit.companyName, formatRecruitFields(recruit.fields), form?.title, ...applicants.flatMap((applicant) => [applicant.userName, applicant.studentNumber])]
         .some((value) => value?.toLowerCase().includes(word))));
   }, [query, rows, status]);
 
@@ -93,7 +94,7 @@ export function TeacherRecruitPage() {
     const recruit = row.recruit;
     setSelectedId(recruit.id);
     setCreating(false);
-    setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "" });
+    setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "", fields: recruit.fields ?? [] });
     setEditing(true);
     setMessage(null);
   };
@@ -107,7 +108,7 @@ export function TeacherRecruitPage() {
       setMessage({ text: "AI가 공고 이미지를 읽고 있습니다." });
       const recruit = await analyzeRecruit(file);
       await load(recruit.id);
-      setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "" });
+      setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "", fields: recruit.fields ?? [] });
       setCreating(false);
       setEditing(true);
       setMessage({ text: "공고 초안을 만들었습니다. 내용을 확인해주세요." });
@@ -184,7 +185,7 @@ export function TeacherRecruitPage() {
                 <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">{filteredRows.length} records</span>
               </div>
               <div className="flex flex-1 flex-wrap justify-end gap-2">
-                <input aria-label="공고 또는 지원자 검색" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="회사·지원자 검색" className="h-10 min-w-0 flex-1 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-[#02C551] sm:max-w-64" />
+                <input aria-label="공고 또는 지원자 검색" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="회사·분야·지원자 검색" className="h-10 min-w-0 flex-1 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-[#02C551] sm:max-w-64" />
                 <select aria-label="공고 상태" value={status} onChange={(event) => setStatus(event.target.value as typeof status)} className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none focus:border-[#02C551]">
                   <option value="ALL">전체 상태</option><option value="PUBLISHED">공개</option><option value="DRAFT">초안</option><option value="CLOSED">마감</option>
                 </select>
@@ -196,7 +197,7 @@ export function TeacherRecruitPage() {
               <div className="overflow-x-auto border-b border-gray-200 lg:border-b-0 lg:border-r">
                 <table className="w-full min-w-[920px] border-collapse text-left text-sm">
                   <thead className="sticky top-0 z-10 bg-[#f8faf9] text-xs font-bold text-gray-500">
-                    <tr><Th className="w-12">#</Th><Th>회사 / 공고</Th><Th>상태</Th><Th>지원 마감</Th><Th>면접일</Th><Th>신청 폼</Th><Th>지원자</Th><Th>최근 지원</Th></tr>
+                    <tr><Th className="w-12">#</Th><Th>회사 / 공고</Th><Th>상태</Th><Th>분야</Th><Th>지원 마감</Th><Th>면접일</Th><Th>신청 폼</Th><Th>지원자</Th><Th>최근 지원</Th></tr>
                   </thead>
                   <tbody>
                     {loading ? <EmptyRow text="지원 현황을 불러오는 중…" /> : filteredRows.length === 0 ? <EmptyRow text="조건에 맞는 공고가 없습니다." /> : filteredRows.map((row, index) => {
@@ -218,6 +219,7 @@ export function TeacherRecruitPage() {
                           <Td className="font-mono text-xs text-gray-400">{String(index + 1).padStart(2, "0")}</Td>
                           <Td><strong className="block max-w-52 truncate text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><SummaryMarkdown text={row.recruit.summary || "공고 요약 없음"} className="mt-1 max-w-52 line-clamp-1 text-xs text-gray-400" /></Td>
                           <Td><Status status={row.recruit.status} /></Td>
+                          <Td>{formatRecruitFields(row.recruit.fields)}</Td>
                           <Td>{row.recruit.deadline || "—"}</Td>
                           <Td>{row.recruit.interviewDate || "—"}</Td>
                           <Td>{row.form ? <span className="block max-w-40 truncate font-medium text-gray-700" title={row.form.title}>{row.form.title}</span> : <span className="font-semibold text-amber-600">미연결</span>}</Td>
@@ -242,6 +244,7 @@ export function TeacherRecruitPage() {
                       <div className="flex shrink-0 gap-2"><button type="button" onClick={() => startEditing(selected)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600">수정</button><button type="button" disabled={working} onClick={() => void remove()} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-600 disabled:opacity-50">삭제</button></div>
                     </div>
                     <dl className="mt-5 grid grid-cols-2 gap-3">
+                      <div className="col-span-2"><Info label="분야" value={formatRecruitFields(selected.recruit.fields)} /></div>
                       <Info label="지원 마감" value={selected.recruit.deadline} /><Info label="면접 일정" value={selected.recruit.interviewDate} />
                     </dl>
                     <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
@@ -283,10 +286,22 @@ function Info({ label, value }: { label: string; value: string | null }) {
 }
 
 function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: RecruitDashboardRow | null; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (publish?: boolean) => Promise<void>; analyze: (event: ChangeEvent<HTMLInputElement>) => Promise<void> }) {
-  const update = (key: keyof RecruitUpdate, value: string) => setForm((current) => ({ ...current, [key]: value }));
+  const update = (key: Exclude<keyof RecruitUpdate, "fields">, value: string) => setForm((current) => ({ ...current, [key]: value }));
   const isDraft = row === null || row.recruit.status === "DRAFT";
   const isClosed = row?.recruit.status === "CLOSED";
-  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "공고 수정" : "공고 작성"}</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><label className={`mt-5 block cursor-pointer rounded-xl border border-dashed border-[#02C551] bg-[#effbf3] p-4 ${working ? "pointer-events-none opacity-60" : ""}`}><span className="block text-sm font-bold text-[#02a946]">이미지로 AI 초안 채우기 <span className="font-normal text-gray-500">(선택)</span></span><span className="mt-1 block text-xs leading-5 text-gray-500">이미지 없이 직접 작성해도 됩니다. 이미지를 넣으면 AI가 공고 내용을 읽어 초안을 만듭니다.</span><span className="mt-3 inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-bold text-[#02a946]">공고 이미지 선택</span><input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" /></label><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><SummaryEditor value={form.summary || ""} onChange={(value) => update("summary", value)} /></div>{isDraft && row?.form && <Link href={`/teacher/forms?formId=${row.form.id}`} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
+  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "공고 수정" : "공고 작성"}</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><label className={`mt-5 block cursor-pointer rounded-xl border border-dashed border-[#02C551] bg-[#effbf3] p-4 ${working ? "pointer-events-none opacity-60" : ""}`}><span className="block text-sm font-bold text-[#02a946]">이미지로 AI 초안 채우기 <span className="font-normal text-gray-500">(선택)</span></span><span className="mt-1 block text-xs leading-5 text-gray-500">이미지 없이 직접 작성해도 됩니다. 이미지를 넣으면 AI가 공고 내용을 읽어 초안을 만듭니다.</span><span className="mt-3 inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-bold text-[#02a946]">공고 이미지 선택</span><input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" /></label><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><fieldset disabled={working} className="rounded-xl border border-gray-200 p-3">
+      <legend className="px-1 text-xs font-bold text-gray-500">분야 (복수 선택)</legend>
+      <div className="grid grid-cols-2 gap-3">
+        {RECRUIT_FIELD_OPTIONS.map(({ value, label }) => (
+          <label key={value} className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={form.fields?.includes(value) ?? false}
+              onChange={(event) => setForm((current) => ({ ...current, fields: event.target.checked ? [...(current.fields ?? []), value] : (current.fields ?? []).filter((field) => field !== value) }))}
+              className="accent-brand" />
+            {label}
+          </label>
+        ))}
+      </div>
+    </fieldset><SummaryEditor value={form.summary || ""} onChange={(value) => update("summary", value)} /></div>{isDraft && row?.form && <Link href={`/teacher/forms?formId=${row.form.id}`} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
@@ -295,7 +310,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
 
 function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <th className={`border-r border-gray-200 px-3 py-3 ${className}`}>{children}</th>; }
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <td className={`border-r border-gray-100 px-3 py-3 align-middle ${className}`}>{children}</td>; }
-function EmptyRow({ text }: { text: string }) { return <tr><td colSpan={8} className="px-6 py-28 text-center text-sm text-gray-400">{text}</td></tr>; }
+function EmptyRow({ text }: { text: string }) { return <tr><td colSpan={9} className="px-6 py-28 text-center text-sm text-gray-400">{text}</td></tr>; }
 function formatDate(value: string, time = false) { return new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit", ...(time ? { hour: "2-digit", minute: "2-digit" } : {}) }).format(new Date(value)); }
 
 function SummaryEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
