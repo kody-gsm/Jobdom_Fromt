@@ -13,18 +13,32 @@ const common = { id: 4, name: "학생", teacherId: 12, teacherName: "강우빈 �
 
 assert.deepEqual(toProfileConsultation("course", course), {
   id: 6,
+  reservationId: 3,
+  kind: "course",
   type: "진로상담",
   date: "2026.09.05",
   slot: "2교시",
+  period: "2교시",
+  teacherId: 11,
   teacherName: "임경원 선생님",
+  title: "",
+  content: "",
+  category: null,
   status: "WAITING",
 });
 assert.deepEqual(toProfileConsultation("common", common), {
   id: 9,
+  reservationId: 4,
+  kind: "common",
   type: "일반상담",
   date: "2026.09.08",
   slot: "점심시간",
+  period: "점심시간",
+  teacherId: 12,
   teacherName: "강우빈 선생님",
+  title: "",
+  content: "",
+  category: null,
   status: "RESERVED",
 });
 

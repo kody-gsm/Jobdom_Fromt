@@ -21,11 +21,19 @@ export interface ReservationInput {
   period: string;
 }
 
+export type ReservationUpdateInput = Pick<
+  ReservationInput,
+  "title" | "content" | "category"
+>;
+
 export interface StudentReservation {
   id: number;
   name: string;
-  teacherId: number;
-  teacherName: string;
+  teacherId?: number | null;
+  teacherName?: string | null;
+  title?: string | null;
+  content?: string | null;
+  category?: CounselingCategory | null;
   date: string;
   period: string;
   status: ReservationStatus;

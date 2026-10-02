@@ -9,7 +9,9 @@ import {
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
 import { ConsultationCancelDialog } from "@fsd/features/cancel-consultation";
+import { ConsultationDetailDialog } from "@fsd/features/consultation-detail";
 import type { ProfileConsultation } from "@fsd/entities/consultation";
+import type { ConsultationDetailItem } from "@fsd/entities/consultation";
 import { ContentCard, SummaryActionCard } from "@fsd/shared/ui";
 
 interface ProfileConsultationsProps {
@@ -18,6 +20,7 @@ interface ProfileConsultationsProps {
   loading?: boolean;
   error?: string;
   onRetry?: () => void;
+  onSaved?: (consultation: ConsultationDetailItem) => void;
 }
 
 export const ProfileConsultations = ({
@@ -26,11 +29,13 @@ export const ProfileConsultations = ({
   loading = false,
   error = "",
   onRetry,
+  onSaved,
 }: ProfileConsultationsProps) => {
   const [cancelTarget, setCancelTarget] = useState<number | null>(null);
   const [canceling, setCanceling] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [reservationChangedMessage, setReservationChangedMessage] = useState("");
+  const [detailTarget, setDetailTarget] = useState<ProfileConsultation | null>(null);
   const [now, setNow] = useState(() => new Date());
   const cancelTargetItem = reservations.find((item) => item.id === cancelTarget);
   const visibleReservations = reservations.filter((item) =>
@@ -115,7 +120,7 @@ export const ProfileConsultations = ({
                 <SummaryActionCard
                   key={item.id}
                   title={`${item.type} · ${item.teacherName} · ${presentation.statusLabel}`}
-                  detail={`${item.date} / ${item.slot}`}
+                  detail={`${item.date.replaceAll("-", ".")} / ${item.slot}`}
                   actionLabel={presentation.actionLabel}
                   actionDisabled={!isConsultationCancelable(item.date, item.slot, now)}
                   onAction={() => {
@@ -123,6 +128,7 @@ export const ProfileConsultations = ({
                     setReservationChangedMessage("");
                     setCancelTarget(item.id);
                   }}
+                  onSelect={() => setDetailTarget(item)}
                 />
               );
             })
@@ -168,6 +174,15 @@ export const ProfileConsultations = ({
           onConfirm={() => void executeCancel()}
         />
       ) : null}
+
+      <ConsultationDetailDialog
+        consultation={detailTarget}
+        onClose={() => setDetailTarget(null)}
+        onSaved={(updated) => {
+          setDetailTarget((current) => current ? { ...current, ...updated } : current);
+          onSaved?.(updated);
+        }}
+      />
     </>
   );
 };

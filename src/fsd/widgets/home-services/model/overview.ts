@@ -1,20 +1,16 @@
 import type { Recruit } from "@fsd/entities/recruit";
 import {
   decodeProfileConsultationId,
-  getConsultationTeacherLabel,
   getReservationPresentation,
   isActiveReservation,
   CONSULTATION_SCHEDULE,
+  toConsultationDetailItem,
+  type ConsultationDetailItem,
   type ReservationStatus,
   type StudentReservation,
 } from "@fsd/entities/consultation";
 
-export type HomeConsultationItem = {
-  id: number;
-  type: "진로상담" | "일반상담";
-  teacherName: string;
-  date: string;
-  period: string;
+export type HomeConsultationItem = ConsultationDetailItem & {
   status: ReservationStatus;
   statusLabel: string;
   actionLabel: string;
@@ -44,11 +40,7 @@ const toHomeConsultationItem = (
   kind: "course" | "common",
   item: StudentReservation,
 ): HomeConsultationItem => ({
-  id: item.id * 2 + (kind === "common" ? 1 : 0),
-  type: kind === "course" ? "진로상담" : "일반상담",
-  teacherName: getConsultationTeacherLabel(item.teacherName),
-  date: item.date,
-  period: item.period,
+  ...toConsultationDetailItem(kind, item),
   ...getReservationPresentation(item.status),
 });
 
