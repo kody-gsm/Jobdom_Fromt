@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Recruit } from "@fsd/entities/recruit";
+import type { Recruit, RecruitField } from "@fsd/entities/recruit";
 import { ApiError } from "@fsd/shared/api";
 import { getRecruits } from "../api/recruit.ts";
 import { filterRecruits, type RecruitListFilter } from "./recruitFilters.ts";
@@ -9,6 +9,7 @@ export const useRecruitList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<RecruitListFilter>("ALL");
+  const [fieldFilters, setFieldFilters] = useState<RecruitField[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const requestVersion = useRef(0);
 
@@ -48,8 +49,8 @@ export const useRecruitList = () => {
   }, [load]);
 
   const visibleItems = useMemo(
-    () => filterRecruits(items, filter, searchQuery),
-    [filter, items, searchQuery],
+    () => filterRecruits(items, filter, searchQuery, new Date(), fieldFilters),
+    [filter, fieldFilters, items, searchQuery],
   );
 
   return {
@@ -59,6 +60,8 @@ export const useRecruitList = () => {
     retry: load,
     filter,
     setFilter,
+    fieldFilters,
+    setFieldFilters,
     searchQuery,
     setSearchQuery,
     visibleItems,
