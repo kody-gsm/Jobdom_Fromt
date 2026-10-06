@@ -67,8 +67,19 @@ const ConsultationDetailDialogContent = ({
       setError("상담 분야를 선택해주세요.");
       return;
     }
+    if (consultation.teacherId === null) {
+      setError("상담 선생님 정보를 확인할 수 없어 수정할 수 없습니다.");
+      return;
+    }
 
-    const input = toConsultationUpdateInput({ title, content, category });
+    const input = toConsultationUpdateInput({
+      title,
+      content,
+      category,
+      date: consultation.date,
+      period: consultation.period,
+      teacherId: consultation.teacherId,
+    });
     try {
       setSaving(true);
       setError("");

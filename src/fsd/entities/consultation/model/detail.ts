@@ -47,12 +47,21 @@ export const toConsultationUpdateInput = ({
   title,
   content,
   category,
+  date,
+  period,
+  teacherId,
 }: {
   title: string;
   content: string;
   category: CounselingCategory;
+  date: string;
+  period: string;
+  teacherId: number;
 }): ReservationUpdateInput => ({
   title: title.trim(),
   content: content.trim(),
   category,
+  date,
+  period,
+  teacherId,
 });

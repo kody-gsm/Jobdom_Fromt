@@ -23,8 +23,10 @@ export interface ReservationInput {
 
 export type ReservationUpdateInput = Pick<
   ReservationInput,
-  "title" | "content" | "category"
->;
+  "title" | "content" | "category" | "date" | "period"
+> & {
+  teacherId: number;
+};
 
 export interface StudentReservation {
   id: number;

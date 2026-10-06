@@ -44,11 +44,17 @@ assert.deepEqual(
     title: "  상담 제목  ",
     content: "  상담 내용\n",
     category: "학업",
+    date: "2026-10-05",
+    period: "1교시",
+    teacherId: 12,
   }),
   {
     title: "상담 제목",
     content: "상담 내용",
     category: "학업",
+    date: "2026-10-05",
+    period: "1교시",
+    teacherId: 12,
   },
 );
 
@@ -62,6 +68,9 @@ await api.update("course", 42, {
   title: "수정한 제목",
   content: "수정한 내용",
   category: "진학",
+  date: "2026-10-05",
+  period: "1교시",
+  teacherId: 12,
 });
 
 assert.equal(requests[0]?.path, "/student/course/42");
@@ -70,4 +79,7 @@ assert.deepEqual(JSON.parse(String(requests[0]?.init?.body)), {
   title: "수정한 제목",
   content: "수정한 내용",
   category: "진학",
+  date: "2026-10-05",
+  period: "1교시",
+  teacherId: 12,
 });

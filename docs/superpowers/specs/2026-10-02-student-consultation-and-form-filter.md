@@ -46,15 +46,15 @@
 
 ## 프론트-백엔드 계약 의존성
 
-현재 학생 상담 목록 응답에는 제목·내용·선생님 정보가 없고 학생용 수정 API도 없다. 프론트 구현은 다음 계약을 전제로 한다.
+최신 백엔드에는 학생 상담 상세 응답과 학생용 수정 API가 이미 반영되어 있다. 프론트 구현은 다음 계약을 사용한다.
 
-- `GET /student/course`, `GET /student/common` 응답에 `teacherId`, `teacherName`, `title`, `content`, `category`가 포함된다.
+- `GET /student/course`, `GET /student/common` 응답에 `teacherId`, `teacherName`, `title`, `content`, `category`, `date`, `period`, `status`가 포함된다.
 - `PATCH /student/course/{id}`, `PATCH /student/common/{id}`가 학생 수정 요청을 받는다.
 - 수정 API는 본인 예약만 허용하고 `WAITING` 상태에서만 처리한다.
-- 수정 요청은 `title`, `content`, `category`를 보낸다.
+- 수정 요청은 백엔드 `CreateDTO` 계약에 맞춰 `title`, `content`, `category`, `date`, `period`, `teacherId`를 보낸다. 날짜·교시·선생님은 현재 상담 값을 그대로 전달해 수정 대상이 바뀌지 않도록 한다.
 - 수정 성공 응답은 최신 상담 객체를 반환하거나, 목록 재조회로 최신 객체를 확인할 수 있어야 한다.
 
-백엔드 저장소는 수정하지 않는다. 위 계약이 배포되지 않은 환경에서는 상담 상세의 데이터가 비어 있거나 수정 요청이 실패할 수 있으므로, 프론트 PR 설명에 계약 의존성을 명시한다.
+백엔드 저장소는 수정하지 않는다. 최신 백엔드의 수정 API가 배포되지 않은 환경에서는 상담 수정 요청이 실패할 수 있으므로, 프론트 PR 설명에 계약 의존성을 명시한다.
 
 신청 폼 제출 여부는 현재 제공되는 `GET /student/form/{id}/submission`을 폼별로 조회한다. 미제출 404는 정상적인 미제출 상태로 처리하고, 그 외 오류는 제출 여부를 확정하지 못한 상태로 처리한다.
 

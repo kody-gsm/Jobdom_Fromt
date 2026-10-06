@@ -8,7 +8,7 @@
 
 - `StudentReservation`에 상담 상세 표시용 필드를 추가한다.
 - 상담 종류와 예약 ID를 안전하게 전달할 수 있도록 목록 아이템 모델을 정리한다.
-- `createConsultationApi`에 course/common 수정 함수를 추가한다.
+- `createConsultationApi`에 course/common 수정 함수를 추가하고 최신 백엔드 `CreateDTO` 계약(`title`, `content`, `category`, `date`, `period`, `teacherId`)을 그대로 전송한다.
 - API 오류를 기존 `ApiError` 흐름에 맞춰 사용자 메시지로 연결한다.
 - 먼저 API와 모델의 단위 테스트를 작성해 WAITING 수정 요청과 상태별 동작을 고정한다.
 
@@ -49,7 +49,7 @@
 - TypeScript 검사와 린트/빌드 검증을 실행한다.
 - 기존 계약·준비 상태 하네스를 실행한다.
 - 상담 상세, 대시보드, 마이페이지, 폼 필터의 변경 파일을 재검토한다.
-- 백엔드 계약 미반영 상태에서는 상담 수정의 실제 API 성공 여부를 주장하지 않고, 의존성을 PR 본문에 명시한다.
+- 최신 백엔드의 상담 수정 API 계약 의존성을 PR 본문에 명시한다.
 
 ## 예상 변경 파일
 
