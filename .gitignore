@@ -20,6 +20,8 @@
 !/tests/unit/recruitSummary.test.ts
 !/tests/unit/recruitFilters.test.ts
 !/tests/unit/formFilters.test.ts
+!/tests/unit/consultationDraft.test.ts
+!/tests/unit/formIdentityValidation.test.ts
 
 # next.js
 /.next/
