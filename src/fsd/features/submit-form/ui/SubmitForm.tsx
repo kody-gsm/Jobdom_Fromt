@@ -5,8 +5,12 @@ import type { DragEvent, FormEvent } from "react";
 import { FiFileText, FiUploadCloud } from "react-icons/fi";
 import {
   buildFormAnswers,
+  FORM_FILE_ACCEPT,
   FORM_TEXT_LIMITS,
+  getFormFileError,
   getFormErrorMessage,
+  getFormValueError,
+  getInvalidFormAnswer,
   getMissingRequiredQuestion,
   isFormClosed,
 } from "@fsd/entities/form";
@@ -23,8 +27,6 @@ import { ActionButton, ContentCard } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
 type Message = { text: string; error?: boolean };
-
-const FORM_FILE_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.gif,.zip,.doc,.docx,.ppt,.pptx,.hwp,.hwpx,.txt,.md";
 
 const valuesFromSubmission = (submission: FormSubmission): Record<number, FormValue> =>
   Object.fromEntries(submission.answers.map((answer) => [
@@ -137,6 +139,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
 
   const setValue = (questionId: number, value: FormValue) => {
     setValues((current) => ({ ...current, [questionId]: value }));
+    setMessage(null);
   };
 
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
@@ -158,6 +161,12 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
     const missing = getMissingRequiredQuestion(form.questions, values);
     if (missing) {
       setMessage({ text: `“${missing.title}” 항목에 응답해주세요.`, error: true });
+      return;
+    }
+    const invalid = getInvalidFormAnswer(form.questions, values);
+    if (invalid) {
+      setMessage({ text: `“${invalid.question.title}” ${invalid.message}`, error: true });
+      document.getElementById(`question-${invalid.question.id}`)?.focus();
       return;
     }
 
@@ -184,14 +193,12 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
 
     if (!isCurrentOperation()) return;
 
-    const answers = buildFormAnswers(form.questions, preparedValues);
-    if (answers.length === 0) {
-      setMessage({ text: "응답을 입력해주세요.", error: true });
-      setSubmitting(false);
-      return;
-    }
-
     try {
+      const answers = buildFormAnswers(form.questions, preparedValues);
+      if (answers.length === 0) {
+        setMessage({ text: "응답을 입력해주세요.", error: true });
+        return;
+      }
       const saved = submission
         ? await formApi.updateSubmission(targetFormId, answers)
         : await formApi.submit(targetFormId, answers);
@@ -328,9 +335,13 @@ type QuestionFieldProps = {
 const QuestionField = ({ question, index, value, onChange, disabled = false }: QuestionFieldProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [fileError, setFileError] = useState("");
   const choices = Array.isArray(value) ? value : [];
   const textLimit = question.type === "SHORT_TEXT" || question.type === "LONG_TEXT" ? FORM_TEXT_LIMITS[question.type] : null;
   const inputId = `question-${question.id}`;
+  const valueError = question.type === "FILE" ? fileError || getFormValueError(question, value) : getFormValueError(question, value);
+  const errorId = `${inputId}-error`;
+  const error = valueError ? <p id={errorId} role="alert" className="mt-2 text-sm font-normal text-red-700">{valueError}</p> : null;
   const questionTitle = (
     <>
       <span className="mr-2 text-gray-400">{index + 1}.</span>
@@ -353,12 +364,15 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
           id={inputId}
           required={question.required}
           maxLength={textLimit ?? undefined}
+          aria-invalid={Boolean(valueError)}
+          aria-describedby={valueError ? errorId : undefined}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
           className={`${inputClass} min-h-36 resize-y font-normal`}
         />
         {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
+        {error}
       </div>
     );
   }
@@ -367,8 +381,10 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
     const fileValue = isFormFileValue(value) ? value : undefined;
     const selectFile = (file?: File) => {
       if (!file || disabled) return;
-      onChange({ file, fileName: file.name });
       setIsDragging(false);
+      const message = getFormFileError(file);
+      setFileError(message);
+      if (!message) onChange({ file, fileName: file.name });
     };
     const handleDrop = (event: DragEvent<HTMLButtonElement>) => {
       event.preventDefault();
@@ -381,7 +397,11 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
         {description}
         <input
           ref={fileInputRef}
+          id={inputId}
           type="file"
+          aria-label={`${question.title} 파일 선택`}
+          aria-invalid={Boolean(valueError)}
+          aria-describedby={valueError ? errorId : undefined}
           accept={FORM_FILE_ACCEPT}
           onChange={(event) => {
             selectFile(event.target.files?.[0]);
@@ -393,6 +413,7 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
         <button
           type="button"
           disabled={disabled}
+          aria-describedby={valueError ? errorId : undefined}
           onClick={() => fileInputRef.current?.click()}
           onDragOver={(event) => {
             event.preventDefault();
@@ -419,6 +440,7 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
             <span className="min-w-0 truncate">{fileValue.fileName}</span>
           </p>
         ) : null}
+        {error}
       </div>
     );
   }
@@ -434,12 +456,18 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
           required={question.required}
           maxLength={textLimit ?? undefined}
           type={inputType}
+          step={question.type === "NUMBER" ? "any" : undefined}
+          min={question.type === "DATE" ? "0001-01-01" : undefined}
+          max={question.type === "DATE" ? "9999-12-31" : undefined}
+          aria-invalid={Boolean(valueError)}
+          aria-describedby={valueError ? errorId : undefined}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
           className={`${inputClass} h-12 font-normal`}
         />
         {textLimit ? <p className="mt-2 text-right text-xs font-normal text-gray-400">{typeof value === "string" ? value.length : 0}/{textLimit.toLocaleString()}자</p> : null}
+        {error}
       </div>
     );
   }
@@ -452,6 +480,8 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
         <select
           id={inputId}
           required={question.required}
+          aria-invalid={Boolean(valueError)}
+          aria-describedby={valueError ? errorId : undefined}
           value={choices[0] || ""}
           onChange={(event) => onChange(event.target.value ? [Number(event.target.value)] : [])}
           disabled={disabled}
@@ -464,12 +494,13 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
             </option>
           ))}
         </select>
+        {error}
       </div>
     );
   }
 
   return (
-    <fieldset disabled={disabled} className="min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
+    <fieldset id={inputId} tabIndex={-1} aria-invalid={Boolean(valueError)} aria-describedby={valueError ? errorId : undefined} disabled={disabled} className="min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
       <legend className="max-w-full wrap-anywhere px-1 font-semibold">{questionTitle}</legend>
       {description}
       <div className="mt-3 space-y-3">
@@ -497,6 +528,7 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
           );
         })}
       </div>
+      {error}
     </fieldset>
   );
 };

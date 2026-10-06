@@ -21,6 +21,14 @@ assert.match(forms, /publishForm/);
 assert.match(forms, /closeForm/);
 assert.match(forms, /학생 응답 링크를 복사했습니다/);
 assert.match(forms, /폼 제목을 입력해주세요/);
+assert.match(forms, /getFormInputLimitError\(\{ title, description, questions \}\)/);
+assert.match(forms, /if \(limitError\) return setMessage\(\{ text: limitError, error: true \}\), null/);
+assert.equal((forms.match(/maxLength=\{FORM_EDITOR_LIMITS\.TITLE\}/g) ?? []).length, 2);
+assert.equal((forms.match(/maxLength=\{FORM_EDITOR_LIMITS\.DESCRIPTION\}/g) ?? []).length, 2);
+assert.match(forms, /maxLength=\{FORM_EDITOR_LIMITS\.OPTION\}/);
+assert.match(forms, /\{title\.length\}\/\{FORM_EDITOR_LIMITS\.TITLE\}자/);
+assert.match(forms, /\{question\.title\.length\}\/\{FORM_EDITOR_LIMITS\.TITLE\}자/);
+assert.match(forms, /\{option\.length\}\/\{FORM_EDITOR_LIMITS\.OPTION\}자/);
 assert.doesNotMatch(forms, />학생 화면</);
 assert.doesNotMatch(forms, /@\/app\/utils\/api|@\/app\/components/);
 

@@ -7,6 +7,7 @@ import type {
   FormSubmissionSummary,
   FormSummary,
 } from "../model/types.ts";
+import { getFormFileError, getFormInputLimitError } from "../model/validation.ts";
 
 interface RequestFn {
   <T>(path: string, init?: RequestInit): Promise<T>;
@@ -27,7 +28,9 @@ export const createFormApi = (request: RequestFn) => ({
       method: "PATCH",
       body: JSON.stringify({ answers }),
     }),
-  uploadFile: (id: number, file: File) => {
+  uploadFile: async (id: number, file: File) => {
+    const error = getFormFileError(file);
+    if (error) throw new Error(error);
     const body = new FormData();
     body.append("file", file);
     return request<FormFileUpload>(`/student/form/${id}/file`, {
@@ -37,16 +40,22 @@ export const createFormApi = (request: RequestFn) => ({
   },
   getTeacherAll: () => request<FormSummary[]>("/teacher/form"),
   getTeacherById: (id: number) => request<DynamicForm>(`/teacher/form/${id}`),
-  createTeacher: (input: FormInput) =>
-    request<DynamicForm>("/teacher/form", {
+  createTeacher: async (input: FormInput) => {
+    const error = getFormInputLimitError(input);
+    if (error) throw new Error(error);
+    return request<DynamicForm>("/teacher/form", {
       method: "POST",
       body: JSON.stringify(input),
-    }),
-  updateTeacher: (id: number, input: FormInput) =>
-    request<DynamicForm>(`/teacher/form/${id}`, {
+    });
+  },
+  updateTeacher: async (id: number, input: FormInput) => {
+    const error = getFormInputLimitError(input);
+    if (error) throw new Error(error);
+    return request<DynamicForm>(`/teacher/form/${id}`, {
       method: "PATCH",
       body: JSON.stringify(input),
-    }),
+    });
+  },
   publishTeacher: (id: number) =>
     request<DynamicForm>(`/teacher/form/${id}/publish`, { method: "POST" }),
   closeTeacher: (id: number) =>
