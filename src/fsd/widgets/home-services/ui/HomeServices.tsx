@@ -11,6 +11,7 @@ import {
   isConsultationUpcoming,
 } from "@fsd/entities/consultation";
 import { ConsultationCancelDialog } from "@fsd/features/cancel-consultation";
+import { ConsultationDetailDialog } from "@fsd/features/consultation-detail";
 import { resolveBannerImageUrl } from "@fsd/entities/banner";
 import type { HomeBanner } from "@fsd/entities/banner";
 import { ContentCard, SummaryActionCard, SummaryMarkdown } from "@fsd/shared/ui";
@@ -36,6 +37,7 @@ export const HomeServices = () => {
   const [reservationChangeNotice, setReservationChangeNotice] = useState("");
   const [cancelingId, setCancelingId] = useState<number | null>(null);
   const [cancelTarget, setCancelTarget] = useState<HomeConsultationItem | null>(null);
+  const [detailTarget, setDetailTarget] = useState<HomeConsultationItem | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [homeBanner, setHomeBanner] = useState<HomeBanner | null>(null);
   const [bannerImageError, setBannerImageError] = useState(false);
@@ -167,6 +169,7 @@ export const HomeServices = () => {
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
                     onAction={() => openCancelDialog(item)}
+                    onSelect={() => setDetailTarget(item)}
                   />
                 ))}
               </div>
@@ -317,6 +320,7 @@ export const HomeServices = () => {
                     actionDisabled={!isConsultationCancelable(item.date, item.period, now)}
                     actionPending={cancelingId === item.id}
                     onAction={() => openCancelDialog(item)}
+                    onSelect={() => setDetailTarget(item)}
                   />
                 ))
               )}
@@ -349,6 +353,15 @@ export const HomeServices = () => {
           onConfirm={() => void cancelConsultation(cancelTarget)}
         />
       ) : null}
+
+      <ConsultationDetailDialog
+        consultation={detailTarget}
+        onClose={() => setDetailTarget(null)}
+        onSaved={(updated) => {
+          setDetailTarget((current) => current ? { ...current, ...updated } : current);
+          void retryConsultations();
+        }}
+      />
     </section>
   );
 };

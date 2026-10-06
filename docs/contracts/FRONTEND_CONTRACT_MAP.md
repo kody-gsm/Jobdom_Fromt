@@ -126,6 +126,9 @@ Storage key는 기존 동작 호환을 위해 계약으로 취급한다.
 - 필수 질문 중 값이 없는 첫 질문을 찾아 제출을 막는다.
 - 빈 응답은 API payload에서 제외한다.
 - text/date/number 답변은 `textValue`, 선택형 답변은 `optionIds`로 전송한다.
+- 단답형 답변은 100자, 장문형은 1,000자까지 입력한다. 기존 제출을 불러와 재응답할 때도 제출·파일 업로드 전에 같은 제한을 검사하며 값을 임의로 자르지 않는다.
+- 숫자는 음수·소수·지수 표기를 포함한 유한한 숫자, 날짜는 실제 존재하는 `YYYY-MM-DD`(0001~9999년)만 제출한다. 선택지는 해당 질문의 보기만 선택하며 단일 선택은 하나, 복수 선택은 중복 없이 제출한다.
+- 첨부 파일은 0바이트를 제외하고 최대 10MB이며 현재 서버 기본 허용 확장자를 검사한다. 잘못된 입력은 항목 옆에 표시하고 제출 요청을 차단한다.
 - 이미 제출한 상태에서는 입력 UI 대신 기존 제출 결과를 표시한다.
 - 제출 API 409는 `이미 제출한 폼입니다.`로 표현한다.
 
@@ -135,6 +138,7 @@ Storage key는 기존 동작 호환을 위해 계약으로 취급한다.
 - ADMIN이 아닌 경우 TEACHER는 `/teacher`, STUDENT는 `/`로 이동한다.
 - 학생 동기화는 `syncedCount`를 받아 최근 실행 결과에 표시한다.
 - 401/403은 관리자 계정 필요 오류로 표현한다.
+- 사용자별 활동 수치·상세 이력 조회 UI와 기록 전송은 [사용자 활동 기록 연동 계약](./USER_ACTIVITY_CONTRACT.md)을 따른다. 백엔드 API는 아직 없으며 `NEXT_PUBLIC_ACTIVITY_API_ENABLED=true`인 환경에서만 활성화한다.
 ## Teacher contract
 
 Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이다.
@@ -151,6 +155,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 - 기존 임경원 수업표는 해당 선생님에게만 표시한다. 실제 교사별 수업 시간표 API는 아직 없다.
 - 학생의 일반 상담 교사 목록은 GET /student/common/teachers(WEE_TEACHER), 진로 상담 교사 목록은 GET /student/course/teachers(TEACHER)를 사용한다.
 - `/teacher/forms`는 폼 목록/상세 조회, 생성, 수정, 공개, 마감 기능을 유지한다.
+- 폼·질문 제목과 보기에는 최대 255자, 폼·질문 설명에는 최대 1,000자 제한을 적용한다. 입력 중 글자 수를 안내하고 저장·공개 및 API 요청 전에 다시 검사한다.
 - 폼 공유 시 `/forms/{id}` URL을 clipboard에 복사한다.
 - `/teacher/forms/[id]/submissions`는 제출 목록과 제출 상세를 조회한다.
 - `/teacher/recruit`는 공고 이미지 분석, draft 수정, publish를 유지한다.

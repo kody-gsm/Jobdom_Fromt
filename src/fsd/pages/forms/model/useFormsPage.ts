@@ -1,12 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FormSummary } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
 import { createRequestVersionGuard } from "@fsd/shared/lib";
 import { formsApi } from "../api/forms.ts";
-import { filterForms, type FormListFilter } from "./formFilters.ts";
+import {
+  filterForms,
+  type FormListFilter,
+  type StudentFormSummary,
+} from "./formFilters.ts";
+
+const loadSubmissionState = async (form: StudentFormSummary): Promise<StudentFormSummary> => {
+  try {
+    await formsApi.getMySubmission(form.id);
+    return { ...form, submitted: true };
+  } catch (caught) {
+    if (caught instanceof ApiError && caught.status === 404) {
+      return { ...form, submitted: false };
+    }
+    return form;
+  }
+};
 
 export const useFormsPage = () => {
-  const [forms, setForms] = useState<FormSummary[]>([]);
+  const [forms, setForms] = useState<StudentFormSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<FormListFilter>("ALL");
@@ -22,9 +37,12 @@ export const useFormsPage = () => {
     }
     return formsApi
       .getAll()
-      .then((result) => {
+      .then(async (result) => {
         if (!mounted.current || !requests.current.isLatest(requestVersion)) return;
         setForms(result);
+        const formsWithSubmissionState = await Promise.all(result.map(loadSubmissionState));
+        if (!mounted.current || !requests.current.isLatest(requestVersion)) return;
+        setForms(formsWithSubmissionState);
       })
       .catch((caught) => {
         if (!mounted.current || !requests.current.isLatest(requestVersion)) return;

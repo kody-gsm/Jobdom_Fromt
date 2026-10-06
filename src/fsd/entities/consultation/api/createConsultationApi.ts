@@ -1,5 +1,6 @@
 import type {
   ConsultationKind,
+  ReservationUpdateInput,
   ReservationInput,
   StudentReservation,
   TeacherReservation,
@@ -18,6 +19,11 @@ export const createConsultationApi = (request: RequestFn) => ({
   create: (kind: ConsultationKind, input: ReservationInput) =>
     request<string>(`/student/${kind}`, {
       method: "POST",
+      body: JSON.stringify(input),
+    }),
+  update: (kind: ConsultationKind, id: number, input: ReservationUpdateInput) =>
+    request<unknown>(`/student/${kind}/${id}`, {
+      method: "PATCH",
       body: JSON.stringify(input),
     }),
   cancel: (kind: ConsultationKind, id: number) =>

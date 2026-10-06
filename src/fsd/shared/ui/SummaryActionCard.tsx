@@ -6,6 +6,7 @@ type SummaryActionCardProps = {
   actionDisabled?: boolean;
   actionPending?: boolean;
   onAction?: () => void;
+  onSelect?: () => void;
 };
 
 export const SummaryActionCard = ({
@@ -16,12 +17,24 @@ export const SummaryActionCard = ({
   actionDisabled = false,
   actionPending = false,
   onAction,
+  onSelect,
 }: SummaryActionCardProps) => (
   <div className="flex flex-col gap-3 rounded-2xl bg-panel p-5 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-      <p className="font-bold text-ink">{title}</p>
-      <p className="mt-1 text-sm text-secondary-text">{detail}</p>
-    </div>
+    {onSelect ? (
+      <button
+        type="button"
+        onClick={onSelect}
+        className="min-w-0 flex-1 rounded-lg text-left transition-colors hover:bg-brand-soft focus:outline-none focus:ring-2 focus:ring-brand"
+      >
+        <span className="block font-bold text-ink">{title}</span>
+        <span className="mt-1 block text-sm text-secondary-text">{detail}</span>
+      </button>
+    ) : (
+      <div>
+        <p className="font-bold text-ink">{title}</p>
+        <p className="mt-1 text-sm text-secondary-text">{detail}</p>
+      </div>
+    )}
     {onAction && actionLabel ? (
       <button
         type="button"

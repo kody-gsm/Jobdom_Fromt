@@ -1,23 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getSession } from "@fsd/entities/user";
+import { getSession, recordPageView } from "@fsd/entities/user";
 import { getAuthRedirect } from "../model/routePolicy.ts";
 
 export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
+  const lastVisit = useRef("");
 
   useEffect(() => {
     const checkAccess = () => {
-      const redirect = getAuthRedirect(pathname, getSession()?.role ?? null);
+      const session = getSession();
+      const redirect = getAuthRedirect(pathname, session?.role ?? null);
       if (redirect) {
+        lastVisit.current = "";
         setAllowed(false);
         router.replace(redirect);
         return;
       }
+      const visit = session ? `${session.userId}:${pathname}` : "";
+      if (visit && visit !== lastVisit.current) recordPageView(pathname);
+      lastVisit.current = visit;
       setAllowed(true);
     };
 

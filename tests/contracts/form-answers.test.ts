@@ -4,7 +4,7 @@ import type { FormQuestion } from "../../src/fsd/entities/form/index.ts";
 
 const questions = [
   { id: 10, orderIndex: 0, title: "이름", description: null, required: true, type: "SHORT_TEXT", options: [] },
-  { id: 11, orderIndex: 1, title: "지원 직무", description: null, required: true, type: "MULTIPLE_CHOICE", options: [] },
+  { id: 11, orderIndex: 1, title: "지원 직무", description: null, required: true, type: "MULTIPLE_CHOICE", options: [{ id: 100, orderIndex: 0, label: "개발" }, { id: 101, orderIndex: 1, label: "디자인" }] },
 ] satisfies FormQuestion[];
 
 assert.equal(getMissingRequiredQuestion(questions, { 10: "김철수", 11: [] })?.id, 11);

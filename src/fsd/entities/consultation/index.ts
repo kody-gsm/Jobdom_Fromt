@@ -5,6 +5,7 @@ export type {
   ConsultationTeacher,
   ConsultationType,
   CounselingCategory,
+  ReservationUpdateInput,
   ReservationInput,
   ReservationStatus,
   StudentReservation,
@@ -28,6 +29,12 @@ export { getReservationPresentation, isActiveReservation } from "./model/status.
 
 export type { ProfileConsultation } from "./model/profile.ts";
 export { decodeProfileConsultationId, toProfileConsultation } from "./model/profile.ts";
+export {
+  canEditConsultation,
+  toConsultationDetailItem,
+  toConsultationUpdateInput,
+} from "./model/detail.ts";
+export type { ConsultationDetailItem } from "./model/detail.ts";
 export {
   getConsultationCancelError,
   isConsultationCancelable,
