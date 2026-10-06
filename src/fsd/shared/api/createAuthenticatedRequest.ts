@@ -1,9 +1,10 @@
 import { ApiError } from "./ApiError.ts";
+import type { ApiRequestInit } from "./client.ts";
 
 interface RawRequest {
   <T>(
     path: string,
-    init?: RequestInit,
+    init?: ApiRequestInit,
     options?: { accessToken?: string | null },
   ): Promise<T>;
 }
@@ -37,7 +38,7 @@ export const createAuthenticatedRequest = ({
 
   const authenticatedRequest = async <T>(
     path: string,
-    init: RequestInit = {},
+    init: ApiRequestInit = {},
     retryAuth = true,
   ): Promise<T> => {
     try {

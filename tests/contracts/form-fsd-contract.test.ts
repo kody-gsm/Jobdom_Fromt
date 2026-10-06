@@ -7,6 +7,8 @@ import {
 import type { FormQuestion } from "../../src/fsd/entities/form/model/types.ts";
 import { createFormApi } from "../../src/fsd/entities/form/api/createFormApi.ts";
 import { getFormValueError, getFormInputLimitError, getFormFileError } from "../../src/fsd/entities/form/model/validation.ts";
+import type { ApiRequestInit } from "../../src/fsd/shared/api/client.ts";
+import { downloadBlob } from "../../src/fsd/shared/lib/downloadBlob.ts";
 
 const questions = [
   {
@@ -122,7 +124,63 @@ await assert.rejects(api.uploadFile(3, oversized), /10MB/);
 assert.equal(calls.length, beforeInvalid, "invalid files must not be uploaded");
 assert.match(getFormValueError(fileQuestion[0], { file: oversized, fileName: oversized.name }), /10MB/);
 const submitSource = readFileSync("src/fsd/features/submit-form/ui/SubmitForm.tsx", "utf8");
+const submissionsSource = readFileSync("src/fsd/pages/teacher-form-submissions/ui/FormSubmissionsPage.tsx", "utf8");
+assert.match(submissionsSource, /<FileDownload/, "teacher answers must offer attachment downloads");
+assert.match(submitSource, /<FileDownload/, "students must be able to download their submitted attachments");
 assert.ok(submitSource.indexOf("const invalid = getInvalidFormAnswer") < submitSource.indexOf("await formApi.uploadFile"), "answers must be validated before uploading files");
 assert.match(submitSource, /step=\{question\.type === "NUMBER" \? "any"/);
 assert.match(submitSource, /max=\{question\.type === "DATE" \? "9999-12-31"/);
 assert.match(submitSource, /aria-invalid=\{Boolean\(valueError\)\}/);
+
+// Download the trusted file endpoint, preserving binary data and original names.
+const bytes = new Uint8Array([0, 255, 128, 80, 68, 70, 10]);
+const downloadCalls: Array<{ path: string; init?: ApiRequestInit }> = [];
+const file = new Blob([bytes], { type: "application/pdf" });
+const downloadApi = createFormApi(async <T>(path: string, init?: ApiRequestInit) => {
+  downloadCalls.push({ path, init });
+  return file as T;
+});
+assert.equal(await downloadApi.downloadFile(55), file);
+assert.equal(downloadCalls[0]?.path, "/form/file/55");
+assert.equal(downloadCalls[0]?.init?.responseType, "blob");
+assert.ok(downloadCalls[0]?.init?.signal instanceof AbortSignal);
+for (const fileId of [0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+  await assert.rejects(downloadApi.downloadFile(fileId), /파일 정보/);
+}
+assert.equal(downloadCalls.length, 1, "invalid IDs must not issue download requests");
+const emptyDownloadApi = createFormApi(async <T>() => new Blob([]) as T);
+await assert.rejects(emptyDownloadApi.downloadFile(55), /비어/);
+
+const link = {
+  href: "",
+  download: "",
+  click: () => { events.push("click"); },
+  remove: () => { events.push("remove"); },
+};
+const events: string[] = [];
+const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+Object.defineProperty(globalThis, "document", { configurable: true, value: {
+  createElement: (tag: string) => { assert.equal(tag, "a"); return link; },
+  body: { appendChild: (element: unknown) => { assert.equal(element, link); events.push("append"); } },
+} });
+try {
+  downloadBlob(file, "홍길동 지원서.pdf");
+  const firstUrl = link.href;
+  assert.match(firstUrl, /^blob:/);
+  assert.equal(link.download, "홍길동 지원서.pdf");
+  assert.deepEqual(events, ["append", "click", "remove"]);
+  assert.deepEqual(new Uint8Array(await (await fetch(firstUrl)).arrayBuffer()), bytes);
+  link.click = () => { throw new Error("download blocked"); };
+  assert.throws(() => downloadBlob(file, "지원서.pdf"), /download blocked/);
+  const blockedUrl = link.href;
+  assert.equal(events.at(-1), "remove", "temporary links must be removed on failure too");
+  await new Promise((resolve) => setTimeout(resolve, 1_100));
+  await assert.rejects(fetch(firstUrl), /fetch failed/, "download URLs must be released after use");
+  await assert.rejects(fetch(blockedUrl), /fetch failed/, "failed download URLs must be released too");
+} finally {
+  if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument);
+  else Reflect.deleteProperty(globalThis, "document");
+}
+assert.match(submissionsSource, /downloadFile=\{fileId \? \(\) => downloadFormFile\(fileId\)/);
+assert.match(submitSource, /downloadFile=\{fileId \? \(\) => formApi\.downloadFile\(fileId\)/);
+assert.match(submissionsSource, /key=\{`\$\{selected\.id\}:\$\{answer\.questionId\}:\$\{fileId\}`\}/);

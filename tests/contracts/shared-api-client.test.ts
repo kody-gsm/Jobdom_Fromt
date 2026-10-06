@@ -57,3 +57,27 @@ globalThis.fetch = (async (_input, init) => {
   return new Response(null, { status: 204 });
 }) as typeof fetch;
 await request("/upload", { method: "POST", body: formData });
+
+const bytes = new Uint8Array([0, 255, 128, 80, 68, 70, 10]);
+globalThis.fetch = (async (input, init) => {
+  assert.equal(String(input), "/backend/form/file/55");
+  assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer download-token");
+  assert.equal("responseType" in (init ?? {}), false, "custom response parsing must not reach fetch");
+  return new Response(bytes, { headers: { "Content-Type": "application/pdf" } });
+}) as typeof fetch;
+const downloaded = await request<Blob>("/form/file/55", { responseType: "blob" }, { accessToken: "download-token" });
+assert.ok(downloaded instanceof Blob);
+assert.equal(downloaded.type, "application/pdf");
+assert.deepEqual(new Uint8Array(await downloaded.arrayBuffer()), bytes);
+
+for (const status of [403, 404]) {
+  globalThis.fetch = (async () => new Response(JSON.stringify({ code: `FILE_${status}`, message: "파일을 받을 수 없습니다." }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })) as typeof fetch;
+  await assert.rejects(request<Blob>("/form/file/55", { responseType: "blob" }),
+    (error) => error instanceof ApiError && error.status === status && error.code === `FILE_${status}` && error.message === "파일을 받을 수 없습니다.");
+}
+
+globalThis.fetch = (async () => new Response("plain text", { headers: { "Content-Type": "text/plain" } })) as typeof fetch;
+assert.equal(await request<string>("/text"), "plain text");

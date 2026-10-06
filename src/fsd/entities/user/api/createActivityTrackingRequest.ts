@@ -1,14 +1,15 @@
 import { getActionActivity } from "../model/activity.ts";
 import type { ActivityAction } from "../model/activity.ts";
+import type { ApiRequestInit } from "@fsd/shared/api";
 
-type RequestFn = <T>(path: string, init?: RequestInit) => Promise<T>;
+type RequestFn = <T>(path: string, init?: ApiRequestInit) => Promise<T>;
 
 export const createActivityTrackingRequest = (
   request: RequestFn,
   record: (activity: ActivityAction, durationMs: number) => void,
   getUserId: () => number | null,
   enabled: boolean,
-) => async <T>(path: string, init?: RequestInit): Promise<T> => {
+) => async <T>(path: string, init?: ApiRequestInit): Promise<T> => {
   if (!enabled) return request<T>(path, init);
   const userId = getUserId();
   const startedAt = performance.now();

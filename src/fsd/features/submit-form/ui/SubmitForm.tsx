@@ -23,7 +23,7 @@ import type {
 } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
 import { formatDeadlineDate } from "@fsd/shared/lib";
-import { ActionButton, ContentCard } from "@fsd/shared/ui";
+import { ActionButton, ContentCard, FileDownload } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
 type Message = { text: string; error?: boolean };
@@ -537,16 +537,20 @@ const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
   <section className="min-w-0">
     <h2 className="text-xl font-bold">제출한 응답</h2>
     <div className="mt-5 space-y-4">
-      {submission.answers.map((answer) => (
+      {submission.answers.map(({ fileId, ...answer }) => (
         <div key={answer.questionId} className="min-w-0 wrap-anywhere rounded-2xl bg-gray-50 p-5">
           <h3 className="min-w-0 wrap-anywhere text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
-          <p className="mt-2 min-w-0 wrap-anywhere whitespace-pre-line text-gray-900">
-            {answer.fileName
-              ? `첨부 파일: ${answer.fileName}`
-              : answer.selectedOptionLabels.length
-              ? answer.selectedOptionLabels.join(", ")
-              : answer.textValue}
-          </p>
+          {fileId !== null || answer.fileName ? (
+            <FileDownload
+              key={`${submission.id}:${answer.questionId}:${fileId}`}
+              fileName={answer.fileName || "첨부 파일"}
+              downloadFile={fileId ? () => formApi.downloadFile(fileId) : undefined}
+            />
+          ) : (
+            <p className="mt-2 min-w-0 wrap-anywhere whitespace-pre-line text-gray-900">
+              {answer.selectedOptionLabels.length ? answer.selectedOptionLabels.join(", ") : answer.textValue}
+            </p>
+          )}
         </div>
       ))}
     </div>
