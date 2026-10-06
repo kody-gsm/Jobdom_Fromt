@@ -135,6 +135,7 @@ Storage key는 기존 동작 호환을 위해 계약으로 취급한다.
 - ADMIN이 아닌 경우 TEACHER는 `/teacher`, STUDENT는 `/`로 이동한다.
 - 학생 동기화는 `syncedCount`를 받아 최근 실행 결과에 표시한다.
 - 401/403은 관리자 계정 필요 오류로 표현한다.
+- 사용자별 활동 수치·상세 이력 조회 UI와 기록 전송은 [사용자 활동 기록 연동 계약](./USER_ACTIVITY_CONTRACT.md)을 따른다. 백엔드 API는 아직 없으며 `NEXT_PUBLIC_ACTIVITY_API_ENABLED=true`인 환경에서만 활성화한다.
 ## Teacher contract
 
 Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이다.
