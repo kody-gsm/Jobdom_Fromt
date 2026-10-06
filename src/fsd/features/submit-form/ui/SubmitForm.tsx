@@ -12,7 +12,9 @@ import {
   getFormValueError,
   getInvalidFormAnswer,
   getMissingRequiredQuestion,
+  getIdentityField,
   isFormClosed,
+  sanitizeIdentityValue,
 } from "@fsd/entities/form";
 import type {
   DynamicForm,
@@ -354,6 +356,13 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
   ) : null;
   const inputClass =
     "mt-3 min-w-0 w-full rounded-xl border border-border px-4 py-3 outline-none focus:border-brand";
+  const setTextValue = (nextValue: string) => {
+    onChange(
+      question.type === "SHORT_TEXT" || question.type === "LONG_TEXT"
+        ? sanitizeIdentityValue(question.title, nextValue)
+        : nextValue,
+    );
+  };
 
   if (question.type === "LONG_TEXT") {
     return (
@@ -367,7 +376,7 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
           aria-invalid={Boolean(valueError)}
           aria-describedby={valueError ? errorId : undefined}
           value={typeof value === "string" ? value : ""}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => setTextValue(event.target.value)}
           disabled={disabled}
           className={`${inputClass} min-h-36 resize-y font-normal`}
         />
@@ -447,6 +456,7 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
 
   if (["SHORT_TEXT", "NUMBER", "DATE"].includes(question.type)) {
     const inputType = question.type === "NUMBER" ? "number" : question.type === "DATE" ? "date" : "text";
+    const identityField = question.type === "SHORT_TEXT" ? getIdentityField(question.title) : null;
     return (
       <div className="block min-w-0 wrap-anywhere rounded-2xl border border-gray-100 p-5">
         <label htmlFor={inputId} className="block font-semibold">{questionTitle}</label>
@@ -456,13 +466,14 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
           required={question.required}
           maxLength={textLimit ?? undefined}
           type={inputType}
+          inputMode={identityField === "studentNumber" ? "numeric" : undefined}
           step={question.type === "NUMBER" ? "any" : undefined}
           min={question.type === "DATE" ? "0001-01-01" : undefined}
           max={question.type === "DATE" ? "9999-12-31" : undefined}
           aria-invalid={Boolean(valueError)}
           aria-describedby={valueError ? errorId : undefined}
           value={typeof value === "string" ? value : ""}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => setTextValue(event.target.value)}
           disabled={disabled}
           className={`${inputClass} h-12 font-normal`}
         />
