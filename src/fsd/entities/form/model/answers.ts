@@ -1,4 +1,5 @@
 import type { FormAnswerInput, FormQuestion } from "./types.ts";
+import { getInvalidFormAnswer } from "./validation.ts";
 
 export type FormFileValue = { file?: File; fileId?: number; fileName: string };
 export type FormValue = string | number[] | FormFileValue;
@@ -18,15 +19,19 @@ export const getMissingRequiredQuestion = (
 export const buildFormAnswers = (
   questions: FormQuestion[],
   values: Record<number, FormValue>,
-): FormAnswerInput[] => questions.flatMap((question) => {
-  const value = values[question.id];
-  if (!hasValue(value)) return [];
-  return [{
-    questionId: question.id,
-    ...(Array.isArray(value)
-      ? { optionIds: value }
-      : typeof value === "string"
-        ? { textValue: value.trim() }
-        : { fileId: value.fileId }),
-  }];
-});
+): FormAnswerInput[] => {
+  const invalid = getInvalidFormAnswer(questions, values);
+  if (invalid) throw new Error(`“${invalid.question.title}” ${invalid.message}`);
+  return questions.flatMap((question) => {
+    const value = values[question.id];
+    if (!hasValue(value)) return [];
+    return [{
+      questionId: question.id,
+      ...(Array.isArray(value)
+        ? { optionIds: value }
+        : typeof value === "string"
+          ? { textValue: value.trim() }
+          : { fileId: value.fileId }),
+    }];
+  });
+};
