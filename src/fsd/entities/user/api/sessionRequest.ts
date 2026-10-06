@@ -12,6 +12,8 @@ import {
   getSession,
   saveSession,
 } from "../model/lifecycle.ts";
+import { createActivityTrackingRequest } from "./createActivityTrackingRequest.ts";
+import { ACTIVITY_API_ENABLED, recordActivity } from "./recordActivity.ts";
 
 const reissueSession = async (refreshToken: string) => {
   const response = await request<Omit<AuthSession, "role">>("/auth/reissue", {
@@ -22,10 +24,17 @@ const reissueSession = async (refreshToken: string) => {
   saveSession(response, isRememberedSession());
 };
 
-export const requestWithSession = createAuthenticatedRequest({
+const authenticatedRequest = createAuthenticatedRequest({
   request,
   readAccessToken,
   getRefreshToken: () => getSession()?.refreshToken,
   reissueSession,
   clearSession,
 });
+
+export const requestWithSession = createActivityTrackingRequest(
+  authenticatedRequest,
+  recordActivity,
+  () => getSession()?.userId ?? null,
+  ACTIVITY_API_ENABLED,
+);

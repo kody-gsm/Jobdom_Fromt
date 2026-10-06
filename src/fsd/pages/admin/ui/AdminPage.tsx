@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ApiError } from "@fsd/shared/api";
 import { syncStudents } from "@fsd/features/sync-students";
 import { SiteHeader } from "@fsd/widgets/site-header";
+import { ActivityRecords } from "./ActivityRecords.tsx";
 
 export const AdminPage = () => {
   const [syncing, setSyncing] = useState(false);
@@ -37,8 +38,10 @@ export const AdminPage = () => {
           <p className="text-sm font-bold text-green-600">ADMIN WORKSPACE</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">시스템 관리</h1>
           <p className="mt-2 text-sm text-gray-500">
-            외부 학생 정보를 잡담 사용자 데이터와 동기화합니다.
+            사용자 활동을 조회하고 외부 학생 정보를 잡담 사용자 데이터와 동기화합니다.
           </p>
+
+          <ActivityRecords />
 
           <section className="mt-8 overflow-hidden rounded-3xl border border-gray-200">
             <header className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 bg-gray-50 p-6 sm:p-8">

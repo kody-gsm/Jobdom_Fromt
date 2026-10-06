@@ -40,6 +40,10 @@ export {
 } from "./api/profile.ts";
 export { useProfileAvatar } from "./model/useProfileAvatar.ts";
 export { normalizeVerificationCode } from "./model/credentials.ts";
+export { ACTIVITY_LABELS, getActivityFilterError, getDefaultActivityFilter } from "./model/activity.ts";
+export type { ActivityEvent, ActivityFilter, ActivityPage, ActivityType, ActivityUser, ActivityUsersResponse } from "./model/activity.ts";
+export { activityApi } from "./api/activity.ts";
+export { ACTIVITY_API_ENABLED, recordPageView } from "./api/recordActivity.ts";
 export {
   MAX_PROFILE_AVATAR_BYTES,
   PROFILE_AVATAR_CHANGED_EVENT,
