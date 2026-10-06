@@ -6,6 +6,7 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8"
 const button = read("src/fsd/shared/ui/Button.tsx");
 const input = read("src/fsd/shared/ui/Input.tsx");
 const summaryActionCard = read("src/fsd/shared/ui/SummaryActionCard.tsx");
+const listMultiFilterMenu = read("src/fsd/shared/ui/ListMultiFilterMenu.tsx");
 const publicApi = read("src/fsd/shared/ui/index.ts");
 
 assert.match(button, /export const Button/);
@@ -17,6 +18,9 @@ assert.match(summaryActionCard, /hover:bg-brand-soft/);
 assert.match(summaryActionCard, /absolute inset-0/);
 assert.match(summaryActionCard, /pointer-events-auto/);
 assert.match(summaryActionCard, /onClick=\{onSelect\}/);
+assert.match(listMultiFilterMenu, /pendingValue/);
+assert.match(listMultiFilterMenu, /onChange\(\[\.\.\.pendingValue\]\)/);
+assert.doesNotMatch(listMultiFilterMenu, /onChange\(next\)/);
 assert.match(publicApi, /Button/);
 assert.match(publicApi, /Input/);
 assert.doesNotMatch(`${button}\n${input}`, /@\/app\//);

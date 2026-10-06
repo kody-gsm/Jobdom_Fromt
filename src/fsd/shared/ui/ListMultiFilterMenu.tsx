@@ -20,20 +20,23 @@ export const ListMultiFilterMenu = <T extends string>({
   allLabel = "전체",
 }: ListMultiFilterMenuProps<T>) => {
   const [open, setOpen] = useState(false);
+  const [pendingValue, setPendingValue] = useState<T[]>(() => [...value]);
   const menuId = useId();
-  const selected = new Set(value);
-  const selectedOptions = options.filter((option) => selected.has(option.value));
-  const label = selectedOptions.length === 0
+  const selected = new Set(pendingValue);
+  const applied = new Set(value);
+  const pendingOptions = options.filter((option) => selected.has(option.value));
+  const appliedOptions = options.filter((option) => applied.has(option.value));
+  const label = appliedOptions.length === 0
     ? allLabel
-    : selectedOptions.length === 1
-      ? selectedOptions[0].label
-      : `${selectedOptions.length}개 선택`;
+    : appliedOptions.length === 1
+      ? appliedOptions[0].label
+      : `${appliedOptions.length}개 선택`;
 
   const toggle = (option: T) => {
     const next = selected.has(option)
-      ? value.filter((current) => current !== option)
-      : [...value, option];
-    onChange(next);
+      ? pendingValue.filter((current) => current !== option)
+      : [...pendingValue, option];
+    setPendingValue(next);
   };
 
   return (
@@ -43,7 +46,10 @@ export const ListMultiFilterMenu = <T extends string>({
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-controls={menuId}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          if (!open) setPendingValue([...value]);
+          setOpen((current) => !current);
+        }}
         className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#E1E6EB] bg-white px-4 text-sm font-bold text-[#4E5B6B] transition-colors hover:border-brand hover:text-brand-accent focus-visible:outline-2 focus-visible:outline-brand"
       >
         <FiFilter aria-hidden="true" className="text-base" />
@@ -58,9 +64,9 @@ export const ListMultiFilterMenu = <T extends string>({
           <button
             type="button"
             role="menuitemradio"
-            aria-checked={selectedOptions.length === 0}
-            onClick={() => onChange([])}
-            className={`block w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors hover:bg-brand-soft ${selectedOptions.length === 0 ? "bg-brand-soft text-brand-accent" : "text-[#4E5B6B]"}`}
+            aria-checked={pendingOptions.length === 0}
+            onClick={() => setPendingValue([])}
+            className={`block w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors hover:bg-brand-soft ${pendingOptions.length === 0 ? "bg-brand-soft text-brand-accent" : "text-[#4E5B6B]"}`}
           >
             {allLabel}
           </button>
@@ -84,7 +90,10 @@ export const ListMultiFilterMenu = <T extends string>({
           })}
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              onChange([...pendingValue]);
+              setOpen(false);
+            }}
             className="mt-1 block w-full rounded-lg border-t border-[#E1E6EB] px-3 py-2.5 text-center text-sm font-bold text-brand-accent hover:bg-brand-soft"
           >
             적용
