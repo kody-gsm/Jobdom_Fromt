@@ -1,32 +1,21 @@
 import type {
   ConsultationKind,
-  ReservationStatus,
   StudentReservation,
 } from "./types.ts";
-import { getConsultationTeacherLabel } from "./labels.ts";
+import type { ConsultationDetailItem } from "./detail.ts";
+import { toConsultationDetailItem } from "./detail.ts";
 
-export interface ProfileConsultation {
-  id: number;
-  type: string;
-  date: string;
+export interface ProfileConsultation extends ConsultationDetailItem {
   slot: string;
-  teacherName: string;
-  status: ReservationStatus;
-  counselor?: string;
-  counselorComment?: string;
-  myMemo?: string;
 }
 
 export const toProfileConsultation = (
   kind: ConsultationKind,
   item: StudentReservation,
 ): ProfileConsultation => ({
-  id: item.id * 2 + (kind === "common" ? 1 : 0),
-  type: kind === "course" ? "진로상담" : "일반상담",
+  ...toConsultationDetailItem(kind, item),
   date: item.date.replaceAll("-", "."),
   slot: item.period,
-  teacherName: getConsultationTeacherLabel(item.teacherName),
-  status: item.status,
 });
 
 export const decodeProfileConsultationId = (profileId: number) => ({

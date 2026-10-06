@@ -1,12 +1,16 @@
 import type { FormSummary } from "@fsd/entities/form";
 import { isFormClosed } from "@fsd/entities/form";
 
-export type FormListFilter = "ALL" | "OPEN" | "CLOSED";
+export type FormListFilter = "ALL" | "OPEN" | "CLOSED" | "SUBMITTED";
+
+export type StudentFormSummary = FormSummary & {
+  submitted?: boolean;
+};
 
 export { isFormClosed } from "@fsd/entities/form";
 
 export const filterForms = (
-  forms: FormSummary[],
+  forms: StudentFormSummary[],
   filter: FormListFilter,
   query: string,
   now = new Date(),
@@ -15,7 +19,8 @@ export const filterForms = (
 
   return forms.filter((form) => {
     const isClosed = isFormClosed(form, now);
-    const matchesFilter = filter === "ALL" || (filter === "CLOSED" ? isClosed : !isClosed);
+    const matchesFilter = filter === "ALL"
+      || (filter === "SUBMITTED" ? form.submitted === true : filter === "CLOSED" ? isClosed : !isClosed);
     const searchableText = [form.title, form.description]
       .filter((value): value is string => Boolean(value))
       .join(" ")

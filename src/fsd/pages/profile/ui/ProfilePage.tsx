@@ -96,6 +96,7 @@ export const ProfilePage = () => {
               error={reservationError}
               onRetry={() => void retryReservations()}
               onCancel={handleCancel}
+              onSaved={() => void retryReservations()}
             />
           </div>
         ) : null}

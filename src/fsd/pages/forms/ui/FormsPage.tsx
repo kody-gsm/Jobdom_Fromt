@@ -11,6 +11,7 @@ const FORM_FILTER_OPTIONS = [
   { value: "ALL", label: "모든 폼" },
   { value: "OPEN", label: "모집중인 폼" },
   { value: "CLOSED", label: "마감된 폼" },
+  { value: "SUBMITTED", label: "내가 제출한 폼" },
 ] as const;
 
 export const FormsPage = () => {
@@ -72,7 +73,10 @@ export const FormsPage = () => {
                     <span className={`rounded-full px-3 py-1 text-xs font-bold ${isExpired ? "bg-[#FFF0EC] text-[#9A4F45]" : "bg-[#EAF9F0] text-brand-hover"}`}>
                       {isExpired ? "마감된 폼" : "신청 폼"}
                     </span>
-                    <span className="text-xs font-semibold text-muted">질문 {form.questionCount}개</span>
+                    <div className="flex items-center gap-2 text-xs font-semibold text-muted">
+                      {form.submitted ? <span className="rounded-full bg-[#EEF3FF] px-2.5 py-1 text-[#4E67A8]">제출 완료</span> : null}
+                      <span>질문 {form.questionCount}개</span>
+                    </div>
                   </div>
                   <h2 className="mt-6 wrap-anywhere break-keep text-2xl font-bold tracking-[-0.02em] text-ink">{form.title}</h2>
                   <p className="mt-3 line-clamp-4 flex-1 wrap-anywhere whitespace-pre-line break-keep text-sm leading-7 text-[#667281]">
@@ -82,13 +86,13 @@ export const FormsPage = () => {
                     <span className="shrink-0 text-muted">제한 기한</span>
                     <strong className="min-w-0 wrap-anywhere text-right text-[#4E5B6B]">{formatDeadlineDate(form.deadline)}</strong>
                   </div>
-                  {isExpired ? (
+                  {isExpired && !form.submitted ? (
                     <button type="button" disabled className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#E3E6EA] px-5 text-sm font-bold text-[#7A8592]">
                       제출 마감
                     </button>
                   ) : (
                     <Link href={`/forms/${form.id}`} className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-bold text-white hover:bg-brand-hover">
-                      응답하기
+                      {form.submitted ? "응답 확인" : "응답하기"}
                     </Link>
                   )}
                 </ContentCard>
