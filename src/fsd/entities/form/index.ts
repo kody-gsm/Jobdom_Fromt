@@ -21,6 +21,8 @@ export {
   getFormInputLimitError,
   getFormValueError,
   getInvalidFormAnswer,
+  getIdentityField,
+  sanitizeIdentityValue,
 } from "./model/validation.ts";
 export { getFormErrorMessage } from "./model/errors.ts";
 export { isFormClosed } from "./model/status.ts";

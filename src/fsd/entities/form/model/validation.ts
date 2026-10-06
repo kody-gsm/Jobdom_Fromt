@@ -6,6 +6,22 @@ export const FORM_EDITOR_LIMITS = { TITLE: 255, DESCRIPTION: 1000, OPTION: 255 }
 export const FORM_FILE_MAX_BYTES = 10 * 1024 * 1024;
 export const FORM_FILE_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.gif,.zip,.doc,.docx,.ppt,.pptx,.hwp,.hwpx,.txt,.md";
 
+export type IdentityField = "studentNumber" | "name";
+
+export const getIdentityField = (title: string): IdentityField | null => {
+  const normalized = title.replace(/\s/g, "");
+  if (normalized === "학번") return "studentNumber";
+  if (normalized === "이름") return "name";
+  return null;
+};
+
+export const sanitizeIdentityValue = (title: string, value: string) => {
+  const field = getIdentityField(title);
+  if (field === "studentNumber") return value.replace(/\D/g, "");
+  if (field === "name") return value.replace(/\d/g, "");
+  return value;
+};
+
 export const getFormFileError = (file: File) => {
   if (file.size === 0) return "빈 파일은 첨부할 수 없습니다.";
   if (file.size > FORM_FILE_MAX_BYTES) return "파일은 최대 10MB까지 첨부할 수 있습니다.";
@@ -33,6 +49,15 @@ export const getFormValueError = (question: FormQuestion, value: FormValue | und
   if (typeof value !== "string") return "이 항목에는 값을 직접 입력해주세요.";
   const text = value.trim();
   if (!text) return "";
+  if (question.type === "SHORT_TEXT" || question.type === "LONG_TEXT") {
+    const identityField = getIdentityField(question.title);
+    if (identityField === "studentNumber" && !/^\d+$/.test(text)) {
+      return "학번은 숫자만 입력해주세요.";
+    }
+    if (identityField === "name" && /\d/.test(text)) {
+      return "이름에는 숫자를 입력할 수 없습니다.";
+    }
+  }
   if (question.type === "SHORT_TEXT" || question.type === "LONG_TEXT") {
     const limit = FORM_TEXT_LIMITS[question.type];
     if (value.length > limit) return `최대 ${limit.toLocaleString("ko-KR")}자까지 입력할 수 있습니다.`;

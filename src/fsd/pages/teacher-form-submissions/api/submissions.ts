@@ -6,3 +6,4 @@ const formApi = createFormApi(requestWithSession);
 export const getTeacherForm = formApi.getTeacherById;
 export const getFormSubmissions = formApi.getSubmissions;
 export const getFormSubmission = formApi.getSubmission;
+export const downloadFormFile = formApi.downloadFile;
