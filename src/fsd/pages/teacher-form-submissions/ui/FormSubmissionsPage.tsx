@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type { DynamicForm, FormSubmission, FormSubmissionSummary } from "@fsd/entities/form";
-import { getFormSubmission, getFormSubmissions, getTeacherForm } from "../api/submissions";
+import { FileDownload } from "@fsd/shared/ui";
+import { downloadFormFile, getFormSubmission, getFormSubmissions, getTeacherForm } from "../api/submissions";
 
 export function FormSubmissionsPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,7 +52,35 @@ export function FormSubmissionsPage() {
               </div>
             </aside>
             <section className="min-w-0 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-              {!selected ? <div className="grid min-h-80 place-items-center text-sm text-gray-400">응답을 선택해주세요.</div> : <><div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 pb-5"><div className="min-w-0 wrap-anywhere"><h2 className="text-2xl font-bold">{selected.userName}</h2><p className="mt-1 text-sm text-gray-500">{selected.studentNumber}</p></div><time className="text-sm text-gray-400">{new Date(selected.submittedAt).toLocaleString("ko-KR")}</time></div><div className="mt-6 space-y-4">{selected.answers.map((answer) => <article key={answer.questionId} className="min-w-0 wrap-anywhere rounded-2xl bg-gray-50 p-5"><h3 className="text-sm font-semibold text-gray-500">{answer.questionTitle}</h3><p className="mt-2 whitespace-pre-line text-gray-900">{answer.fileName ? `첨부 파일: ${answer.fileName}` : answer.selectedOptionLabels.length ? answer.selectedOptionLabels.join(", ") : answer.textValue}</p></article>)}</div></>}
+              {!selected ? <div className="grid min-h-80 place-items-center text-sm text-gray-400">응답을 선택해주세요.</div> : (
+                <>
+                  <div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 pb-5">
+                    <div className="min-w-0 wrap-anywhere">
+                      <h2 className="text-2xl font-bold">{selected.userName}</h2>
+                      <p className="mt-1 text-sm text-gray-500">{selected.studentNumber}</p>
+                    </div>
+                    <time className="text-sm text-gray-400">{new Date(selected.submittedAt).toLocaleString("ko-KR")}</time>
+                  </div>
+                  <div className="mt-6 space-y-4">
+                    {selected.answers.map(({ fileId, ...answer }) => (
+                      <article key={answer.questionId} className="min-w-0 wrap-anywhere rounded-2xl bg-gray-50 p-5">
+                        <h3 className="text-sm font-semibold text-gray-500">{answer.questionTitle}</h3>
+                        {fileId !== null || answer.fileName ? (
+                          <FileDownload
+                            key={`${selected.id}:${answer.questionId}:${fileId}`}
+                            fileName={answer.fileName || "첨부 파일"}
+                            downloadFile={fileId ? () => downloadFormFile(fileId) : undefined}
+                          />
+                        ) : (
+                          <p className="mt-2 whitespace-pre-line text-gray-900">
+                            {answer.selectedOptionLabels.length ? answer.selectedOptionLabels.join(", ") : answer.textValue}
+                          </p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                </>
+              )}
             </section>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import type { ApiRequestInit } from "@fsd/shared/api";
 import type {
   DynamicForm,
   FormAnswerInput,
@@ -10,7 +11,7 @@ import type {
 import { getFormFileError, getFormInputLimitError } from "../model/validation.ts";
 
 interface RequestFn {
-  <T>(path: string, init?: RequestInit): Promise<T>;
+  <T>(path: string, init?: ApiRequestInit): Promise<T>;
 }
 
 export const createFormApi = (request: RequestFn) => ({
@@ -37,6 +38,19 @@ export const createFormApi = (request: RequestFn) => ({
       method: "POST",
       body,
     });
+  },
+  downloadFile: async (fileId: number) => {
+    if (!Number.isSafeInteger(fileId) || fileId <= 0) {
+      throw new Error("첨부 파일 정보가 올바르지 않습니다.");
+    }
+    const file = await request<Blob>(`/form/file/${fileId}`, {
+      responseType: "blob",
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!(file instanceof Blob) || file.size === 0) {
+      throw new Error("첨부 파일이 비어 있거나 파일을 불러오지 못했습니다.");
+    }
+    return file;
   },
   getTeacherAll: () => request<FormSummary[]>("/teacher/form"),
   getTeacherById: (id: number) => request<DynamicForm>(`/teacher/form/${id}`),

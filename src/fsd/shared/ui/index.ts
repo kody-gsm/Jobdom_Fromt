@@ -15,3 +15,4 @@ export { ListFilterMenu } from "./ListFilterMenu.tsx";
 export type { ListFilterOption } from "./ListFilterMenu.tsx";
 export { ListMultiFilterMenu } from "./ListMultiFilterMenu.tsx";
 export { SummaryMarkdown } from "./SummaryMarkdown.tsx";
+export { FileDownload } from "./FileDownload.tsx";

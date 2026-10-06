@@ -4,6 +4,7 @@ const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
 
 type ParsedApiError = { message: string; code?: string };
+export type ApiRequestInit = RequestInit & { responseType?: "blob" };
 
 const parseError = async (response: Response): Promise<ParsedApiError> => {
   if ([502, 503, 504].includes(response.status)) {
@@ -33,9 +34,10 @@ interface RequestOptions {
 }
 export const request = async <T>(
   path: string,
-  init: RequestInit = {},
+  init: ApiRequestInit = {},
   options: RequestOptions = {},
 ): Promise<T> => {
+  const { responseType, ...fetchInit } = init;
   const headers = new Headers(init.headers);
   const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
 
@@ -48,7 +50,7 @@ export const request = async <T>(
 
   let response: Response;
   try {
-    response = await fetch(`${getApiBaseUrl()}${path}`, { ...init, headers });
+    response = await fetch(`${getApiBaseUrl()}${path}`, { ...fetchInit, headers });
   } catch {
     throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
   }
@@ -58,6 +60,7 @@ export const request = async <T>(
     throw new ApiError(error.message, response.status, error.code);
   }
   if (response.status === 204) return undefined as T;
+  if (responseType === "blob") return await response.blob() as T;
 
   const text = await response.text();
   if (!text) return undefined as T;
