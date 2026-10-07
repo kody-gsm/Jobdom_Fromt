@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ApiError } from "@fsd/shared/api";
 import { syncStudents } from "@fsd/features/sync-students";
+import { syncDiscordMembers } from "@fsd/features/sync-discord-members";
+import type { DiscordMemberSyncResult } from "@fsd/features/sync-discord-members";
 import { SiteHeader } from "@fsd/widgets/site-header";
 import { ActivityRecords } from "./ActivityRecords.tsx";
 
@@ -97,6 +99,8 @@ export const AdminPage = () => {
               </button>
             </footer>
           </section>
+
+          <DiscordMemberSync />
         </div>
       </main>
     </>
@@ -109,3 +113,69 @@ const Info = ({ label, value }: { label: string; value: string }) => (
     <dd className="mt-2 font-bold text-gray-800">{value}</dd>
   </div>
 );
+
+const DiscordMemberSync = () => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [result, setResult] = useState<{ counts: DiscordMemberSyncResult; time: Date } | null>(null);
+  const [error, setError] = useState("");
+  const inFlight = useRef(false);
+
+  const saveIds = async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setIsSaving(true);
+    setError("");
+    try {
+      const counts = await syncDiscordMembers();
+      setResult({ counts, time: new Date() });
+    } catch (caught) {
+      setError(caught instanceof ApiError && [401, 403].includes(caught.status)
+        ? "관리자 계정으로 로그인해야 실행할 수 있습니다."
+        : caught instanceof Error ? caught.message : "학생 ID 저장에 실패했습니다.");
+    } finally {
+      inFlight.current = false;
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <section aria-labelledby="discord-sync-title" aria-busy={isSaving} className="mt-8 overflow-hidden rounded-3xl border border-gray-200">
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 bg-gray-50 p-6 sm:p-8">
+        <div>
+          <p className="text-xs font-bold text-green-600">Discord 연결</p>
+          <h2 id="discord-sync-title" className="mt-3 text-2xl font-bold">학생 ID 저장</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+            Discord 서버 닉네임의 학번·이름을 학생 정보와 비교해 Discord 사용자 ID를 저장하고, 연결되지 않는 기존 ID를 정리합니다.
+          </p>
+        </div>
+        <span className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-500">관리자 전용</span>
+      </header>
+      <div className="p-6 sm:p-8" role="status">
+        <p className="text-xs font-bold text-gray-500">최근 성공 결과</p>
+        {result ? (
+          <>
+            <dl className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 sm:grid-cols-3">
+              <Info label="조회한 Discord 회원" value={`${result.counts.scannedMembers.toLocaleString("ko-KR")}명`} />
+              <Info label="연결된 학생" value={`${result.counts.linkedStudents.toLocaleString("ko-KR")}명`} />
+              <Info label="ID 갱신·정리" value={`${result.counts.updatedStudents.toLocaleString("ko-KR")}명`} />
+            </dl>
+            <time dateTime={result.time.toISOString()} className="mt-3 block text-xs text-gray-400">
+              {result.time.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}
+            </time>
+          </>
+        ) : <p className="mt-3 text-sm text-gray-400">아직 실행하지 않았습니다.</p>}
+      </div>
+      {error && (
+        <div role="alert" className="mx-6 mb-6 flex flex-wrap items-center gap-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 sm:mx-8">
+          <p>{error}</p>
+          <button type="button" disabled={isSaving} onClick={() => void saveIds()} className="min-h-11 cursor-pointer font-semibold underline underline-offset-4 disabled:cursor-wait">다시 시도</button>
+        </div>
+      )}
+      <footer className="flex justify-end border-t border-gray-200 px-6 py-5 sm:px-8">
+        <button type="button" disabled={isSaving} onClick={() => void saveIds()} className="h-12 cursor-pointer rounded-xl bg-green-600 px-6 font-bold text-white disabled:cursor-wait disabled:opacity-60">
+          {isSaving ? "저장 중…" : "학생 ID 저장"}
+        </button>
+      </footer>
+    </section>
+  );
+};

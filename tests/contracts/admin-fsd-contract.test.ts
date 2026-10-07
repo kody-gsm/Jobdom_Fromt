@@ -28,6 +28,28 @@ assert.match(page, /syncStudents/);
 assert.match(page, /관리자 계정으로 로그인해야 실행할 수 있습니다/);
 assert.match(page, /syncedCount/);
 assert.doesNotMatch(page, /router\.replace/);
+assert.match(page, /학생 ID 저장/);
+assert.match(page, /DiscordMemberSync/);
+assert.match(page, /if \(inFlight\.current\) return/);
+assert.match(page, /disabled=\{isSaving\}/);
+assert.match(page, /다시 시도/);
+
+const { createSyncDiscordMembers } = await import("../../src/fsd/features/sync-discord-members/api/createSyncDiscordMembers.ts");
+const discordCalls: Array<[string, RequestInit | undefined]> = [];
+const discordResult = { scannedMembers: 230, linkedStudents: 170, updatedStudents: 12 };
+const syncDiscordMembers = createSyncDiscordMembers(async <T>(path: string, init?: RequestInit) => {
+  discordCalls.push([path, init]);
+  return discordResult as T;
+});
+assert.deepEqual(await syncDiscordMembers(), discordResult);
+assert.deepEqual(discordCalls, [["/admin/discord/members/sync", { method: "POST" }]]);
+const malformedDiscordSync = createSyncDiscordMembers(async <T>() => ({ ...discordResult, updatedStudents: -1 }) as T);
+await assert.rejects(malformedDiscordSync(), /응답 형식/);
+const failedDiscordSync = createSyncDiscordMembers(async () => { throw new ApiError("권한 없음", 403); });
+await assert.rejects(failedDiscordSync(), (error) => error instanceof ApiError && error.status === 403);
+assert.match(read("src/fsd/features/sync-discord-members/api/syncDiscordMembers.ts"), /createSyncDiscordMembers\(requestWithSession\)/);
+for (const name of ["scannedMembers", "linkedStudents", "updatedStudents"]) assert.match(page, new RegExp(`result\\.counts\\.${name}`));
+assert.match(page, /timeZone: "Asia\/Seoul"/);
 
 assert.equal(getActivityPagePath("/forms/12?token=secret#answer"), "/forms/12");
 assert.equal(getActivityPagePath("/login?email=secret"), null);

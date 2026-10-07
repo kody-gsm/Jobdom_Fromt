@@ -223,7 +223,7 @@ export function TeacherRecruitPage() {
                           <Td>{row.recruit.deadline || "—"}</Td>
                           <Td>{row.recruit.interviewDate || "—"}</Td>
                           <Td>{row.form ? <span className="block max-w-40 truncate font-medium text-gray-700" title={row.form.title}>{row.form.title}</span> : <span className="font-semibold text-amber-600">미연결</span>}</Td>
-                          <Td><span className="rounded-lg bg-gray-100 px-2.5 py-1.5 font-bold text-gray-700">{row.applicants.length}명</span></Td>
+                          <Td><span className="inline-flex whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 font-bold text-gray-700">{row.applicants.length}명</span></Td>
                           <Td className="text-xs text-gray-500">{latest ? formatDate(latest.submittedAt, true) : "—"}</Td>
                         </tr>
                       );
