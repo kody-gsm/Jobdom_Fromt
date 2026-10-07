@@ -7,6 +7,7 @@ export type {
   FormQuestionInput,
   FormQuestionOption,
   FormInput,
+  FormUpdateInput,
   FormStatus,
   FormSubmission,
   FormSubmissionSummary,
