@@ -162,7 +162,7 @@ export function TeacherRecruitPage() {
     <>
       <TeacherHeader />
       <main className="min-h-[calc(100vh-5rem)] bg-white px-4 py-8 text-[#17201a] sm:px-6 lg:px-8">
-        <div className="mx-auto w-full max-w-[1500px]">
+        <div className="mx-auto w-full max-w-[1760px]">
           <header className="flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-sm font-bold text-[#02a946]">TEACHER WORKSPACE</p>
@@ -182,7 +182,7 @@ export function TeacherRecruitPage() {
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#02C551]" />
                 <h2 className="font-bold">공고 데이터</h2>
-                <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">{filteredRows.length} records</span>
+                <span className="whitespace-nowrap rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">{filteredRows.length}건</span>
               </div>
               <div className="flex flex-1 flex-wrap justify-end gap-2">
                 <input aria-label="공고 또는 지원자 검색" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="회사·분야·지원자 검색" className="h-10 min-w-0 flex-1 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-[#02C551] sm:max-w-64" />
@@ -194,10 +194,21 @@ export function TeacherRecruitPage() {
             </div>
 
             <div className="grid min-h-[560px] lg:grid-cols-[minmax(0,1fr)_380px]">
-              <div className="overflow-x-auto border-b border-gray-200 lg:border-b-0 lg:border-r">
-                <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+              <div className="min-w-0 overflow-x-auto border-b border-gray-200 lg:border-b-0 lg:border-r">
+                <table className="w-full min-w-[1240px] table-fixed border-collapse text-left text-sm">
+                  <colgroup>
+                    <col className="w-12" />
+                    <col className="w-56" />
+                    <col className="w-20" />
+                    <col className="w-[152px]" />
+                    <col className="w-28" />
+                    <col className="w-28" />
+                    <col className="w-[216px]" />
+                    <col className="w-24" />
+                    <col className="w-40" />
+                  </colgroup>
                   <thead className="sticky top-0 z-10 bg-[#f8faf9] text-xs font-bold text-gray-500">
-                    <tr><Th className="w-12">#</Th><Th>회사 / 공고</Th><Th>상태</Th><Th>분야</Th><Th>지원 마감</Th><Th>면접일</Th><Th>신청 폼</Th><Th>지원자</Th><Th>최근 지원</Th></tr>
+                    <tr><Th className="w-12">#</Th><Th>회사 / 공고</Th><Th>상태</Th><Th>분야</Th><Th>지원 마감</Th><Th>면접 일정</Th><Th>신청 폼</Th><Th className="text-center">지원자</Th><Th>최근 지원</Th></tr>
                   </thead>
                   <tbody>
                     {loading ? <EmptyRow text="지원 현황을 불러오는 중…" /> : filteredRows.length === 0 ? <EmptyRow text="조건에 맞는 공고가 없습니다." /> : filteredRows.map((row, index) => {
@@ -217,14 +228,14 @@ export function TeacherRecruitPage() {
                           className={`cursor-pointer border-b border-gray-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#02C551] ${active ? "bg-[#effbf3]" : "hover:bg-gray-50"}`}
                         >
                           <Td className="font-mono text-xs text-gray-400">{String(index + 1).padStart(2, "0")}</Td>
-                          <Td><strong className="block max-w-52 truncate text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><SummaryMarkdown text={row.recruit.summary || "공고 요약 없음"} className="mt-1 max-w-52 line-clamp-1 text-xs text-gray-400" /></Td>
+                          <Td><strong title={row.recruit.companyName || "회사명 미입력"} className="block truncate font-semibold text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><SummaryMarkdown text={row.recruit.summary || "공고 요약 없음"} className="mt-1 line-clamp-2 text-xs leading-5 text-gray-500" /></Td>
                           <Td><Status status={row.recruit.status} /></Td>
-                          <Td>{formatRecruitFields(row.recruit.fields)}</Td>
-                          <Td>{row.recruit.deadline || "—"}</Td>
-                          <Td>{row.recruit.interviewDate || "—"}</Td>
-                          <Td>{row.form ? <span className="block max-w-40 truncate font-medium text-gray-700" title={row.form.title}>{row.form.title}</span> : <span className="font-semibold text-amber-600">미연결</span>}</Td>
-                          <Td><span className="inline-flex whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 font-bold text-gray-700">{row.applicants.length}명</span></Td>
-                          <Td className="text-xs text-gray-500">{latest ? formatDate(latest.submittedAt, true) : "—"}</Td>
+                          <Td><span title={formatRecruitFields(row.recruit.fields)} className="block truncate text-gray-700">{formatRecruitFields(row.recruit.fields)}</span></Td>
+                          <Td className="tabular-nums text-gray-600"><span title={row.recruit.deadline || undefined} className="block truncate">{row.recruit.deadline || "—"}</span></Td>
+                          <Td className="tabular-nums text-gray-600"><span title={row.recruit.interviewDate || undefined} className="block truncate">{row.recruit.interviewDate || "—"}</span></Td>
+                          <Td>{row.form ? <span className="block truncate font-medium text-gray-700" title={row.form.title}>{row.form.title}</span> : <span className="whitespace-nowrap font-semibold text-amber-600">미연결</span>}</Td>
+                          <Td className="text-center"><span className="inline-flex whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 font-semibold tabular-nums text-gray-700">{row.applicants.length}명</span></Td>
+                          <Td className="whitespace-nowrap text-xs tabular-nums text-gray-500">{latest ? formatDate(latest.submittedAt, true) : "—"}</Td>
                         </tr>
                       );
                     })}
@@ -240,7 +251,7 @@ export function TeacherRecruitPage() {
                 ) : (
                   <>
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0"><Status status={selected.recruit.status} /><h2 className="mt-3 truncate text-2xl font-bold">{selected.recruit.companyName || "회사명 미입력"}</h2><p className="mt-1 text-xs text-gray-400">공고 ID #{selected.recruit.id}</p></div>
+                      <div className="min-w-0"><Status status={selected.recruit.status} /><h2 className="mt-3 wrap-anywhere break-keep text-2xl font-bold leading-snug">{selected.recruit.companyName || "회사명 미입력"}</h2><p className="mt-1 text-xs text-gray-400">공고 ID #{selected.recruit.id}</p></div>
                       <div className="flex shrink-0 gap-2"><button type="button" onClick={() => startEditing(selected)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600">수정</button><button type="button" disabled={working} onClick={() => void remove()} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-600 disabled:opacity-50">삭제</button></div>
                     </div>
                     <dl className="mt-5 grid grid-cols-2 gap-3">
@@ -257,7 +268,7 @@ export function TeacherRecruitPage() {
                         <article key={applicant.id} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3">
                           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e6f9ec] text-sm font-bold text-[#02a946]">{applicant.userName.slice(0, 1)}</span>
                           <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-gray-800">{applicant.userName}</p><p className="mt-0.5 text-xs text-gray-400">{applicant.studentNumber || "학번 없음"}</p></div>
-                          <time className="text-right text-[11px] leading-4 text-gray-400">{formatDate(applicant.submittedAt, true)}</time>
+                          <time className="shrink-0 whitespace-nowrap text-right text-[11px] leading-4 tabular-nums text-gray-500">{formatDate(applicant.submittedAt, true)}</time>
                         </article>
                       ))}
                     </div>
@@ -278,11 +289,11 @@ function Status({ status }: { status: Recruit["status"] }) {
     PUBLISHED: { label: "공개", className: "bg-green-100 text-green-700" },
     CLOSED: { label: "마감", className: "bg-gray-100 text-gray-600" },
   }[status];
-  return <span className={`inline-flex rounded-md px-2 py-1 text-[11px] font-bold ${display.className}`}>{display.label}</span>;
+  return <span className={`inline-flex whitespace-nowrap rounded-md px-2 py-1 text-xs font-semibold leading-5 ${display.className}`}>{display.label}</span>;
 }
 
 function Info({ label, value }: { label: string; value: string | null }) {
-  return <div className="rounded-xl border border-gray-200 bg-white p-3"><dt className="text-[11px] font-bold text-gray-400">{label}</dt><dd className="mt-1 text-sm font-bold text-gray-800">{value || "—"}</dd></div>;
+  return <div className="min-w-0 rounded-xl border border-gray-200 bg-white p-3"><dt className="text-xs font-semibold text-gray-500">{label}</dt><dd className="mt-1 wrap-anywhere break-keep text-sm font-semibold leading-6 text-gray-800">{value || "—"}</dd></div>;
 }
 
 function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: RecruitDashboardRow | null; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (publish?: boolean) => Promise<void>; analyze: (event: ChangeEvent<HTMLInputElement>) => Promise<void> }) {
@@ -308,8 +319,8 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
   return <label className="block text-xs font-bold text-gray-500">{label}<input required value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-normal outline-none focus:border-[#02C551]" /></label>;
 }
 
-function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <th className={`border-r border-gray-200 px-3 py-3 ${className}`}>{children}</th>; }
-function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <td className={`border-r border-gray-100 px-3 py-3 align-middle ${className}`}>{children}</td>; }
+function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <th scope="col" className={`whitespace-nowrap border-r border-gray-200 px-3 py-3 ${className}`}>{children}</th>; }
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <td className={`border-r border-gray-100 px-3 py-4 align-middle leading-6 ${className}`}>{children}</td>; }
 function EmptyRow({ text }: { text: string }) { return <tr><td colSpan={9} className="px-6 py-28 text-center text-sm text-gray-400">{text}</td></tr>; }
 function formatDate(value: string, time = false) { return new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit", ...(time ? { hour: "2-digit", minute: "2-digit" } : {}) }).format(new Date(value)); }
 
