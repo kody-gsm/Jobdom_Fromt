@@ -24,9 +24,17 @@
 - `GET /backend/student/course`
 - `GET /backend/teacher/common`
 - `POST /backend/admin/students/sync`
+- `POST /backend/admin/discord/members/sync`
 - `POST /backend/auth/email/signup-code`
 - `POST /backend/auth/signup`
 - `POST /backend/auth/password/reset`
+
+## Discord student IDs
+
+- 관리자 화면의 `학생 ID 저장`은 기존 Bearer 인증으로 `POST /admin/discord/members/sync`를 호출하며 요청 body는 없다.
+- 서버는 Discord 닉네임의 학번·이름을 학생 정보와 비교해 Discord 사용자 ID를 저장하고, 매칭되지 않는 기존 ID를 정리한다. DataGSM 학생 정보 동기화와는 별도 기능이다.
+- DB 반영 후 응답은 `{ scannedMembers: number, linkedStudents: number, updatedStudents: number }`이다. 각각 조회한 Discord 회원 수, 연결된 학생 수, ID가 갱신·정리된 학생 수이며 0 이상의 정수다.
+- 실행 중 중복 요청을 막고 성공 수치와 한국 시간 기준 완료 시각을 표시한다. 401/403은 관리자 권한 안내, 그 외 실패는 오류와 재시도를 제공한다.
 
 ## Form attachment download
 
