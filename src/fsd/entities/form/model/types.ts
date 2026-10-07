@@ -54,6 +54,7 @@ export interface FormInput {
   description: string;
   questions: FormQuestionInput[];
 }
+export type FormUpdateInput = Omit<FormInput, "questions"> & { questions?: FormQuestionInput[] };
 export interface DynamicForm extends Omit<FormSummary, "questionCount"> {
   questions: FormQuestion[];
   updatedAt: string;
