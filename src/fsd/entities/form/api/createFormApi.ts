@@ -4,6 +4,7 @@ import type {
   FormAnswerInput,
   FormFileUpload,
   FormInput,
+  FormUpdateInput,
   FormSubmission,
   FormSubmissionSummary,
   FormSummary,
@@ -62,7 +63,7 @@ export const createFormApi = (request: RequestFn) => ({
       body: JSON.stringify(input),
     });
   },
-  updateTeacher: async (id: number, input: FormInput) => {
+  updateTeacher: async (id: number, input: FormUpdateInput) => {
     const error = getFormInputLimitError(input);
     if (error) throw new Error(error);
     return request<DynamicForm>(`/teacher/form/${id}`, {

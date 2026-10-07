@@ -1,5 +1,5 @@
 import { FORM_TEXT_LIMITS } from "./types.ts";
-import type { FormInput, FormQuestion } from "./types.ts";
+import type { FormUpdateInput, FormQuestion } from "./types.ts";
 import type { FormValue } from "./answers.ts";
 
 export const FORM_EDITOR_LIMITS = { TITLE: 255, DESCRIPTION: 1000, OPTION: 255 } as const;
@@ -82,10 +82,10 @@ export const getInvalidFormAnswer = (questions: FormQuestion[], values: Record<n
   return null;
 };
 
-export const getFormInputLimitError = (input: FormInput): string => {
+export const getFormInputLimitError = (input: FormUpdateInput): string => {
   if (input.title.length > FORM_EDITOR_LIMITS.TITLE) return "폼 제목은 최대 255자까지 입력할 수 있습니다.";
   if (input.description.length > FORM_EDITOR_LIMITS.DESCRIPTION) return "폼 설명은 최대 1,000자까지 입력할 수 있습니다.";
-  for (const [index, question] of input.questions.entries()) {
+  for (const [index, question] of (input.questions ?? []).entries()) {
     if (question.title.length > FORM_EDITOR_LIMITS.TITLE) return `질문 ${index + 1}의 제목은 최대 255자까지 입력할 수 있습니다.`;
     if (question.description.length > FORM_EDITOR_LIMITS.DESCRIPTION) return `질문 ${index + 1}의 설명은 최대 1,000자까지 입력할 수 있습니다.`;
     if (["SINGLE_CHOICE", "MULTIPLE_CHOICE", "DROPDOWN"].includes(question.type)

@@ -7,6 +7,7 @@ const recruitApi = createRecruitApi(requestWithSession);
 
 export const getTeacherForms = formApi.getTeacherAll;
 export const getTeacherForm = formApi.getTeacherById;
+export const getFormSubmissions = formApi.getSubmissions;
 export const createForm = formApi.createTeacher;
 export const updateForm = formApi.updateTeacher;
 export const publishForm = async (formId: number) => {

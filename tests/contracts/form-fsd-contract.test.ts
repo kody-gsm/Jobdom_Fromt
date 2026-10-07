@@ -115,6 +115,24 @@ await assert.rejects(api.createTeacher(invalidInput), /255자/);
 await assert.rejects(api.updateTeacher(3, invalidInput), /255자/);
 assert.equal(calls.length, beforeInvalid, "invalid editor values must not reach the API");
 
+const metadataUpdate = { title: "공개된 폼 제목 수정", description: "설명 수정" };
+assert.equal(getFormInputLimitError(metadataUpdate), "");
+const editCalls: Array<{ path: string; init?: ApiRequestInit }> = [];
+const editApi = createFormApi(async <T>(path: string, init?: ApiRequestInit) => {
+  editCalls.push({ path, init });
+  return {} as T;
+});
+await editApi.updateTeacher(7, metadataUpdate);
+assert.deepEqual(editCalls[0], { path: "/teacher/form/7", init: { method: "PATCH", body: JSON.stringify(metadataUpdate) } });
+assert.equal(Object.hasOwn(JSON.parse(String(editCalls[0]?.init?.body)), "questions"), false, "metadata edits must preserve existing questions and submissions");
+await editApi.updateTeacher(7, validInput);
+assert.deepEqual(JSON.parse(String(editCalls[1]?.init?.body)).questions, validInput.questions, "question edits must include the complete replacement list");
+await editApi.getSubmissions(7);
+assert.deepEqual(editCalls[2], { path: "/teacher/form/7/submission", init: undefined });
+await assert.rejects(editApi.updateTeacher(7, { ...metadataUpdate, title: "가".repeat(256) }), /255자/);
+await assert.rejects(editApi.updateTeacher(7, { ...metadataUpdate, description: "가".repeat(1001) }), /1,000자/);
+assert.equal(editCalls.length, 3, "invalid metadata must not issue update requests");
+
 assert.equal(getFormFileError(new File(["resume"], "RESUME.PDF")), "");
 assert.match(getFormFileError(new File([], "empty.pdf")), /빈 파일/);
 assert.match(getFormFileError(new File(["text"], "bad.exe")), /형식/);
