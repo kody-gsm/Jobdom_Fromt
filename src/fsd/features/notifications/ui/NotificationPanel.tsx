@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   getNotificationTargetUrl,
+  isNotificationNavigable,
   markAllNotificationsRead,
   markNotificationRead,
   NotificationType,
@@ -22,6 +23,7 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   COUNSELING_APPROVED: "상담 승인",
   COUNSELING_REJECTED: "상담 거절",
   COUNSELING_AUTO_CANCELED: "상담 자동 취소",
+  COUNSELING_CANCELED_BY_STUDENT: "상담 취소",
   COUNSELING_EXPIRED: "신청 만료",
 };
 
@@ -33,6 +35,7 @@ const TYPE_COLORS: Record<NotificationType, string> = {
   COUNSELING_APPROVED: "bg-green-100 text-green-700",
   COUNSELING_REJECTED: "bg-red-100 text-red-700",
   COUNSELING_AUTO_CANCELED: "bg-red-100 text-red-700",
+  COUNSELING_CANCELED_BY_STUDENT: "bg-red-100 text-red-700",
   COUNSELING_EXPIRED: "bg-gray-100 text-gray-700",
 };
 
@@ -46,11 +49,14 @@ const NotificationRow = ({
   onRead: (id: number) => void;
 }) => {
   const router = useRouter();
+  const navigable = isNotificationNavigable(item);
 
   const handleClick = () => {
     if (!item.isRead) onRead(item.id);
-    const targetUrl = getNotificationTargetUrl(item.targetUrl);
-    if (targetUrl) router.push(targetUrl);
+    if (navigable) {
+      const targetUrl = getNotificationTargetUrl(item.targetUrl);
+      if (targetUrl) router.push(targetUrl);
+    }
   };
 
   return (
@@ -60,7 +66,7 @@ const NotificationRow = ({
         onClick={handleClick}
         className={`w-full text-left px-4 py-3 flex gap-3 items-start transition-colors hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-50 ${
           item.isRead ? "opacity-60" : ""
-        }`}
+        } ${!navigable ? "cursor-default" : ""}`}
       >
         {/* unread dot */}
         <span
@@ -78,6 +84,11 @@ const NotificationRow = ({
             >
               {TYPE_LABELS[item.type]}
             </span>
+            {item.expired && (
+              <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-500">
+                만료됨
+              </span>
+            )}
             <span className="text-[11px] text-gray-400 ml-auto shrink-0">
               {formatNotificationTime(item.createdAt)}
             </span>

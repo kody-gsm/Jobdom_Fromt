@@ -1,6 +1,13 @@
 import { CONSULTATION_SCHEDULE } from "@fsd/entities/consultation";
 
-export const CONSULTATION_SCHEDULE_ROWS = CONSULTATION_SCHEDULE;
+const STUDENT_CONSULTATION_PERIODS = new Set([
+  ...Array.from({ length: 7 }, (_, index) => `${index + 1}교시`),
+  "점심시간",
+]);
+
+export const CONSULTATION_SCHEDULE_ROWS = CONSULTATION_SCHEDULE.filter(({ period }) =>
+  STUDENT_CONSULTATION_PERIODS.has(period),
+);
 
 const PERIOD_TIMES = Object.fromEntries(
   CONSULTATION_SCHEDULE.map(({ period, time }) => [period, time]),
