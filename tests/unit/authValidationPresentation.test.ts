@@ -11,6 +11,7 @@ import {
   getFirstResetPasswordErrorField,
   validateResetPasswordForm,
 } from "../../src/fsd/features/reset-password/model/validation.ts";
+import { hasReachedConsentEnd } from "../../src/fsd/features/signup/model/consentContent.ts";
 
 const loginErrors = validateLoginForm({ email: "", password: "" });
 assert.equal(getFirstLoginErrorField(loginErrors), "email");
@@ -21,9 +22,36 @@ const signupErrors = validateSignupForm({
   verificationCode: "",
   password: "",
   confirmPassword: "",
+  termsAccepted: false,
+  privacyAccepted: false,
 });
 assert.equal(getFirstSignupErrorField(signupErrors), "email");
 assert.equal(getFirstSignupErrorField({ verificationCode: "인증코드를 입력해주세요." }), "verificationCode");
+
+const signupConsentErrors = validateSignupForm({
+  email: "s25001@gsm.hs.kr",
+  verificationCode: "123456",
+  password: "Aa12345678!",
+  confirmPassword: "Aa12345678!",
+  termsAccepted: false,
+  privacyAccepted: false,
+});
+assert.equal(signupConsentErrors.termsAccepted, "이용약관에 동의해주세요.");
+assert.equal(signupConsentErrors.privacyAccepted, "개인정보 수집 및 이용에 동의해주세요.");
+assert.deepEqual(
+  validateSignupForm({
+    email: "s25001@gsm.hs.kr",
+    verificationCode: "123456",
+    password: "Aa12345678!",
+    confirmPassword: "Aa12345678!",
+    termsAccepted: true,
+    privacyAccepted: true,
+  }),
+  {},
+);
+assert.equal(hasReachedConsentEnd({ scrollTop: 0, clientHeight: 100, scrollHeight: 100 }), true);
+assert.equal(hasReachedConsentEnd({ scrollTop: 0, clientHeight: 100, scrollHeight: 300 }), false);
+assert.equal(hasReachedConsentEnd({ scrollTop: 198, clientHeight: 100, scrollHeight: 300 }), true);
 
 const resetErrors = validateResetPasswordForm({
   email: "",

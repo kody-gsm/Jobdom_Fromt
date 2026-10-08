@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import type { UIEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   getAuthErrorMessage,
@@ -10,6 +11,9 @@ import {
 } from "@fsd/entities/user";
 import { useCountdown } from "@fsd/shared/lib";
 import { sendSignupVerificationCode, signup } from "../api/signup.ts";
+import { hasReachedConsentEnd } from "./consentContent.ts";
+import type { SignupConsentDocument } from "./consentContent.ts";
+import type { SignupConsentField, SignupTextField } from "./validation.ts";
 import { getFirstSignupErrorField, validateSignupForm } from "./validation.ts";
 import type { SignupFormErrors, SignupFormValues } from "./validation.ts";
 
@@ -18,6 +22,8 @@ const INITIAL_VALUES: SignupFormValues = {
   verificationCode: "",
   password: "",
   confirmPassword: "",
+  termsAccepted: false,
+  privacyAccepted: false,
 };
 
 export const useSignupForm = () => {
@@ -29,11 +35,16 @@ export const useSignupForm = () => {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
+  const [activeConsent, setActiveConsent] = useState<SignupConsentDocument | null>(null);
+  const [readConsentDocuments, setReadConsentDocuments] = useState<Record<SignupConsentDocument, boolean>>({
+    terms: false,
+    privacy: false,
+  });
   const verificationCountdown = useCountdown();
   const resendCountdown = useCountdown();
   const verificationRequestVersion = useRef(0);
 
-  const updateField = (field: keyof SignupFormValues, value: string) => {
+  const updateField = (field: SignupTextField, value: string) => {
     const normalized =
       field === "verificationCode" ? normalizeVerificationCode(value) : value;
     if (field === "email" && form.email !== normalized) {
@@ -48,6 +59,19 @@ export const useSignupForm = () => {
     setErrors((current) => ({ ...current, [field]: undefined }));
     setErrorField(null);
     setSubmitError("");
+  };
+
+  const updateConsent = (field: SignupConsentField, value: boolean) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+    setErrorField(null);
+    setSubmitError("");
+  };
+
+  const handleConsentScroll = (document: SignupConsentDocument, event: UIEvent<HTMLDivElement>) => {
+    if (hasReachedConsentEnd(event.currentTarget)) {
+      setReadConsentDocuments((current) => ({ ...current, [document]: true }));
+    }
   };
 
   const sendCode = async () => {
@@ -134,6 +158,13 @@ export const useSignupForm = () => {
     canSubmit,
     verificationSecondsLeft: verificationCountdown.secondsLeft,
     updateField,
+    updateConsent,
+    activeConsent,
+    openConsent: setActiveConsent,
+    closeConsent: () => setActiveConsent(null),
+    handleConsentScroll,
+    canAgreeToTerms: readConsentDocuments.terms,
+    canAgreeToPrivacy: readConsentDocuments.privacy,
     sendCode,
     submit,
   };
