@@ -7,7 +7,9 @@ const helper = readFileSync(resolve(process.cwd(), "src/fsd/features/submit-cons
 const form = readFileSync(resolve(process.cwd(), "src/fsd/features/submit-consultation/ui/ConsultationForm.tsx"), "utf8");
 
 assert.match(schedule, /"1교시"[\s\S]*"2교시"[\s\S]*"3교시"[\s\S]*"4교시"[\s\S]*"점심시간"[\s\S]*"5교시"[\s\S]*"6교시"[\s\S]*"7교시"[\s\S]*"8교시"[\s\S]*"9교시"[\s\S]*"저녁시간"/);
-assert.match(helper, /CONSULTATION_SCHEDULE_ROWS = CONSULTATION_SCHEDULE/);
+assert.match(helper, /CONSULTATION_SCHEDULE\.filter/);
+assert.match(helper, /STUDENT_CONSULTATION_PERIODS/);
+assert.doesNotMatch(helper, /CONSULTATION_SCHEDULE_ROWS = CONSULTATION_SCHEDULE;/);
 assert.match(form, /scheduleRows\.map/);
 assert.doesNotMatch(form, /times\.map|times\.includes|unavailableByTeacher|breakTime/);
 assert.match(form, /const unavailable = isTimeUnavailable\(row\.period\)/);
