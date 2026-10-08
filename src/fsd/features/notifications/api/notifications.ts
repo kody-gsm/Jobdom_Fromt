@@ -9,6 +9,7 @@ export type NotificationType =
   | "COUNSELING_APPROVED"
   | "COUNSELING_REJECTED"
   | "COUNSELING_AUTO_CANCELED"
+  | "COUNSELING_CANCELED_BY_STUDENT"
   | "COUNSELING_EXPIRED";
 
 export interface NotificationItem {
@@ -49,6 +50,17 @@ export const getNotificationTargetUrl = (url: string | null) => {
   if (/^\/teacher\/(course|common)\/\d+$/.test(safePath)) return "/teacher";
   if (/^\/student\/(course|common)\/\d+$/.test(safePath)) return "/";
   return safePath.replace(/^\/form\/(\d+)$/, "/forms/$1");
+};
+
+/**
+ * 알림 클릭 시 실제로 페이지 이동해도 되는지 여부를 반환합니다.
+ * expired=true이거나 대상이 삭제·취소·만료된 경우 이동하지 않습니다.
+ */
+export const isNotificationNavigable = (item: NotificationItem): boolean => {
+  if (item.expired) return false;
+  if (item.targetStatus === null || item.targetStatus === undefined) return true;
+  const blockedStatuses = ["CANCELED", "DELETED", "EXPIRED", "CLOSED"];
+  return !blockedStatuses.includes(item.targetStatus);
 };
 
 export const getNotifications = (page = 0, size = 20) =>

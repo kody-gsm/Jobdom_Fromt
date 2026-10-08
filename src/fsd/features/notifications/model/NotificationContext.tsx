@@ -176,6 +176,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     const handleConnect = () => {
       refreshCount();
       reservationRefresh();
+      // SSE가 끊어졌다 재연결된 사이 놓친 알림을 다시 가져옵니다.
+      void loadNotifications(0);
     };
     const polling = window.setInterval(refreshCount, 60_000);
     subscribeNotifications((item) => {

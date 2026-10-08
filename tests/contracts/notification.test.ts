@@ -24,6 +24,14 @@ assert.equal(api.getNotificationTargetUrl("/recruit/7"), "/recruit/7");
 assert.equal(api.getNotificationTargetUrl("https://example.com"), null);
 assert.equal(api.getNotificationTargetUrl("javascript:alert(1)"), null);
 assert.equal(api.getNotificationTargetUrl(null), null);
+// isNotificationNavigable 계약 검사
+const makeItem = (overrides: Partial<import("../../src/fsd/features/notifications/api/notifications.ts").NotificationItem>) =>
+  ({ id: 1, type: "RECRUIT_PUBLISHED", title: "", content: "", targetId: null, targetUrl: null, isRead: false, targetStatus: null, expired: false, createdAt: "", expiresAt: null, ...overrides } as import("../../src/fsd/features/notifications/api/notifications.ts").NotificationItem);
+assert.equal(api.isNotificationNavigable(makeItem({})), true, "상태 없으면 이동 가능");
+assert.equal(api.isNotificationNavigable(makeItem({ expired: true })), false, "expired=true이면 이동 불가");
+assert.equal(api.isNotificationNavigable(makeItem({ targetStatus: "CANCELED" })), false, "CANCELED이면 이동 불가");
+assert.equal(api.isNotificationNavigable(makeItem({ targetStatus: "WAITING" })), true, "WAITING이면 이동 가능");
+assert.equal(api.isNotificationNavigable(makeItem({ targetStatus: "RESERVED" })), true, "RESERVED이면 이동 가능");
 assert.match(homeServices, /getSafeLinkUrl/);
 const calls: { url: string; method: string; authorization: string | null }[] = [];
 globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
