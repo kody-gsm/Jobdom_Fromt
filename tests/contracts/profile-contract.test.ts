@@ -30,7 +30,7 @@ assert.deepEqual(toProfileConsultation("common", common), {
   id: 9,
   reservationId: 4,
   kind: "common",
-  type: "일반상담",
+  type: "wee클래스 상담",
   date: "2026.09.08",
   slot: "점심시간",
   period: "점심시간",

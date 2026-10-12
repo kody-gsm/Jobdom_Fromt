@@ -29,7 +29,7 @@ export const toConsultationDetailItem = (
   id: item.id * 2 + (kind === "common" ? 1 : 0),
   reservationId: item.id,
   kind,
-  type: kind === "course" ? "진로상담" : "일반상담",
+  type: kind === "course" ? "진로상담" : "wee클래스 상담",
   teacherId: item.teacherId ?? null,
   teacherName: getConsultationTeacherLabel(item.teacherName ?? "선생님"),
   title: item.title ?? "",

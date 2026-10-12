@@ -5,7 +5,7 @@ interface RequestFn {
 }
 
 const readBanner = async (request: RequestFn, path: string) =>
-  (await request<HomeBanner | undefined>(path)) ?? null;
+  (await request<HomeBanner | undefined>(path, { cache: "no-store" })) ?? null;
 
 export const createBannerApi = (request: RequestFn) => ({
   getTeacher: () => readBanner(request, "/teacher/banner"),
