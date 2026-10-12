@@ -126,7 +126,7 @@ export const HomeServices = () => {
             상담 신청
           </h1>
           <p className="mt-3 flex-1 break-keep text-sm leading-7 text-[#667281]">
-            진로 또는 일반 상담을 신청하고 필요한 상담 유형은 신청 화면에서 선택할 수 있습니다.
+            진로 또는 wee클래스 상담을 신청하고 필요한 상담 유형은 신청 화면에서 선택할 수 있습니다.
           </p>
           <Link
             href="/counsel"

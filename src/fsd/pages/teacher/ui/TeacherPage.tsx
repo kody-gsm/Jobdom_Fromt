@@ -57,6 +57,7 @@ export function TeacherPage() {
     const [bannerImage, setBannerImage] = useState<File | null>(null);
     const [bannerStatus, setBannerStatus] = useState("");
     const [isBannerSaving, setIsBannerSaving] = useState(false);
+    const [isBannerLoading, setIsBannerLoading] = useState(true);
     const dialog = useRef<HTMLDialogElement>(null);
     const forceDialog = useRef<HTMLDialogElement>(null);
     const bannerImageInput = useRef<HTMLInputElement>(null);
@@ -102,7 +103,7 @@ export function TeacherPage() {
             setTeacherRole(role);
             const [authorizedKind] = getTeacherConsultationKinds(role);
             if (authorizedKind) setKind(authorizedKind);
-            if (canManageHomeBanner(name)) {
+            if (canManageHomeBanner(role)) {
                 void getTeacherBanner()
                     .then((banner) => {
                         if (!active || !banner) return;
@@ -113,7 +114,12 @@ export function TeacherPage() {
                     })
                     .catch(() => {
                         if (active) setBannerStatus("기존 배너를 불러오지 못했습니다.");
+                    })
+                    .finally(() => {
+                        if (active) setIsBannerLoading(false);
                     });
+            } else {
+                setIsBannerLoading(false);
             }
         });
         return () => { active = false; };
@@ -152,7 +158,7 @@ export function TeacherPage() {
     const teacherVariant = getTeacherWorkspaceVariant(teacherName);
     const periods = getTeacherAvailablePeriods(kind, teacherName);
     const teacherKinds = getTeacherConsultationKinds(teacherRole);
-    const canManageBanner = teacherName !== "선생님" && canManageHomeBanner(teacherName);
+    const canManageBanner = canManageHomeBanner(teacherRole);
     const todayKey = dateKey(today);
     const upcomingPending = useMemo(() => pending.filter((item) => item.date >= todayKey), [pending, todayKey]);
     const upcomingApproved = useMemo(() => approved, [approved]);
@@ -271,6 +277,7 @@ export function TeacherPage() {
         }
     };
     const handleBannerSave = async () => {
+        if (isBannerSaving || isBannerLoading) return;
         if (!canManageBanner || !bannerImage) {
             setBannerStatus("배너 이미지를 선택해 주세요.");
             return;
@@ -416,6 +423,7 @@ export function TeacherPage() {
                             aria-label="배너 이미지"
                             ref={bannerImageInput}
                             type="file"
+                            disabled={isBannerLoading || isBannerSaving}
                             accept="image/png,image/jpeg,image/webp,image/gif"
                             onChange={(event) => {
                                 setBannerImage(event.target.files?.[0] ?? null);
@@ -427,6 +435,7 @@ export function TeacherPage() {
                         <input
                             aria-label="배너 제목"
                             value={bannerTitle}
+                            disabled={isBannerLoading || isBannerSaving}
                             maxLength={100}
                             onChange={(event) => {
                                 setBannerTitle(event.target.value);
@@ -436,7 +445,9 @@ export function TeacherPage() {
                             className="mt-3 h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-brand"
                         />
                         <textarea
+                            aria-label="배너 내용"
                             value={bannerMessage}
+                            disabled={isBannerLoading || isBannerSaving}
                             maxLength={500}
                             onChange={(event) => {
                                 setBannerMessage(event.target.value);
@@ -449,6 +460,7 @@ export function TeacherPage() {
                             aria-label="배너 링크"
                             type="url"
                             value={bannerLink}
+                            disabled={isBannerLoading || isBannerSaving}
                             maxLength={2048}
                             onChange={(event) => {
                                 setBannerLink(event.target.value);
@@ -457,8 +469,8 @@ export function TeacherPage() {
                             placeholder="배너 링크 (선택)"
                             className="mt-3 h-11 w-full rounded-xl border border-border px-3 text-sm outline-none focus:border-brand"
                         />
-                        <button type="button" disabled={isBannerSaving} onClick={() => void handleBannerSave()} className="mt-2 min-h-11 w-full rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-hover disabled:opacity-50">
-                            {isBannerSaving ? "배너 저장 중…" : "배너 저장"}
+                        <button type="button" disabled={isBannerLoading || isBannerSaving} onClick={() => void handleBannerSave()} className="mt-2 min-h-11 w-full rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-hover disabled:opacity-50">
+                            {isBannerLoading ? "배너 불러오는 중…" : isBannerSaving ? "배너 저장 중…" : "배너 저장"}
                         </button>
                         {bannerStatus ? <p role="status" className="mt-2 text-xs font-semibold text-brand-accent">{bannerStatus}</p> : null}
                     </section>
@@ -497,18 +509,18 @@ export function TeacherPage() {
                              requestVersion.current += 1;
                              setKind(value); setPending([]); setApproved([]); setSelection(null); setIsLockMode(false); setIsForceMode(false);
                          }} className={`rounded-lg px-4 py-2 font-semibold ${kind === value ? "bg-brand text-white" : "bg-white text-secondary-text"}`}>
-                             {value === "course" ? "진로 상담" : "일반 상담"}
+                             {value === "course" ? "진로 상담" : "wee클래스 상담"}
                          </button>
                      ))}
                     <button type="button" aria-pressed={isLockMode} onClick={() => { setIsLockMode((current) => !current); setIsForceMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
                         {isLockMode ? "시간 금지 모드 끄기" : "시간 금지 모드"}
                     </button>
                     <button type="button" aria-pressed={isForceMode} onClick={() => { setIsForceMode((current) => !current); setIsLockMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isForceMode ? "border-blue-500 bg-blue-50 text-blue-600" : "border-border bg-white text-secondary-text"}`}>
-                        {isForceMode ? "강제 추가 모드 끄기" : "강제 추가 모드"}
+                        {isForceMode ? "추가 신청 끄기" : "추가 신청"}
                     </button>
                  </div>
                 {isLockMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-red-600">시간 금지 모드입니다. 금지할 셀을 클릭하세요. 금지된 셀을 클릭하면 해제됩니다. 변경 사항은 현재 선생님 계정에 즉시 저장됩니다.</p>}
-                {isForceMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-blue-600">강제 추가 모드입니다. 상담을 추가할 셀을 클릭하세요. 학생을 검색하여 즉시 상담을 예약할 수 있습니다.</p>}
+                {isForceMode && <p role="status" className="px-6 pt-3 text-sm font-semibold text-blue-600">추가 신청입니다. 상담을 추가할 셀을 클릭하세요. 학생을 검색하여 즉시 상담을 예약할 수 있습니다.</p>}
                 {isLoading && <p role="status" className="px-6 pt-3 text-sm">상담 신청을 불러오는 중...</p>}
                 {loadError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{loadError}<button onClick={() => void loadReservations()} className="ml-3 underline">다시 불러오기</button></div>}
                 {slotError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{slotError}<button onClick={() => void loadSlotStatuses()} className="ml-3 underline">다시 불러오기</button></div>}
@@ -536,7 +548,7 @@ export function TeacherPage() {
                                 return <td key={slot}
                                     role={isModeActive ? "button" : undefined}
                                     tabIndex={isModeActive ? 0 : undefined}
-                                    aria-label={isPast ? undefined : isLockMode ? `${currentDate} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : isForceMode ? `${currentDate} ${period} 상담 강제 추가` : undefined}
+                                    aria-label={isPast ? undefined : isLockMode ? `${currentDate} ${period} ${isLocked ? "예약 금지 해제" : "예약 금지"}` : isForceMode ? `${currentDate} ${period} 상담 추가 신청` : undefined}
                                     onClick={(event) => {
                                         if (isPast || (event.target instanceof Element && event.target.closest("button"))) return;
                                         handleSlotModeAction(currentDate, period, isLocked, isPast);
@@ -582,9 +594,9 @@ export function TeacherPage() {
                     <div>
                         <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
                             <div>
-                                <h2 id="force-dialog-title" className="text-lg font-bold text-ink">상담 강제 추가</h2>
+                                <h2 id="force-dialog-title" className="text-lg font-bold text-ink">상담 추가 신청</h2>
                                 <p className="text-xs text-secondary-text">
-                                    {forceSlotTarget.date} · {formatPeriod(forceSlotTarget.period)} ({kind === "course" ? "진로 상담" : "일반 상담"})
+                                    {forceSlotTarget.date} · {formatPeriod(forceSlotTarget.period)} ({kind === "course" ? "진로 상담" : "wee클래스 상담"})
                                 </p>
                             </div>
                             <button

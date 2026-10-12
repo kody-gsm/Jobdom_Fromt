@@ -8,7 +8,7 @@ import { getAuthRedirect } from "../model/routePolicy.ts";
 export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const [allowed, setAllowed] = useState(false);
+  const [allowedPath, setAllowedPath] = useState<string | null>(null);
   const lastVisit = useRef("");
 
   useEffect(() => {
@@ -17,14 +17,14 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
       const redirect = getAuthRedirect(pathname, session?.role ?? null);
       if (redirect) {
         lastVisit.current = "";
-        setAllowed(false);
+        setAllowedPath(null);
         router.replace(redirect);
         return;
       }
       const visit = session ? `${session.userId}:${pathname}` : "";
       if (visit && visit !== lastVisit.current) recordPageView(pathname);
       lastVisit.current = visit;
-      setAllowed(true);
+      setAllowedPath(pathname);
     };
 
     checkAccess();
@@ -32,6 +32,6 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     return () => window.removeEventListener("jobdam-session", checkAccess);
   }, [pathname, router]);
 
-  if (!allowed) return null;
+  if (allowedPath !== pathname) return null;
   return children;
 };
