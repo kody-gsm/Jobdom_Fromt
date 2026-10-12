@@ -30,14 +30,13 @@ export const getTeacherWorkspaceVariant = (
   return "general";
 };
 
-export const canManageHomeBanner = (name: string) =>
-  getTeacherWorkspaceVariant(name) === "general";
+export const canManageHomeBanner = (role: UserRole | null) => role === "TEACHER";
 
 export const getTeacherAvailablePeriods = (
   kind: ConsultationKind,
   name: string,
 ) => {
-  if (kind === "common" || canManageHomeBanner(name)) {
+  if (kind === "common" || getTeacherWorkspaceVariant(name) === "general") {
     const periods = getAvailablePeriods("general", `${normalizeTeacherName(name)} 선생님`);
     if (periods.includes("4교시")) return periods;
 

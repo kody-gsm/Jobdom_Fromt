@@ -26,7 +26,7 @@ assert.match(hook, /getConsultationTeachers/);
 assert.doesNotMatch(hook, /getUpcomingConsultations|setHasCareerReservation/);
 assert.match(hook, /validateConsultationDraft/);
 assert.match(form, /진로 상담/);
-assert.match(form, /label: "일반 상담"/);
+assert.match(form, /label: "wee클래스 상담"/);
 assert.doesNotMatch(form, /key=\{counselType\}/);
 assert.doesNotMatch(form, /consultation-fade-in|animate/);
 assert.match(segmentedTabs, /transition-all/);

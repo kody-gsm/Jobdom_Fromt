@@ -21,6 +21,11 @@ assert.equal(getAuthRedirect("/teacher", "ADMIN"), "/admin");
 assert.equal(getAuthRedirect("/counsel", "STUDENT"), null);
 assert.equal(getAuthRedirect("/teacher/recruit", "TEACHER"), null);
 assert.equal(getAuthRedirect("/teacher", "WEE_TEACHER"), null);
+for (const path of ["/teacher/recruit", "/teacher/recruit/1", "/teacher/forms", "/teacher/forms/7/submissions"]) {
+  assert.equal(getAuthRedirect(path, "WEE_TEACHER"), "/teacher");
+  assert.equal(getAuthRedirect(path, "TEACHER"), null);
+}
+assert.equal(getAuthRedirect("/profile", "WEE_TEACHER"), null);
 assert.equal(getAuthRedirect("/counsel", "WEE_TEACHER"), "/teacher");
 assert.equal(decodeUserRole(tokenWithRole("WEE_TEACHER")), "WEE_TEACHER");
 assert.equal(getRoleHomePath("WEE_TEACHER"), "/teacher");

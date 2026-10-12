@@ -17,6 +17,9 @@ export const getAuthRedirect = (
   const isTeacherRoute = pathname === "/teacher" || pathname.startsWith("/teacher/");
   if (isTeacherRoute && !isTeacher) return "/";
   if (!isTeacherRoute && pathname !== "/profile" && isTeacher) return "/teacher";
+  if (role === "WEE_TEACHER" && ["/teacher/recruit", "/teacher/forms"].some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  )) return "/teacher";
 
   return null;
 };

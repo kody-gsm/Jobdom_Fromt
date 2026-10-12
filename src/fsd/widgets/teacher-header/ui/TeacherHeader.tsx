@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getSession, type UserRole } from "@fsd/entities/user";
 import { FiLogOut } from "react-icons/fi";
 import { NotificationBell } from "@fsd/features/notifications";
 import { logout } from "@fsd/features/logout";
@@ -16,6 +18,16 @@ const navigation = [
 export function TeacherHeader() {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState<UserRole | null>(null);
+
+  useEffect(() => {
+    const syncRole = () => setRole(getSession()?.role ?? null);
+    syncRole();
+    window.addEventListener("jobdam-session", syncRole);
+    return () => window.removeEventListener("jobdam-session", syncRole);
+  }, []);
+
+  const visibleNavigation = navigation.filter((item) => item.href === "/teacher" || role === "TEACHER");
 
   const handleLogout = async () => {
     try {
@@ -33,13 +45,13 @@ export function TeacherHeader() {
         </Link>
 
         <nav aria-label="교사 주요 메뉴" className="col-span-2 row-start-2 flex h-12 items-center gap-6 border-t border-border text-sm font-semibold text-secondary-text sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:h-auto sm:justify-center sm:border-0 sm:text-base lg:gap-12">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const isActive = item.href === "/teacher"
               ? pathname === item.href
               : pathname.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href} aria-current={isActive ? "page" : undefined} className={isActive ? "text-brand-accent" : "transition-colors hover:text-ink"}>
-                {item.label}
+                {item.href === "/teacher" && role === "WEE_TEACHER" ? "wee클래스 상담" : item.label}
               </Link>
             );
           })}

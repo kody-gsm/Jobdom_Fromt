@@ -143,7 +143,7 @@ export const ConsultationForm = ({
                 className="[&_[aria-selected=true]]:!text-brand [&_[aria-selected=true]]:!ring-1 [&_[aria-selected=true]]:!ring-brand"
                 items={[
                   { value: "career", label: "취업 진로 상담" },
-                  { value: "general", label: "일반 상담" },
+                  { value: "general", label: "wee클래스 상담" },
                 ]}
                 value={counselType}
                 onChange={handleTabChange}

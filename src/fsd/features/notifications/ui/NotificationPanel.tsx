@@ -18,7 +18,7 @@ import { formatNotificationTime } from "../model/time.ts";
 const TYPE_LABELS: Record<NotificationType, string> = {
   RECRUIT_PUBLISHED: "채용공고",
   FORM_PUBLISHED: "설문",
-  COMMON_COUNSELING_REQUESTED: "일반상담",
+  COMMON_COUNSELING_REQUESTED: "wee클래스 상담",
   COURSE_COUNSELING_REQUESTED: "진로상담",
   COUNSELING_APPROVED: "상담 승인",
   COUNSELING_REJECTED: "상담 거절",
