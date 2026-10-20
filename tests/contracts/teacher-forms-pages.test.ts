@@ -8,6 +8,7 @@ const submissionsRoute = read("app/teacher/forms/[id]/submissions/page.tsx");
 const submissions = read(
   "src/fsd/pages/teacher-form-submissions/ui/FormSubmissionsPage.tsx",
 );
+const submissionsApi = read("src/fsd/pages/teacher-form-submissions/api/submissions.ts");
 
 assert.match(formsRoute, /@fsd\/pages\/teacher-forms/);
 assert.doesNotMatch(formsRoute, /useState|getTeacherForms|createForm/);
@@ -55,10 +56,18 @@ assert.match(read("src/fsd/pages/teacher-forms/api/forms.ts"), /getFormSubmissio
 
 assert.match(submissionsRoute, /@fsd\/pages\/teacher-form-submissions/);
 assert.doesNotMatch(submissionsRoute, /useState|getFormSubmissions/);
-assert.match(submissions, /getTeacherForm/);
-assert.match(submissions, /getFormSubmissions/);
-assert.match(submissions, /getFormSubmission/);
-assert.match(submissions, /loadedSubmissions\[0\]/);
+assert.match(submissions, /getFormSubmissionSheet\(formId, controller\.signal\)/);
+assert.match(submissionsApi, /createFormApi\(requestWithSession\)/);
+assert.match(submissionsApi, /getTeacherForm = formApi\.getTeacherById/);
+assert.match(submissionsApi, /getFormSubmissions = formApi\.getSubmissions/);
+assert.match(submissionsApi, /getFormSubmission = formApi\.getSubmission/);
+assert.match(submissionsApi, /getFormSubmission\(formId, id\)/);
+assert.match(submissions, /<table/);
+assert.match(submissions, /submissions\.map\(\(submission, rowIndex\)/);
+assert.match(submissions, /answers\.get\(question\.id\)/);
+assert.match(submissions, /getSpreadsheetColumnLabel\(index\)/);
+assert.match(submissions, /엑셀 다운로드/);
+assert.match(submissions, /await exportSubmissions\(state\.form, state\.submissions\)/);
 assert.match(submissions, /제출된 응답이 없습니다/);
 assert.match(submissions, /\/teacher\/forms/);
 assert.doesNotMatch(submissions, /@\/app\/utils\/api|@\/app\/components/);
