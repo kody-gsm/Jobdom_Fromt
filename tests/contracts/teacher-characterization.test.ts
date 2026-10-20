@@ -38,9 +38,11 @@ const submissions = source(
   "app/teacher/forms/[id]/submissions/page.tsx",
   "src/fsd/pages/teacher-form-submissions/ui/FormSubmissionsPage.tsx",
 );
-assert.match(submissions, /getTeacherForm/);
-assert.match(submissions, /getFormSubmissions/);
-assert.match(submissions, /getFormSubmission/);
+const submissionsApi = read("src/fsd/pages/teacher-form-submissions/api/submissions.ts");
+assert.match(submissions, /getFormSubmissionSheet/);
+assert.match(submissionsApi, /getTeacherForm/);
+assert.match(submissionsApi, /getFormSubmissions/);
+assert.match(submissionsApi, /getFormSubmission\(formId, id\)/);
 assert.match(submissions, /\/teacher\/forms/);
 assert.match(submissions, /제출된 응답이 없습니다/);
 assert.match(submissions, /TeacherHeader/);
@@ -61,7 +63,7 @@ assert.match(recruit, /TeacherHeader/);
 
 assert.match(teacherHeader, /href: "\/teacher"/);
 assert.match(teacherHeader, /href: "\/teacher\/recruit"/);
-assert.match(teacherHeader, /href: "\/teacher\/forms"/);
+assert.match(teacherHeader, /href: "\/teacher\/forms", label: "신청 폼 관리"/);
 assert.match(teacherHeader, /pathname === item\.href/);
 assert.match(teacherHeader, /pathname\.startsWith\(item\.href\)/);
 

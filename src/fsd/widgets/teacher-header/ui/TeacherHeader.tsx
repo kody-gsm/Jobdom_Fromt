@@ -12,7 +12,7 @@ import { logout } from "@fsd/features/logout";
 const navigation = [
   { href: "/teacher", label: "상담 일정" },
   { href: "/teacher/recruit", label: "취업 공고" },
-  { href: "/teacher/forms", label: "폼 관리" },
+  { href: "/teacher/forms", label: "신청 폼 관리" },
 ];
 
 export function TeacherHeader() {

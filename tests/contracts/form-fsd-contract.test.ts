@@ -201,4 +201,4 @@ try {
 }
 assert.match(submissionsSource, /downloadFile=\{fileId \? \(\) => downloadFormFile\(fileId\)/);
 assert.match(submitSource, /downloadFile=\{fileId \? \(\) => formApi\.downloadFile\(fileId\)/);
-assert.match(submissionsSource, /key=\{`\$\{selected\.id\}:\$\{answer\.questionId\}:\$\{fileId\}`\}/);
+assert.match(submissionsSource, /key=\{`\$\{submission\.id\}:\$\{question\.id\}:\$\{fileId\}`\}/);

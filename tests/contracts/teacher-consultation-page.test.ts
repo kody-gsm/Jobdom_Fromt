@@ -47,7 +47,7 @@ assert.doesNotMatch(page, /@\/app\/utils\/api|@\/app\/components/);
 assert.match(teacherHeader, /교사 주요 메뉴/);
 assert.match(teacherHeader, /상담 일정/);
 assert.match(teacherHeader, /취업 공고/);
-assert.match(teacherHeader, /폼 관리/);
+assert.match(teacherHeader, /신청 폼 관리/);
 
 console.log("teacher consultation page contract passed");
 
