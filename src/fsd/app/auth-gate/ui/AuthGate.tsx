@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getSession, recordPageView } from "@fsd/entities/user";
+import { RoleTutorialGate } from "@fsd/features/role-tutorial";
 import { getAuthRedirect } from "../model/routePolicy.ts";
 
 export const AuthGate = ({ children }: { children: React.ReactNode }) => {
@@ -33,5 +34,5 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   }, [pathname, router]);
 
   if (allowedPath !== pathname) return null;
-  return children;
+  return <RoleTutorialGate>{children}</RoleTutorialGate>;
 };
