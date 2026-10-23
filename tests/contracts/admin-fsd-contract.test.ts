@@ -173,3 +173,50 @@ const records = read("src/fsd/pages/admin/ui/ActivityRecords.tsx");
 assert.match(page, /ActivityRecords/);
 assert.match(records, /AbortController/);
 assert.match(records, /기록 조회 기능이 아직 연결되지 않았습니다/);
+
+const { createApiStatisticsApi } = await import("../../src/fsd/features/view-api-statistics/api/createApiStatisticsApi.ts");
+const statisticsCalls: Array<[string, RequestInit | undefined]> = [];
+const statisticsResponse = {
+  from: "2026-10-01",
+  to: "2026-10-22",
+  totalCalls: 12,
+  errorCalls: 2,
+  averageDurationMs: 31.5,
+  daily: [{ date: "2026-10-02", calls: 12, errorCalls: 2 }],
+  endpoints: [
+    { method: "GET", route: "/form", status: 200, calls: 10, averageDurationMs: 20 },
+    { method: "POST", route: "UNMATCHED", status: 401, calls: 2, averageDurationMs: 89.25 },
+  ],
+};
+const getApiStatistics = createApiStatisticsApi(async <T>(path: string, init?: RequestInit) => {
+  statisticsCalls.push([path, init]);
+  return statisticsResponse as T;
+});
+assert.deepEqual(await getApiStatistics({ from: "2026-10-01", to: "2026-10-22" }), statisticsResponse);
+assert.equal(statisticsCalls[0][0], "/admin/statistics/api?from=2026-10-01&to=2026-10-22");
+assert.equal(statisticsCalls[0][1]?.method, undefined);
+assert.equal(statisticsCalls[0][1]?.body, undefined);
+assert.ok(statisticsCalls[0][1]?.signal instanceof AbortSignal);
+await assert.rejects(getApiStatistics({ from: "2026-10-22", to: "2026-10-01" }), /시작일/);
+assert.equal(statisticsCalls.length, 1);
+for (const malformed of [
+  { ...statisticsResponse, errorCalls: 13 },
+  { ...statisticsResponse, averageDurationMs: -1 },
+  { ...statisticsResponse, daily: [{ date: "2026-13-01", calls: 1, errorCalls: 0 }] },
+  { ...statisticsResponse, endpoints: [{ method: "GET", route: "/form", status: 99, calls: 1, averageDurationMs: 1 }] },
+]) {
+  await assert.rejects(createApiStatisticsApi(async <T>() => malformed as T)({ from: "2026-10-01", to: "2026-10-22" }), /응답 형식/);
+}
+await assert.rejects(
+  createApiStatisticsApi(async () => { throw new ApiError("권한 없음", 403); })({ from: "2026-10-01", to: "2026-10-22" }),
+  (error) => error instanceof ApiError && error.status === 403,
+);
+assert.match(read("src/fsd/features/view-api-statistics/api/getApiStatistics.ts"), /createApiStatisticsApi\(requestWithSession\)/);
+
+const statistics = read("src/fsd/pages/admin/ui/ApiStatistics.tsx");
+assert.match(page, /<ApiStatistics \/>/);
+assert.match(statistics, /@fsd\/features\/view-api-statistics/);
+assert.match(statistics, /AbortController/);
+assert.match(statistics, /관리자 계정으로 로그인해야 통계를 조회할 수 있습니다/);
+assert.match(statistics, /일별 수치 표로 보기/);
+assert.match(statistics, /UNMATCHED/);
