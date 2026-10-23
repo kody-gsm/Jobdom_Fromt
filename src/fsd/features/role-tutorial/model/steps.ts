@@ -34,7 +34,7 @@ const STUDENT_STEPS: readonly TutorialStep[] = [
   { id: "form-list", section: "신청 폼 · 1/3", scene: "student-forms", target: "form-list", title: "신청할 폼을 선택해요", description: "신청 폼 목록에서 제목과 설명, 모집 상태를 확인하고 폼을 열어요. 지금 보이는 ‘잡담 체험 회사 지원서’는 이 튜토리얼에서만 보여주는 가상 폼이에요." },
   { id: "form-fields", section: "신청 폼 · 2/3", scene: "student-form", target: "form-fields", title: "질문을 읽고 응답해요", description: "별표가 있는 질문은 필수예요. 폼에 따라 글쓰기, 선택형, 날짜, 파일 첨부 등 질문이 달라질 수 있어요. 예시 폼에는 가상의 응답을 넣어 두었고, 파일 업로드나 응답 저장은 하지 않아요." },
   { id: "form-submit", section: "신청 폼 · 3/3", scene: "student-form", target: "form-submit", title: "응답을 확인하고 제출해요", description: "실제 이용 시 모든 필수 질문에 답한 뒤 ‘제출하기’를 눌러요. 튜토리얼은 제출 버튼 설명에서 마무리하며 실제 지원이나 제출은 일어나지 않아요." },
-  { id: "student-account", section: "안내 완료", scene: "student-home", target: "account", title: "이제 잡담을 이용해 보세요", description: "상단 알림에서 새 소식을, 프로필에서 내 정보와 상담 내역을 확인해요. ‘잡담 시작하기’를 누르면 안내가 완료되고 원래 화면으로 돌아가요. 끝까지 확인한 계정은 이 브라우저에서 다음부터 안내를 생략해요." },
+  { id: "student-account", section: "안내 완료", scene: "student-home", target: "account", title: "이제 잡담을 이용해 보세요", description: "상단 알림에서 새 소식을, 프로필에서 내 정보와 상담 내역을 확인해요. ‘잡담 시작하기’를 누르면 안내가 완료되고 원래 화면으로 돌아가요. 안내는 계정마다 한 번만 보여 드리며, 완료하면 다음부터는 표시되지 않아요." },
 ];
 
 const TEACHER_STEPS: readonly TutorialStep[] = [
@@ -51,7 +51,7 @@ const TEACHER_STEPS: readonly TutorialStep[] = [
   { id: "form-editor", section: "신청 폼 관리 · 2/4", scene: "teacher-form-editor", target: "form-editor", title: "질문과 필수 응답을 설정해요", description: "질문을 추가해 단답형·장문형·선택형·파일 첨부 등 유형과 필수 여부를 정해요. 응답이 있는 폼은 질문 변경이 제한될 수 있어요. 튜토리얼에서는 예시 질문만 보여드려요." },
   { id: "form-publish", section: "신청 폼 관리 · 3/4", scene: "teacher-form-editor", target: "form-publish", title: "저장하고 공개하면 신청을 받을 수 있어요", description: "실제 이용 시 폼을 저장하고 공개하면 학생이 응답할 수 있어요. 모집을 끝내려면 마감해요. 여기서는 저장·공개·마감 버튼만 안내하고 실제 폼을 만들거나 공개하지 않아요." },
   { id: "form-responses", section: "신청 폼 관리 · 4/4", scene: "teacher-responses", target: "form-responses", title: "응답을 시트로 확인해요", description: "폼의 응답 보기에서 학생별 답변을 표로 확인하고 엑셀로 내려받을 수 있어요. 지금 보이는 이름과 답변은 모두 가상 데이터이며, 파일을 내려받지는 않아요." },
-  { id: "teacher-account", section: "안내 완료", scene: "teacher-schedule", target: "account", title: "안내를 모두 확인했어요", description: "상단에서 알림과 프로필을 확인할 수 있어요. ‘잡담 시작하기’를 누르면 원래 화면으로 돌아가요. 끝까지 확인한 계정은 이 브라우저에서 다음부터 안내를 생략해요." },
+  { id: "teacher-account", section: "안내 완료", scene: "teacher-schedule", target: "account", title: "안내를 모두 확인했어요", description: "상단에서 알림과 프로필을 확인할 수 있어요. ‘잡담 시작하기’를 누르면 원래 화면으로 돌아가요. 안내는 계정마다 한 번만 보여 드리며, 완료하면 다음부터는 표시되지 않아요." },
 ];
 
 export const getTutorialSteps = (role: TutorialRole): readonly TutorialStep[] => {

@@ -45,6 +45,14 @@
 - DB 반영 후 응답은 `{ scannedMembers: number, linkedStudents: number, updatedStudents: number }`이다. 각각 조회한 Discord 회원 수, 연결된 학생 수, ID가 갱신·정리된 학생 수이며 0 이상의 정수다.
 - 실행 중 중복 요청을 막고 성공 수치와 한국 시간 기준 완료 시각을 표시한다. 401/403은 관리자 권한 안내, 그 외 실패는 오류와 재시도를 제공한다.
 
+## Role tutorial completion
+
+- 학생·교사·Wee 교사는 로그인 후 보호된 화면에 들어올 때 기존 Bearer 인증으로 `GET /auth/tutorial`을 호출해 `{ tutorialCompleted: boolean }`을 확인한다. 관리자와 로그인·회원가입·비밀번호 찾기 화면은 대상이 아니다.
+- `tutorialCompleted`가 `false`이면 역할별 튜토리얼을 필수로 표시한다. 건너뛰기는 없고 마지막 단계의 `잡담 시작하기`에서 요청 body 없이 `PATCH /auth/tutorial/complete`를 호출한다.
+- 완료 응답의 `tutorialCompleted`가 `true`일 때만 튜토리얼을 닫는다. 저장 실패 시 튜토리얼을 유지하고 오류와 재시도를 제공하며, 저장 중 중복 요청을 막는다.
+- 완료 여부는 계정 단위 서버 상태만 사용하며 브라우저 저장소에 기록하지 않는다. 완료가 확인된 계정은 같은 탭에서 다시 조회하지 않는다.
+- 상태 조회가 실패하면 서비스 이용을 막지 않고 튜토리얼 없이 화면을 표시하며, 다음 진입 때 다시 조회한다.
+
 ## Admin API statistics
 
 - 관리자 화면의 `API 호출 통계`는 기존 Bearer 인증으로 `GET /admin/statistics/api?from=YYYY-MM-DD&to=YYYY-MM-DD`를 호출한다. 기본 기간은 한국 시간 기준 최근 30일이며, 시작일이 종료일보다 늦거나 366일을 넘으면 요청하지 않는다.

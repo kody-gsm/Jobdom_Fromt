@@ -1,42 +1,28 @@
 "use client";
 
-import { useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getSession } from "@fsd/entities/user";
-import { getTutorialRole, getTutorialStorageKey, readTutorialCompletion, saveTutorialCompletion } from "../model/progress.ts";
+import { tutorialApi } from "../api/tutorialApi.ts";
+import { getTutorialRole } from "../model/progress.ts";
 
 const Tutorial = dynamic(() => import("./Tutorial.tsx").then((module) => module.Tutorial));
-const COMPLETION_EVENT = "jobdam-tutorial-completed";
-const completedInMemory = new Set<string>();
 const PUBLIC_PATHS = new Set(["/login", "/signup", "/forgot-password"]);
+// 완료가 확인된 계정은 탭이 살아 있는 동안 다시 조회하지 않는다.
+const completedUsers = new Set<number>();
 
-const getBrowserStorage = () => {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-};
+type TutorialStatus = { userId: number; isCompleted: boolean };
 
 const getSnapshot = () => {
   const session = getSession();
   const role = getTutorialRole(session?.role);
-  if (!session || !role) return "ready";
-  const key = getTutorialStorageKey(session.userId, role);
-  const isCompleted = completedInMemory.has(key) || readTutorialCompletion(getBrowserStorage(), key);
-  return `${key}:${isCompleted ? "completed" : "pending"}`;
+  return session && role ? `${session.userId}:${role}` : "none";
 };
 
 const subscribe = (onChange: () => void) => {
   window.addEventListener("jobdam-session", onChange);
-  window.addEventListener("storage", onChange);
-  window.addEventListener(COMPLETION_EVENT, onChange);
-  return () => {
-    window.removeEventListener("jobdam-session", onChange);
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener(COMPLETION_EVENT, onChange);
-  };
+  return () => window.removeEventListener("jobdam-session", onChange);
 };
 
 const getServerSnapshot = () => "loading";
@@ -44,22 +30,40 @@ const getServerSnapshot = () => "loading";
 export const RoleTutorialGate = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [status, setStatus] = useState<TutorialStatus | null>(null);
+  const session = snapshot === "loading" || snapshot === "none" ? null : getSession();
+  const role = getTutorialRole(session?.role);
+  const userId = session && role ? session.userId : null;
+
+  useEffect(() => {
+    if (userId === null || completedUsers.has(userId)) return;
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        const isCompleted = await tutorialApi.isCompleted(controller.signal);
+        if (controller.signal.aborted) return;
+        if (isCompleted) completedUsers.add(userId);
+        setStatus({ userId, isCompleted });
+      } catch {
+        // 상태 조회 실패로 서비스 이용을 막지 않는다. 캐시하지 않으므로 다음 진입 때 다시 확인한다.
+        if (!controller.signal.aborted) setStatus({ userId, isCompleted: true });
+      }
+    };
+    void load();
+    return () => controller.abort();
+  }, [userId]);
 
   if (PUBLIC_PATHS.has(pathname)) return children;
   if (snapshot === "loading") return null;
-  if (snapshot === "ready" || snapshot.endsWith(":completed")) return children;
+  if (userId === null || !role || completedUsers.has(userId)) return children;
+  if (status?.userId !== userId) return null;
+  if (status.isCompleted) return children;
 
-  const session = getSession();
-  const role = getTutorialRole(session?.role);
-  if (!session || !role) return null;
-  const completionKey = getTutorialStorageKey(session.userId, role);
-
-  const handleComplete = () => {
-    // 저장소가 차단된 브라우저에서도 현재 탭에서는 완료 상태를 유지한다.
-    completedInMemory.add(completionKey);
-    saveTutorialCompletion(getBrowserStorage(), completionKey);
-    window.dispatchEvent(new Event(COMPLETION_EVENT));
+  const handleComplete = async () => {
+    await tutorialApi.complete();
+    completedUsers.add(userId);
+    setStatus({ userId, isCompleted: true });
   };
 
-  return <Tutorial key={completionKey} role={role} onComplete={handleComplete} />;
+  return <Tutorial key={snapshot} role={role} onComplete={handleComplete} />;
 };

@@ -1,40 +1,35 @@
 import assert from "node:assert/strict";
-import {
-  getTutorialRole,
-  getTutorialStorageKey,
-  readTutorialCompletion,
-  saveTutorialCompletion,
-} from "../../src/fsd/features/role-tutorial/model/progress.ts";
+import { createTutorialApi } from "../../src/fsd/features/role-tutorial/api/createTutorialApi.ts";
+import { getTutorialRole } from "../../src/fsd/features/role-tutorial/model/progress.ts";
 import { getTutorialSteps } from "../../src/fsd/features/role-tutorial/model/steps.ts";
 
-const values = new Map<string, string>();
-const storage = {
-  getItem: (key: string) => values.get(key) ?? null,
-  setItem: (key: string, value: string) => { values.set(key, value); },
-};
-const studentKey = getTutorialStorageKey(1, "STUDENT");
 assert.equal(getTutorialRole("ADMIN"), null);
 assert.equal(getTutorialRole(undefined), null);
 assert.equal(getTutorialRole("STUDENT"), "STUDENT");
 assert.equal(getTutorialRole("TEACHER"), "TEACHER");
 assert.equal(getTutorialRole("WEE_TEACHER"), "WEE_TEACHER");
-assert.equal(readTutorialCompletion(storage, studentKey), false);
-assert.equal(saveTutorialCompletion(storage, studentKey), true);
-assert.equal(readTutorialCompletion(storage, studentKey), true);
-assert.equal(readTutorialCompletion(storage, getTutorialStorageKey(2, "STUDENT")), false);
-assert.equal(readTutorialCompletion(storage, getTutorialStorageKey(1, "TEACHER")), false);
-assert.equal(readTutorialCompletion(storage, getTutorialStorageKey(1, "WEE_TEACHER")), false);
-storage.setItem(studentKey, "started");
-assert.equal(readTutorialCompletion(storage, studentKey), false);
 
-const blockedStorage = {
-  getItem: (): string | null => { throw new Error("Storage blocked"); },
-  setItem: () => { throw new Error("Storage blocked"); },
-};
-assert.equal(readTutorialCompletion(blockedStorage, studentKey), false);
-assert.equal(saveTutorialCompletion(blockedStorage, studentKey), false);
-assert.equal(readTutorialCompletion(null, studentKey), false);
-assert.equal(saveTutorialCompletion(null, studentKey), false);
+const calls: Array<[string, RequestInit | undefined]> = [];
+let completed = false;
+const tutorialApi = createTutorialApi(async <T>(path: string, init?: RequestInit) => {
+  calls.push([path, init]);
+  if (init?.method === "PATCH") completed = true;
+  return { tutorialCompleted: completed } as T;
+});
+const controller = new AbortController();
+assert.equal(await tutorialApi.isCompleted(controller.signal), false);
+assert.deepEqual(calls[0], ["/auth/tutorial", { signal: controller.signal }]);
+await tutorialApi.complete();
+assert.deepEqual(calls[1], ["/auth/tutorial/complete", { method: "PATCH" }]);
+assert.equal(await tutorialApi.isCompleted(), true);
+
+const malformedApi = createTutorialApi(async <T>() => ({ tutorialCompleted: "true" }) as T);
+await assert.rejects(malformedApi.isCompleted(), /응답 형식/);
+await assert.rejects(malformedApi.complete(), /응답 형식/);
+const notSavedApi = createTutorialApi(async <T>() => ({ tutorialCompleted: false }) as T);
+await assert.rejects(notSavedApi.complete(), /저장되지 않았습니다/);
+const failedApi = createTutorialApi(async () => { throw new Error("네트워크 오류"); });
+await assert.rejects(failedApi.complete(), /네트워크 오류/);
 
 for (const role of ["STUDENT", "TEACHER", "WEE_TEACHER"] as const) {
   const steps = getTutorialSteps(role);
