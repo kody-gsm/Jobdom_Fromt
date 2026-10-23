@@ -188,6 +188,8 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | GET | `/teacher` | teacher id 조회 |
 | POST | `/admin/students/sync` | 학생 정보 동기화 |
 | GET | `/admin/statistics/api` | 관리자 API 호출 통계(`from`, `to` 날짜) |
+| GET | `/auth/tutorial` | 계정 튜토리얼 완료 여부 조회 |
+| PATCH | `/auth/tutorial/complete` | 계정 튜토리얼 완료 저장 |
 | GET | `/recruit` | 공개 공고 목록 |
 | GET | `/recruit/{id}` | 공개 공고 상세 |
 | GET | `/teacher/recruit` | 교사 공고 목록 |

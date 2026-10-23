@@ -8,8 +8,16 @@ import { getTutorialSteps } from "../model/steps.ts";
 import { TutorialPreview } from "./TutorialPreview.tsx";
 import styles from "./tutorial.module.css";
 
-export const Tutorial = ({ role, onComplete }: { role: TutorialRole; onComplete: () => void }) => {
+const getNextLabel = (isLastStep: boolean, isCompleting: boolean, hasError: boolean) => {
+  if (!isLastStep) return "다음";
+  if (isCompleting) return "저장 중…";
+  return hasError ? "다시 시도" : "잡담 시작하기";
+};
+
+export const Tutorial = ({ role, onComplete }: { role: TutorialRole; onComplete: () => Promise<void> }) => {
   const [stepIndex, setStepIndex] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completionError, setCompletionError] = useState("");
   const steps = getTutorialSteps(role);
   const step = steps[stepIndex];
   const isLastStep = stepIndex === steps.length - 1;
@@ -24,8 +32,20 @@ export const Tutorial = ({ role, onComplete }: { role: TutorialRole; onComplete:
     target?.scrollIntoView({ behavior: "instant", block: "start" });
   }, [step.id, step.target]);
 
+  const complete = async () => {
+    if (isCompleting) return;
+    setIsCompleting(true);
+    setCompletionError("");
+    try {
+      await onComplete();
+    } catch {
+      setCompletionError("안내 완료 상태를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      setIsCompleting(false);
+    }
+  };
+
   const handleNext = () => {
-    if (isLastStep) onComplete();
+    if (isLastStep) void complete();
     else setStepIndex((index) => index + 1);
   };
 
@@ -65,9 +85,10 @@ export const Tutorial = ({ role, onComplete }: { role: TutorialRole; onComplete:
         <h2 ref={title} id="tutorial-title" tabIndex={-1} className="mt-4 text-xl font-bold leading-snug tracking-tight outline-none lg:mt-6">{step.title}</h2>
         <p id="tutorial-description" className="mt-2 break-keep text-sm leading-6 text-[#536174] lg:mt-3 lg:leading-7">{step.description}</p>
         <p id="tutorial-safety" className="mt-3 flex items-start gap-2 text-xs font-semibold leading-5 text-[#137342] lg:mt-5 lg:rounded-xl lg:bg-brand-soft lg:px-3 lg:py-3"><FiShield aria-hidden className="mt-0.5 shrink-0" size={15} />신청·제출·저장은 실행되지 않아요.</p>
+        {completionError && <p role="alert" className="mt-3 text-xs font-semibold leading-5 text-red-700">{completionError}</p>}
         <div className="mt-4 flex items-center justify-between gap-3 lg:mt-6">
-          <ActionButton variant="ghost" disabled={stepIndex === 0} onClick={() => setStepIndex((index) => index - 1)} className="gap-1 !px-3 !text-sm"><FiArrowLeft aria-hidden />이전</ActionButton>
-          <ActionButton onClick={handleNext} className="gap-2 !px-4 !text-sm">{isLastStep ? "잡담 시작하기" : "다음"}{isLastStep ? <FiCheckCircle aria-hidden /> : <FiArrowRight aria-hidden />}</ActionButton>
+          <ActionButton variant="ghost" disabled={stepIndex === 0 || isCompleting} onClick={() => setStepIndex((index) => index - 1)} className="gap-1 !px-3 !text-sm"><FiArrowLeft aria-hidden />이전</ActionButton>
+          <ActionButton disabled={isCompleting} onClick={handleNext} className="gap-2 !px-4 !text-sm">{getNextLabel(isLastStep, isCompleting, Boolean(completionError))}{isLastStep ? <FiCheckCircle aria-hidden /> : <FiArrowRight aria-hidden />}</ActionButton>
         </div>
         <p className="mt-4 hidden text-center text-[11px] leading-5 text-muted lg:block">처음 한 번, 마지막 단계까지 확인해 주세요.</p>
       </aside>
