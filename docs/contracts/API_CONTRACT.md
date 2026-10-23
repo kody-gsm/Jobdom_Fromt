@@ -25,6 +25,7 @@
 - `GET /backend/teacher/common`
 - `POST /backend/admin/students/sync`
 - `POST /backend/admin/discord/members/sync`
+- `GET /backend/admin/statistics/api`
 - `POST /backend/auth/email/signup-code`
 - `POST /backend/auth/signup`
 - `POST /backend/auth/password/reset`
@@ -43,6 +44,13 @@
 - 서버는 Discord 닉네임의 학번·이름을 학생 정보와 비교해 Discord 사용자 ID를 저장하고, 매칭되지 않는 기존 ID를 정리한다. DataGSM 학생 정보 동기화와는 별도 기능이다.
 - DB 반영 후 응답은 `{ scannedMembers: number, linkedStudents: number, updatedStudents: number }`이다. 각각 조회한 Discord 회원 수, 연결된 학생 수, ID가 갱신·정리된 학생 수이며 0 이상의 정수다.
 - 실행 중 중복 요청을 막고 성공 수치와 한국 시간 기준 완료 시각을 표시한다. 401/403은 관리자 권한 안내, 그 외 실패는 오류와 재시도를 제공한다.
+
+## Admin API statistics
+
+- 관리자 화면의 `API 호출 통계`는 기존 Bearer 인증으로 `GET /admin/statistics/api?from=YYYY-MM-DD&to=YYYY-MM-DD`를 호출한다. 기본 기간은 한국 시간 기준 최근 30일이며, 시작일이 종료일보다 늦거나 366일을 넘으면 요청하지 않는다.
+- 응답은 `{ from, to, totalCalls, errorCalls, averageDurationMs, daily: [{ date, calls, errorCalls }], endpoints: [{ method, route, status, calls, averageDurationMs }] }`이다. 오류 호출은 HTTP 4xx·5xx이며 `endpoints`는 호출 수 내림차순이다.
+- 서버는 호출이 있던 날짜만 `daily`로 내려주므로 화면은 빈 날짜를 0으로 채워 일별 차트를 그린다. 인증 실패나 매핑되지 않은 요청은 `UNMATCHED` 경로로 집계된다.
+- 401/403은 관리자 권한 안내, 그 외 실패는 오류와 재조회를 제공한다. 형식이 맞지 않는 응답은 오류로 처리한다.
 
 ## Form attachment download
 

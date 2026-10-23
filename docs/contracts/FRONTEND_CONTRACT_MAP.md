@@ -25,7 +25,7 @@ Student 영역은 이 계약을 유지하면 UI, component, hook, state, 함수 
 | `/login` | Auth | 로그인, 아이디 저장, 저장 세션 복원, role별 redirect |
 | `/signup` | Auth | GSM 이메일 인증코드 발송, 3분 만료, 회원가입 후 `/login` 이동 |
 | `/forgot-password` | Auth | 이메일 인증코드 발송, 3분 만료, 새 비밀번호 설정 후 `/login` 이동 |
-| `/admin` | Admin | ADMIN 전용. 학생 정보 동기화 실행 |
+| `/admin` | Admin | ADMIN 전용. 사용자 활동·API 호출 통계 조회, 학생 정보 동기화 실행 |
 | `/counsel` | Student | 진로/일반 상담 신청. `type=general`이면 일반상담 탭으로 시작 |
 | `/forms` | Student | 공개 신청 폼 목록 조회 |
 | `/forms/[id]` | Student | 폼 조회, 필수 응답 검증, 최초 제출, 기존 제출 결과 조회 |
@@ -187,6 +187,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | POST | `/teacher/{course|common}/lock` | 상담 slot 잠금 |
 | GET | `/teacher` | teacher id 조회 |
 | POST | `/admin/students/sync` | 학생 정보 동기화 |
+| GET | `/admin/statistics/api` | 관리자 API 호출 통계(`from`, `to` 날짜) |
 | GET | `/recruit` | 공개 공고 목록 |
 | GET | `/recruit/{id}` | 공개 공고 상세 |
 | GET | `/teacher/recruit` | 교사 공고 목록 |
