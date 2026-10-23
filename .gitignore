@@ -22,6 +22,9 @@
 !/tests/unit/formFilters.test.ts
 !/tests/unit/consultationDraft.test.ts
 !/tests/unit/formIdentityValidation.test.ts
+!/tests/unit/submissionExport.test.ts
+!/tests/unit/submissionSheet.test.ts
+!/tests/unit/tutorial.test.ts
 
 # next.js
 /.next/

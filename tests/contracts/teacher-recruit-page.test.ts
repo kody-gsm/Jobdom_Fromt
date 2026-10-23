@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 const route = readFileSync("app/teacher/recruit/page.tsx", "utf8");
 const page = readFileSync("src/fsd/pages/teacher-recruit/ui/TeacherRecruitPage.tsx", "utf8");
+const header = readFileSync("src/fsd/widgets/teacher-header/ui/TeacherHeader.tsx", "utf8");
 
 assert.match(route, /@fsd\/pages\/teacher-recruit/);
 assert.doesNotMatch(route, /useState|useEffect|app\/utils\/api|fetch\(/);
@@ -15,6 +16,8 @@ assert.match(page, /creating/);
 assert.match(page, /이미지로 AI 초안 채우기/);
 assert.match(page, /이미지 없이 직접 작성해도 됩니다/);
 assert.match(page, /\/teacher\/forms/);
+assert.doesNotMatch(page, />신청 폼 관리<\//);
+assert.match(header, /href: "\/teacher\/forms", label: "신청 폼 관리"/);
 assert.match(page, /\/teacher\/forms\?formId=\$\{row\.form\.id\}/);
 assert.match(page, /\/teacher\/forms\/\$\{selected\.form\.id\}\/submissions/);
 assert.match(page, /onClick=\{\(\) => select\(row\)\}/);

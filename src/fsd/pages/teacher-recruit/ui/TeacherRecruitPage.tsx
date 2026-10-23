@@ -170,7 +170,6 @@ export function TeacherRecruitPage() {
               <p className="mt-2 text-sm text-gray-500">공고와 신청자를 데이터 시트처럼 한 화면에서 확인하세요.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link href="/teacher/forms" className="inline-flex h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700">신청 폼 관리</Link>
               <button type="button" onClick={startCreating} className="inline-flex h-11 items-center rounded-xl bg-[#02C551] px-4 text-sm font-bold text-white disabled:opacity-60" disabled={working}>+ 공고 작성</button>
             </div>
           </header>
