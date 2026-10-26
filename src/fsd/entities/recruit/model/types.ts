@@ -16,6 +16,8 @@ export interface Recruit {
 
 export type RecruitCategory = "기업" | "공공기관";
 
+export type RecruitNoticeChannel = { id: string; name: string; categoryName: string | null };
+
 export type RecruitUpdate = Pick<
   Recruit,
   "companyName" | "interviewDate" | "deadline" | "summary" | "fields"
