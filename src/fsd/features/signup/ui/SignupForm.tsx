@@ -110,6 +110,7 @@ export const SignupForm = () => {
               <button
                 ref={termsTriggerRef}
                 type="button"
+                aria-label="이용약관 자세히 보기"
                 onClick={() => signupForm.openConsent("terms")}
                 className="min-h-11 self-start px-1 text-sm font-semibold text-brand-hover transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:shrink-0"
               >
@@ -138,6 +139,7 @@ export const SignupForm = () => {
               <button
                 ref={privacyTriggerRef}
                 type="button"
+                aria-label="개인정보 수집·이용 자세히 보기"
                 onClick={() => signupForm.openConsent("privacy")}
                 className="min-h-11 self-start px-1 text-sm font-semibold text-brand-hover transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:shrink-0"
               >
