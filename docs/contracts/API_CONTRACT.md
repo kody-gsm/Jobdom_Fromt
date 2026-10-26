@@ -45,6 +45,16 @@
 - DB 반영 후 응답은 `{ scannedMembers: number, linkedStudents: number, updatedStudents: number }`이다. 각각 조회한 Discord 회원 수, 연결된 학생 수, ID가 갱신·정리된 학생 수이며 0 이상의 정수다.
 - 실행 중 중복 요청을 막고 성공 수치와 한국 시간 기준 완료 시각을 표시한다. 401/403은 관리자 권한 안내, 그 외 실패는 오류와 재시도를 제공한다.
 
+## Recruit publish with linked form
+
+- 교사 공고 화면의 `폼 작성 후 공개`는 공고를 저장(`POST /teacher/recruit` 또는 `PATCH /teacher/recruit/{id}`)한 뒤 응답의 `formId`로 `/teacher/forms?formId={formId}`를 연다. 공고 화면에서 직접 공개하지 않는다.
+- 폼 화면은 `GET /teacher/recruit`로 `formId`가 같은 공고를 찾는다. 초안 폼이 초안 공고에 연결되어 있으면 디스코드 알림 채널을 필수로 고르게 하고 `공고와 함께 공개`로 표시한다.
+- 공개 시 폼 수정 내용을 먼저 저장(`PATCH /teacher/form/{id}`)한 뒤 `POST /teacher/recruit/{recruitId}/publish`에 `{ channelId: string }`을 보낸다. 서버는 공고 공개와 함께 연결 폼도 공개한다. 채널 ID는 JavaScript 안전 정수 범위를 넘으므로 문자열로 보낸다.
+- 선택 가능한 채널은 프론트 설정(`entities/recruit/config/noticeChannels.ts`)의 test1·test2·test3이며, 화면에는 이름을, 요청에는 ID를 사용한다.
+- 디스코드 공지는 서버가 공고 공개 처리에서 보낸다. 프론트는 공고 공개 후 `/api/notices`를 별도로 호출하지 않는다.
+- 공고에 연결되지 않았거나 공고가 이미 공개된 폼은 기존 `POST /teacher/form/{id}/publish`를 사용한다.
+- 2026-10-26 기준 백엔드 `develop`의 공고 공개 API는 요청 body와 `channelId`를 읽지 않고 기본 공지 채널로 보낸다. 선택 채널 발송은 백엔드 반영이 필요하다.
+
 ## Role tutorial completion
 
 - 학생·교사·Wee 교사는 로그인 후 보호된 화면에 들어올 때 기존 Bearer 인증으로 `GET /auth/tutorial`을 호출해 `{ tutorialCompleted: boolean }`을 확인한다. 관리자와 로그인·회원가입·비밀번호 찾기 화면은 대상이 아니다.
