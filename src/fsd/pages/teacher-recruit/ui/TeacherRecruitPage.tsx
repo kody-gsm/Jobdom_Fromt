@@ -5,6 +5,7 @@ import { formatRecruitFields, RECRUIT_FIELD_OPTIONS } from "@fsd/entities/recrui
 import { SummaryMarkdown } from "@fsd/shared/ui";
 import { indentSummaryList } from "@fsd/shared/lib";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { ApiError } from "@fsd/shared/api";
 import {
@@ -12,7 +13,6 @@ import {
   createRecruit,
   deleteRecruit,
   getRecruitDashboard,
-  publishRecruit,
   updateRecruit,
   type Recruit,
   type RecruitDashboardRow,
@@ -22,6 +22,7 @@ import {
 const blank: RecruitUpdate = { companyName: "", interviewDate: "", deadline: "", summary: "", fields: [] };
 
 export function TeacherRecruitPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<RecruitDashboardRow[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
@@ -120,7 +121,8 @@ export function TeacherRecruitPage() {
     }
   };
 
-  const save = async (publish = false) => {
+  // 공고는 연결된 지원 폼을 작성한 뒤 폼 화면에서 함께 공개한다.
+  const save = async (openForm = false) => {
     if (!form.companyName?.trim()) return setMessage({ text: "회사명을 입력해주세요.", error: true });
     try {
       setWorking(true);
@@ -131,11 +133,15 @@ export function TeacherRecruitPage() {
         setCreating(false);
         await load(recruit.id);
       }
-      if (publish) await publishRecruit(recruit.id);
+      if (openForm && recruit.formId) {
+        router.push(`/teacher/forms?formId=${recruit.formId}`);
+        return;
+      }
       await load(recruit.id);
       setEditing(false);
       setCreating(false);
-      setMessage({ text: publish ? "공고를 공개했습니다." : "공고를 저장했습니다." });
+      if (openForm) return setMessage({ text: "공고는 저장했지만 연결된 지원 폼을 찾지 못해 공개를 진행할 수 없습니다.", error: true });
+      setMessage({ text: "공고를 저장했습니다." });
     } catch (caught) {
       setMessage({ text: caught instanceof Error ? caught.message : "공고를 저장하지 못했습니다.", error: true });
     } finally {
@@ -295,7 +301,7 @@ function Info({ label, value }: { label: string; value: string | null }) {
   return <div className="min-w-0 rounded-xl border border-gray-200 bg-white p-3"><dt className="text-xs font-semibold text-gray-500">{label}</dt><dd className="mt-1 wrap-anywhere break-keep text-sm font-semibold leading-6 text-gray-800">{value || "—"}</dd></div>;
 }
 
-function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: RecruitDashboardRow | null; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (publish?: boolean) => Promise<void>; analyze: (event: ChangeEvent<HTMLInputElement>) => Promise<void> }) {
+function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: RecruitDashboardRow | null; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (openForm?: boolean) => Promise<void>; analyze: (event: ChangeEvent<HTMLInputElement>) => Promise<void> }) {
   const update = (key: Exclude<keyof RecruitUpdate, "fields">, value: string) => setForm((current) => ({ ...current, [key]: value }));
   const isDraft = row === null || row.recruit.status === "DRAFT";
   const isClosed = row?.recruit.status === "CLOSED";
@@ -311,7 +317,7 @@ function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: R
           </label>
         ))}
       </div>
-    </fieldset><SummaryEditor value={form.summary || ""} onChange={(value) => update("summary", value)} /></div>{isDraft && row?.form && <Link href={`/teacher/forms?formId=${row.form.id}`} className="mt-5 flex h-11 items-center justify-center rounded-xl border border-[#02C551] bg-white text-sm font-bold text-[#02a946]">연결 폼 작성하기</Link>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">공개</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
+    </fieldset><SummaryEditor value={form.summary || ""} onChange={(value) => update("summary", value)} /></div>{isDraft && <p className="mt-5 rounded-xl bg-[#effbf3] px-3 py-2.5 text-xs leading-5 text-gray-600">공개하려면 연결된 지원 폼을 먼저 작성해주세요. 폼 화면에서 디스코드 알림 채널을 고르고 공개하면 공고와 폼이 함께 게시됩니다.</p>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">폼 작성 후 공개</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {

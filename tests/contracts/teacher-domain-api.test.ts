@@ -80,7 +80,7 @@ await recruit.getTeacherAll();
 await recruit.createTeacher(update);
 await recruit.analyze(image);
 await recruit.updateTeacher(3, update);
-await recruit.publishTeacher(3);
+await recruit.publishTeacher(3, "1564185374937452697");
 await recruit.deleteTeacher(3);
 
 const recruitCalls = calls.splice(0);
@@ -97,18 +97,16 @@ assert.deepEqual(recruitCalls.slice(3), [
     path: "/teacher/recruit/3",
     init: { method: "PATCH", body: JSON.stringify(update) },
   },
-  { path: "/teacher/recruit/3/publish", init: { method: "POST" } },
   {
-    path: "/api/notices",
-    init: {
-      method: "POST",
-      body: JSON.stringify({
-        title: "취업 공고",
-        content: "새로운 취업 공고가 등록되었습니다.",
-      }),
-    },
+    path: "/teacher/recruit/3/publish",
+    init: { method: "POST", body: JSON.stringify({ channelId: "1564185374937452697" }) },
   },
   { path: "/teacher/recruit/3", init: { method: "DELETE" } },
 ]);
+
+// 디스코드 공지는 서버가 공개와 함께 보내므로 프론트에서 /api/notices를 따로 호출하지 않는다.
+assert.ok(recruitCalls.every(({ path }) => !path.startsWith("/api/notices")));
+assert.throws(() => recruit.publishTeacher(3, "123" as never), /디스코드 알림 채널/);
+assert.equal(calls.length, 0);
 
 console.log("teacher domain api contract passed");

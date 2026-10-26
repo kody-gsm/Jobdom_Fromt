@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { UIEvent } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getAuthErrorMessage,
@@ -11,7 +10,6 @@ import {
 } from "@fsd/entities/user";
 import { useCountdown } from "@fsd/shared/lib";
 import { sendSignupVerificationCode, signup } from "../api/signup.ts";
-import { hasReachedConsentEnd } from "./consentContent.ts";
 import type { SignupConsentDocument } from "./consentContent.ts";
 import type { SignupConsentField, SignupTextField } from "./validation.ts";
 import { getFirstSignupErrorField, validateSignupForm } from "./validation.ts";
@@ -44,6 +42,8 @@ export const useSignupForm = () => {
   const resendCountdown = useCountdown();
   const verificationRequestVersion = useRef(0);
 
+  const closeConsent = useCallback(() => setActiveConsent(null), []);
+
   const updateField = (field: SignupTextField, value: string) => {
     const normalized =
       field === "verificationCode" ? normalizeVerificationCode(value) : value;
@@ -68,11 +68,19 @@ export const useSignupForm = () => {
     setSubmitError("");
   };
 
-  const handleConsentScroll = (document: SignupConsentDocument, event: UIEvent<HTMLDivElement>) => {
-    if (hasReachedConsentEnd(event.currentTarget)) {
-      setReadConsentDocuments((current) => ({ ...current, [document]: true }));
-    }
-  };
+  const markConsentRead = useCallback((document: SignupConsentDocument) => {
+    setReadConsentDocuments((current) => ({ ...current, [document]: true }));
+  }, []);
+
+  const agreeToConsent = useCallback((document: SignupConsentDocument) => {
+    if (!readConsentDocuments[document]) return;
+    const field: SignupConsentField = document === "terms" ? "termsAccepted" : "privacyAccepted";
+    setForm((current) => ({ ...current, [field]: true }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+    setErrorField(null);
+    setSubmitError("");
+    closeConsent();
+  }, [closeConsent, readConsentDocuments]);
 
   const sendCode = async () => {
     const emailError = getGsmEmailErrorMessage(form.email);
@@ -161,8 +169,9 @@ export const useSignupForm = () => {
     updateConsent,
     activeConsent,
     openConsent: setActiveConsent,
-    closeConsent: () => setActiveConsent(null),
-    handleConsentScroll,
+    closeConsent,
+    markConsentRead,
+    agreeToConsent,
     canAgreeToTerms: readConsentDocuments.terms,
     canAgreeToPrivacy: readConsentDocuments.privacy,
     sendCode,

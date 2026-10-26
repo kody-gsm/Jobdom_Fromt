@@ -13,6 +13,8 @@ import type {
   QuestionType,
 } from "@fsd/entities/form";
 import { FORM_EDITOR_LIMITS, FORM_TEXT_LIMITS, getFormInputLimitError } from "@fsd/entities/form";
+import { RECRUIT_NOTICE_CHANNELS, isRecruitNoticeChannelId } from "@fsd/entities/recruit";
+import type { Recruit, RecruitNoticeChannelId } from "@fsd/entities/recruit";
 import { ApiError } from "@fsd/shared/api";
 import { createRequestVersionGuard } from "@fsd/shared/lib";
 import {
@@ -21,6 +23,7 @@ import {
   getTeacherForm,
   getFormSubmissions,
   getTeacherForms,
+  getTeacherRecruits,
   publishForm,
   updateForm,
 } from "../api/forms";
@@ -43,6 +46,8 @@ const newQuestion = (): DraftQuestion => ({ key: crypto.randomUUID(), type: "SHO
 
 export function TeacherFormsPage() {
   const [forms, setForms] = useState<FormSummary[]>([]);
+  const [recruits, setRecruits] = useState<Recruit[]>([]);
+  const [channelId, setChannelId] = useState<RecruitNoticeChannelId | "">("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [status, setStatus] = useState<FormStatus>("DRAFT");
   const [title, setTitle] = useState("");
@@ -59,6 +64,8 @@ export function TeacherFormsPage() {
   const [savedQuestions, setSavedQuestions] = useState<DraftQuestion[]>([]);
   const questionsEditable = selectedId === null || hasResponses === false;
   const hasQuestionChanges = JSON.stringify(questions) !== JSON.stringify(savedQuestions);
+  const linkedRecruit = selectedId === null ? undefined : recruits.find((recruit) => recruit.formId === selectedId);
+  const isPublishingWithRecruit = status === "DRAFT" && linkedRecruit?.status === "DRAFT";
 
   const isCurrent = useCallback((requestVersion: number) =>
     mounted.current && requests.current.isLatest(requestVersion), []);
@@ -66,9 +73,10 @@ export function TeacherFormsPage() {
   const load = useCallback(async () => {
     const requestVersion = listRequests.current.next();
     try {
-      const loadedForms = await getTeacherForms();
+      const [loadedForms, loadedRecruits] = await Promise.all([getTeacherForms(), getTeacherRecruits()]);
       if (!mounted.current || !listRequests.current.isLatest(requestVersion)) return false;
       setForms(loadedForms);
+      setRecruits(loadedRecruits);
       return true;
     } catch (caught) {
       if (!mounted.current || !listRequests.current.isLatest(requestVersion)) return false;
@@ -104,6 +112,7 @@ export function TeacherFormsPage() {
     }));
     setSavedQuestions(loadedQuestions);
     setQuestions(loadedQuestions);
+    setChannelId("");
     setHasResponses(null);
     setResponseError("");
     setMessage(null);
@@ -157,6 +166,7 @@ export function TeacherFormsPage() {
     setDescription("");
     setQuestions([newQuestion()]);
     setSavedQuestions([]);
+    setChannelId("");
     setHasResponses(false);
     setResponseError("");
     setWorking(false);
@@ -242,6 +252,8 @@ export function TeacherFormsPage() {
 
   const publish = async () => {
     if (!selectedId || inFlight.current) return;
+    if (isPublishingWithRecruit && !channelId) return setMessage({ text: "공고와 함께 공개하려면 디스코드 알림 채널을 선택해주세요.", error: true });
+    const withRecruit = isPublishingWithRecruit;
     const input = payload();
     if (!input) return;
     const updateInput = getUpdateInput(input);
@@ -252,11 +264,11 @@ export function TeacherFormsPage() {
       setWorking(true);
       await updateForm(selectedId, updateInput);
       questionPatchPending = false;
-      const published = await publishForm(selectedId);
+      const published = await publishForm(selectedId, channelId || null);
       if (!isCurrent(requestVersion)) return;
       edit(published);
       void loadResponses(published.id, requestVersion);
-      if (await load() && isCurrent(requestVersion)) setMessage({ text: "공개했습니다." });
+      if (await load() && isCurrent(requestVersion)) setMessage({ text: withRecruit ? "공고와 지원 폼을 함께 공개했습니다." : "공개했습니다." });
     } catch (caught) {
       if (!isCurrent(requestVersion)) return;
       handleSaveError(caught, "공개하지 못했습니다.", questionPatchPending);
@@ -359,11 +371,24 @@ export function TeacherFormsPage() {
               </fieldset>
 
               {message && <p role="status" className={`mt-6 wrap-anywhere rounded-xl px-4 py-3 text-sm ${message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{message.text}</p>}
+              {isPublishingWithRecruit && (
+                <div className="mt-6 rounded-xl border border-green-100 bg-green-50 p-4">
+                  <p className="text-sm font-semibold text-gray-800">{linkedRecruit?.companyName || "연결된"} 공고의 지원 폼입니다.</p>
+                  <p className="mt-1 text-xs leading-5 text-gray-600">폼 작성을 마치고 공개하면 공고와 이 폼이 함께 게시되고, 선택한 디스코드 채널로 공고 알림이 발송됩니다.</p>
+                  <label className="mt-3 block max-w-xs text-xs font-bold text-gray-600">
+                    디스코드 알림 채널
+                    <select required disabled={working} value={channelId} onChange={(event) => { const value = event.target.value; setChannelId(isRecruitNoticeChannelId(value) ? value : ""); }} className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-normal outline-none focus:border-[#02C551] disabled:opacity-60">
+                      <option value="">채널 선택</option>
+                      {RECRUIT_NOTICE_CHANNELS.map((channel) => <option key={channel.id} value={channel.id}>{channel.name}</option>)}
+                    </select>
+                  </label>
+                </div>
+              )}
               <div className="mt-7 flex flex-wrap justify-end gap-3">
                 {status === "PUBLISHED" && <button type="button" onClick={copyLink} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">링크 복사</button>}
                 {status === "PUBLISHED" && <button type="button" disabled={working} onClick={close} className="h-12 rounded-xl bg-gray-800 px-6 font-semibold text-white">마감</button>}
                 <button type="button" disabled={working} onClick={() => void save()} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">{selectedId ? "수정 저장" : "저장"}</button>
-                {status === "DRAFT" && selectedId && <button type="button" disabled={working} onClick={() => void publish()} className="h-12 rounded-xl bg-[#02C551] px-7 font-bold text-white">공개</button>}
+                {status === "DRAFT" && selectedId && <button type="button" disabled={working || (isPublishingWithRecruit && !channelId)} onClick={() => void publish()} className="h-12 rounded-xl bg-[#02C551] px-7 font-bold text-white disabled:opacity-50">{isPublishingWithRecruit ? "공고와 함께 공개" : "공개"}</button>}
               </div>
             </section>
           </div>

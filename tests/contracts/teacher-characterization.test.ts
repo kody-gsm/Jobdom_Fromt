@@ -56,7 +56,7 @@ assert.match(recruit, /10 \* 1024 \* 1024/);
 assert.match(recruit, /analyzeRecruit/);
 assert.match(recruit, /getRecruitDashboard/);
 assert.match(recruit, /updateRecruit/);
-assert.match(recruit, /publishRecruit/);
+assert.match(recruit, /폼 작성 후 공개/);
 assert.match(recruit, /\/teacher\/forms/);
 assert.match(recruit, /선생님 계정으로 로그인해야 지원 현황을 볼 수 있습니다/);
 assert.match(recruit, /TeacherHeader/);

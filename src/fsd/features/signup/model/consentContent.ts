@@ -76,7 +76,7 @@ export const SIGNUP_CONSENT_DOCUMENTS: Record<SignupConsentDocument, SignupConse
     ],
   },
   privacy: {
-    title: "개인정보 수집 및 이용 동의",
+    title: "개인정보 수집·이용 동의",
     sections: [
       {
         title: "1. 수집·이용 목적",

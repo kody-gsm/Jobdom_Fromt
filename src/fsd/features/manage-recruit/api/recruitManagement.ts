@@ -10,7 +10,6 @@ export const analyzeRecruit = recruitApi.analyze;
 export const createRecruit = recruitApi.createTeacher;
 export const getTeacherRecruits = recruitApi.getTeacherAll;
 export const updateRecruit = recruitApi.updateTeacher;
-export const publishRecruit = recruitApi.publishTeacher;
 export const deleteRecruit = recruitApi.deleteTeacher;
 export const getRecruitDashboard = createRecruitDashboardLoader({
   getTeacherRecruits: recruitApi.getTeacherAll,
