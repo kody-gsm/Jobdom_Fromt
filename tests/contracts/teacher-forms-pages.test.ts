@@ -52,6 +52,19 @@ assert.match(forms, /if \(isQuestionUpdate && caught instanceof ApiError && caug
 assert.match(forms, /questionPatchPending = false;\s*const published = await publishForm/);
 assert.match(forms, /handleSaveError\(caught, "공개하지 못했습니다\.", questionPatchPending\)/);
 assert.doesNotMatch(forms, /const editable = status === "DRAFT"/);
+
+// 초안 공고에 딸린 폼은 디스코드 알림 채널을 고른 뒤 공고와 함께 공개한다.
+const formsApi = read("src/fsd/pages/teacher-forms/api/forms.ts");
+assert.match(forms, /const linkedRecruit = selectedId === null \? undefined : recruits\.find\(\(recruit\) => recruit\.formId === selectedId\)/);
+assert.match(forms, /const isPublishingWithRecruit = status === "DRAFT" && linkedRecruit\?\.status === "DRAFT"/);
+assert.match(forms, /RECRUIT_NOTICE_CHANNELS\.map/);
+assert.match(forms, /디스코드 알림 채널/);
+assert.match(forms, /disabled=\{working \|\| \(isPublishingWithRecruit && !channelId\)\}/);
+assert.match(forms, /공고와 함께 공개/);
+assert.match(forms, /publishForm\(selectedId, channelId \|\| null\)/);
+assert.match(forms, /setChannelId\(""\)/);
+assert.match(formsApi, /if \(!channelId\) throw new Error/);
+assert.match(formsApi, /recruitApi\.publishTeacher\(recruit\.id, channelId\)/);
 assert.match(read("src/fsd/pages/teacher-forms/api/forms.ts"), /getFormSubmissions = formApi\.getSubmissions/);
 
 assert.match(submissionsRoute, /@fsd\/pages\/teacher-form-submissions/);

@@ -159,7 +159,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 - 폼·질문 제목과 보기에는 최대 255자, 폼·질문 설명에는 최대 1,000자 제한을 적용한다. 입력 중 글자 수를 안내하고 저장·공개 및 API 요청 전에 다시 검사한다.
 - 폼 공유 시 `/forms/{id}` URL을 clipboard에 복사한다.
 - `/teacher/forms/[id]/submissions`는 제출 목록과 제출 상세를 조회한다.
-- `/teacher/recruit`는 공고 이미지 분석, draft 수정, publish를 유지한다.
+- `/teacher/recruit`는 공고 이미지 분석과 draft 수정을 유지한다. 공개는 `폼 작성 후 공개`로 공고를 저장한 뒤 연결된 지원 폼(`/teacher/forms?formId={formId}`)에서 진행한다.
 - 교사 폼·공고 화면의 `학생 화면` 바로가기 버튼은 제공하지 않는다.
 - recruit dashboard의 공고-폼 연결은 Backend의 `formId`를 우선 사용하고, 과거 데이터만 회사명과 폼 제목의 normalize 문자열 매칭을 사용한다.
 - 이미지로 공고 초안을 만들면 Backend가 연결된 기본 지원 폼도 함께 만든다.
@@ -196,7 +196,7 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | POST | `/teacher/recruit` | 이미지 없이 공고 초안 생성 |
 | POST | `/teacher/recruit/analyze` | 이미지 기반 공고 분석(FormData `image`) |
 | PATCH | `/teacher/recruit/{id}` | 공고 수정 |
-| POST | `/teacher/recruit/{id}/publish` | 공고 공개 |
+| POST | `/teacher/recruit/{id}/publish` | 공고와 연결 지원 폼 함께 공개(body `{ channelId }`, 디스코드 채널 ID 문자열) |
 | POST | `/teacher/banner` | 교사 홈 배너 저장(FormData `image`, 선택 `title`, `content`, `link`) |
 | GET | `/teacher/banner` | 교사 홈 현재 배너 조회(없으면 204) |
 | GET | `/student/banner` | 학생 홈 현재 배너 조회(없으면 204) |
