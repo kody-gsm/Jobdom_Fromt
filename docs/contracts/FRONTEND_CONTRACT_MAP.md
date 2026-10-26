@@ -196,7 +196,9 @@ Teacher는 Student rebuild와 다르게 behavior-preserving migration 대상이�
 | POST | `/teacher/recruit` | 이미지 없이 공고 초안 생성 |
 | POST | `/teacher/recruit/analyze` | 이미지 기반 공고 분석(FormData `image`) |
 | PATCH | `/teacher/recruit/{id}` | 공고 수정 |
-| POST | `/teacher/recruit/{id}/publish` | 공고와 연결 지원 폼 함께 공개(body `{ channelId }`, 디스코드 채널 ID 문자열) |
+| POST | `/teacher/recruit/{id}/publish` | 공고와 연결 지원 폼 함께 공개(서버가 기본 공지 채널로 알림) |
+| GET | `/api/notices/channels` | 공고 알림을 보낼 수 있는 디스코드 채널 목록 |
+| POST | `/api/notices/send` | 선택한 디스코드 채널로 공고 알림 추가 발송(`channelId` 문자열) |
 | POST | `/teacher/banner` | 교사 홈 배너 저장(FormData `image`, 선택 `title`, `content`, `link`) |
 | GET | `/teacher/banner` | 교사 홈 현재 배너 조회(없으면 204) |
 | GET | `/student/banner` | 학생 홈 현재 배너 조회(없으면 204) |

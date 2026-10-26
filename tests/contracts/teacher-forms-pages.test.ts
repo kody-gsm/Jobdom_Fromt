@@ -53,18 +53,23 @@ assert.match(forms, /questionPatchPending = false;\s*const published = await pub
 assert.match(forms, /handleSaveError\(caught, "공개하지 못했습니다\.", questionPatchPending\)/);
 assert.doesNotMatch(forms, /const editable = status === "DRAFT"/);
 
-// 초안 공고에 딸린 폼은 디스코드 알림 채널을 고른 뒤 공고와 함께 공개한다.
+// 초안 공고에 딸린 폼은 공고와 함께 공개하고, 고른 디스코드 채널에도 공고 알림을 추가로 보낸다.
 const formsApi = read("src/fsd/pages/teacher-forms/api/forms.ts");
+const channelPicker = read("src/fsd/pages/teacher-forms/ui/NoticeChannelPicker.tsx");
 assert.match(forms, /const linkedRecruit = selectedId === null \? undefined : recruits\.find\(\(recruit\) => recruit\.formId === selectedId\)/);
 assert.match(forms, /const isPublishingWithRecruit = status === "DRAFT" && linkedRecruit\?\.status === "DRAFT"/);
-assert.match(forms, /RECRUIT_NOTICE_CHANNELS\.map/);
-assert.match(forms, /디스코드 알림 채널/);
-assert.match(forms, /disabled=\{working \|\| \(isPublishingWithRecruit && !channelId\)\}/);
+assert.match(forms, /isPublishingWithRecruit && <NoticeChannelPicker/);
 assert.match(forms, /공고와 함께 공개/);
 assert.match(forms, /publishForm\(selectedId, channelId \|\| null\)/);
 assert.match(forms, /setChannelId\(""\)/);
-assert.match(formsApi, /if \(!channelId\) throw new Error/);
-assert.match(formsApi, /recruitApi\.publishTeacher\(recruit\.id, channelId\)/);
+assert.match(forms, /선택한 디스코드 채널로 알림을 보내지 못했습니다/);
+assert.match(channelPicker, /getNoticeChannels\(controller\.signal\)/);
+assert.match(channelPicker, /<option value="">기본 공지 채널만<\/option>/);
+assert.match(channelPicker, /<optgroup/);
+assert.match(channelPicker, /다시 불러오기/);
+assert.match(formsApi, /recruitApi\.publishTeacher\(recruit\.id\)/);
+assert.match(formsApi, /recruitApi\.sendNoticeToChannel\(published, channelId\)/);
+assert.match(formsApi, /channelNotice = "failed"/);
 assert.match(read("src/fsd/pages/teacher-forms/api/forms.ts"), /getFormSubmissions = formApi\.getSubmissions/);
 
 assert.match(submissionsRoute, /@fsd\/pages\/teacher-form-submissions/);
