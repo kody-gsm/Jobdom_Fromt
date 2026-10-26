@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import type { FormEvent } from "react";
 import { formatCountdown } from "@fsd/shared/lib";
 import { ActionButton, PasswordField, TextField } from "@fsd/shared/ui";
@@ -9,6 +10,9 @@ import { useSignupForm } from "../model/useSignupForm.ts";
 
 export const SignupForm = () => {
   const signupForm = useSignupForm();
+  const termsTriggerRef = useRef<HTMLButtonElement>(null);
+  const privacyTriggerRef = useRef<HTMLButtonElement>(null);
+  const activeConsent = signupForm.activeConsent;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -86,28 +90,31 @@ export const SignupForm = () => {
         placeholder="비밀번호 재입력"
       />
 
-      <div className="space-y-3 rounded-2xl border border-border bg-[#FAFBFC] p-4">
-        <p className="text-sm font-semibold text-[#27364A]">약관 동의</p>
+      <fieldset className="space-y-3 pt-1">
+        <legend className="text-sm font-semibold text-[#27364A]">약관 동의</legend>
+        <p className="text-xs leading-5 text-[#7A828B]">필수 약관 내용을 확인한 뒤 동의해주세요.</p>
 
         <div className="space-y-3">
           <div>
-            <div className="flex items-center justify-between gap-3">
-              <label className="flex min-w-0 items-center gap-3 text-sm text-[#4D5663]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex min-w-0 items-start gap-3 text-sm text-[#4D5663]">
                 <input
                   type="checkbox"
                   checked={signupForm.form.termsAccepted}
                   disabled={!signupForm.canAgreeToTerms}
                   onChange={(event) => signupForm.updateConsent("termsAccepted", event.target.checked)}
-                  className="h-5 w-5 shrink-0 accent-brand disabled:cursor-not-allowed"
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-brand disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-brand"
                 />
-                <span>이용약관에 동의합니다 <strong className="text-[#E53935]">(필수)</strong></span>
+                <span className="min-w-0 break-keep">이용약관 동의 <strong className="text-[#E53935]">(필수)</strong></span>
               </label>
               <button
+                ref={termsTriggerRef}
                 type="button"
+                aria-label="이용약관 자세히 보기"
                 onClick={() => signupForm.openConsent("terms")}
-                className="shrink-0 text-sm font-semibold text-brand-hover hover:underline"
+                className="min-h-11 self-start px-1 text-sm font-semibold text-brand-hover transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:shrink-0"
               >
-                이용약관 보기
+                자세히 보기
               </button>
             </div>
             {signupForm.errorField === "termsAccepted" && signupForm.errors.termsAccepted ? (
@@ -118,23 +125,25 @@ export const SignupForm = () => {
           </div>
 
           <div>
-            <div className="flex items-center justify-between gap-3">
-              <label className="flex min-w-0 items-center gap-3 text-sm text-[#4D5663]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex min-w-0 items-start gap-3 text-sm text-[#4D5663]">
                 <input
                   type="checkbox"
                   checked={signupForm.form.privacyAccepted}
                   disabled={!signupForm.canAgreeToPrivacy}
                   onChange={(event) => signupForm.updateConsent("privacyAccepted", event.target.checked)}
-                  className="h-5 w-5 shrink-0 accent-brand disabled:cursor-not-allowed"
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-brand disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-brand"
                 />
-                <span>개인정보 수집 및 이용에 동의합니다 <strong className="text-[#E53935]">(필수)</strong></span>
+                <span className="min-w-0 break-keep">개인정보 수집·이용 동의 <strong className="text-[#E53935]">(필수)</strong></span>
               </label>
               <button
+                ref={privacyTriggerRef}
                 type="button"
+                aria-label="개인정보 수집·이용 자세히 보기"
                 onClick={() => signupForm.openConsent("privacy")}
-                className="shrink-0 text-sm font-semibold text-brand-hover hover:underline"
+                className="min-h-11 self-start px-1 text-sm font-semibold text-brand-hover transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:shrink-0"
               >
-                개인정보 처리방침 보기
+                자세히 보기
               </button>
             </div>
             {signupForm.errorField === "privacyAccepted" && signupForm.errors.privacyAccepted ? (
@@ -144,7 +153,7 @@ export const SignupForm = () => {
             ) : null}
           </div>
         </div>
-      </div>
+      </fieldset>
 
       {signupForm.submitError ? (
         <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -163,12 +172,14 @@ export const SignupForm = () => {
         </Link>
       </p>
 
-      {signupForm.activeConsent ? (
+      {activeConsent ? (
         <SignupConsentDialog
-          document={signupForm.activeConsent}
+          document={activeConsent}
           onClose={signupForm.closeConsent}
-          onScroll={(event) => signupForm.handleConsentScroll(signupForm.activeConsent!, event)}
-          hasReadToEnd={signupForm.activeConsent === "terms" ? signupForm.canAgreeToTerms : signupForm.canAgreeToPrivacy}
+          onAgree={() => signupForm.agreeToConsent(activeConsent)}
+          onReadToEnd={() => signupForm.markConsentRead(activeConsent)}
+          hasReadToEnd={activeConsent === "terms" ? signupForm.canAgreeToTerms : signupForm.canAgreeToPrivacy}
+          returnFocusRef={activeConsent === "terms" ? termsTriggerRef : privacyTriggerRef}
         />
       ) : null}
     </form>

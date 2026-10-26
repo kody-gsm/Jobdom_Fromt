@@ -30,7 +30,7 @@ export const validateSignupForm = (values: SignupFormValues): SignupFormErrors =
   }
   if (!values.termsAccepted) errors.termsAccepted = "이용약관에 동의해주세요.";
   if (!values.privacyAccepted) {
-    errors.privacyAccepted = "개인정보 수집 및 이용에 동의해주세요.";
+    errors.privacyAccepted = "개인정보 수집·이용에 동의해주세요.";
   }
   return errors;
 };
