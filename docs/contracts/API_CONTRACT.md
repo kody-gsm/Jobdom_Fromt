@@ -48,12 +48,13 @@
 ## Recruit publish with linked form
 
 - 교사 공고 화면의 `폼 작성 후 공개`는 공고를 저장(`POST /teacher/recruit` 또는 `PATCH /teacher/recruit/{id}`)한 뒤 응답의 `formId`로 `/teacher/forms?formId={formId}`를 연다. 공고 화면에서 직접 공개하지 않는다.
-- 폼 화면은 `GET /teacher/recruit`로 `formId`가 같은 공고를 찾는다. 초안 폼이 초안 공고에 연결되어 있으면 디스코드 알림 채널을 필수로 고르게 하고 `공고와 함께 공개`로 표시한다.
-- 공개 시 폼 수정 내용을 먼저 저장(`PATCH /teacher/form/{id}`)한 뒤 `POST /teacher/recruit/{recruitId}/publish`에 `{ channelId: string }`을 보낸다. 서버는 공고 공개와 함께 연결 폼도 공개한다. 채널 ID는 JavaScript 안전 정수 범위를 넘으므로 문자열로 보낸다.
-- 선택 가능한 채널은 프론트 설정(`entities/recruit/config/noticeChannels.ts`)의 test1·test2·test3이며, 화면에는 이름을, 요청에는 ID를 사용한다.
-- 디스코드 공지는 서버가 공고 공개 처리에서 보낸다. 프론트는 공고 공개 후 `/api/notices`를 별도로 호출하지 않는다.
+- 폼 화면은 `GET /teacher/recruit`로 `formId`가 같은 공고를 찾는다. 초안 폼이 초안 공고에 연결되어 있으면 `공고와 함께 공개`로 표시하고 디스코드 알림 채널 선택을 보여준다.
+- 채널 목록은 `GET /api/notices/channels`의 `[{ id: string, name: string, categoryName: string | null }]`을 카테고리별로 표시한다. 기본값은 `기본 공지 채널만`이며, 목록 조회 실패 시 재시도를 제공하고 기본 공지 채널로만 공개할 수 있다.
+- 공개 시 폼 수정 내용을 먼저 저장(`PATCH /teacher/form/{id}`)한 뒤 body 없이 `POST /teacher/recruit/{recruitId}/publish`를 호출한다. 서버는 공고와 연결 폼을 함께 공개하고 기본 공지 채널(`DISCORD_BOT_CHANNEL_ID`)로 공고 알림을 보낸다.
+- 채널을 골랐으면 공개 성공 후 `POST /api/notices/send`에 `{ channelId, title, content, field, link }`를 보내 선택 채널에도 알린다. 내용은 서버 공고 알림과 같은 형식(`{회사명} 공고`, 요약 또는 기본 문구, 분야 또는 `미정`, `/recruit/{id}` 링크)이다. 채널 ID는 JavaScript 안전 정수 범위를 넘으므로 문자열로 보낸다.
+- 선택 채널 발송이 실패해도 공고·폼 공개는 유지하고 발송 실패를 안내한다.
 - 공고에 연결되지 않았거나 공고가 이미 공개된 폼은 기존 `POST /teacher/form/{id}/publish`를 사용한다.
-- 2026-10-26 기준 백엔드 `develop`의 공고 공개 API는 요청 body와 `channelId`를 읽지 않고 기본 공지 채널로 보낸다. 선택 채널 발송은 백엔드 반영이 필요하다.
+- 2026-10-26 기준 백엔드 공고 공개 API는 채널을 받지 않아 기본 공지 채널 발송을 끌 수 없다. 따라서 다른 채널을 고르면 기본 채널과 선택 채널에 각각 게시된다. 선택 채널 메시지 ID는 저장하지 않으므로 이후 공고 수정은 기본 채널 메시지에만 반영된다.
 
 ## Role tutorial completion
 

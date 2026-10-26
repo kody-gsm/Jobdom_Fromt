@@ -80,7 +80,7 @@ await recruit.getTeacherAll();
 await recruit.createTeacher(update);
 await recruit.analyze(image);
 await recruit.updateTeacher(3, update);
-await recruit.publishTeacher(3, "1564185374937452697");
+await recruit.publishTeacher(3);
 await recruit.deleteTeacher(3);
 
 const recruitCalls = calls.splice(0);
@@ -97,16 +97,39 @@ assert.deepEqual(recruitCalls.slice(3), [
     path: "/teacher/recruit/3",
     init: { method: "PATCH", body: JSON.stringify(update) },
   },
-  {
-    path: "/teacher/recruit/3/publish",
-    init: { method: "POST", body: JSON.stringify({ channelId: "1564185374937452697" }) },
-  },
+  { path: "/teacher/recruit/3/publish", init: { method: "POST" } },
   { path: "/teacher/recruit/3", init: { method: "DELETE" } },
 ]);
 
-// 디스코드 공지는 서버가 공개와 함께 보내므로 프론트에서 /api/notices를 따로 호출하지 않는다.
+// 기본 공지 채널 알림은 서버가 공개와 함께 보내므로 공개 요청 뒤에 /api/notices를 자동 호출하지 않는다.
 assert.ok(recruitCalls.every(({ path }) => !path.startsWith("/api/notices")));
-assert.throws(() => recruit.publishTeacher(3, "123" as never), /디스코드 알림 채널/);
+
+const channels = [
+  { id: "1564185374937452697", name: "취업-공지", categoryName: "공지" },
+  { id: "1564185448283242586", name: "자유", categoryName: null },
+];
+const noticeCalls: Array<{ path: string; init?: RequestInit }> = [];
+const noticeApi = createRecruitApi(async <T>(path: string, init?: RequestInit) => {
+  noticeCalls.push({ path, init });
+  return (path === "/api/notices/channels" ? channels : "message-id") as T;
+});
+const controller = new AbortController();
+assert.deepEqual(await noticeApi.getNoticeChannels(controller.signal), channels);
+assert.deepEqual(noticeCalls[0], { path: "/api/notices/channels", init: { signal: controller.signal } });
+const publishedRecruit = { id: 3, companyName: "OpenAI", interviewDate: null, deadline: null, summary: " 공고 요약 ", fields: ["FRONTEND", "AI"] as const, status: "PUBLISHED" as const, createdAt: "", updatedAt: "" };
+assert.equal(await noticeApi.sendNoticeToChannel({ ...publishedRecruit, fields: [...publishedRecruit.fields] }, "1564185374937452697"), "message-id");
+assert.equal(noticeCalls[1]?.path, "/api/notices/send");
+assert.equal(noticeCalls[1]?.init?.method, "POST");
+// 채널 ID는 안전 정수 범위를 넘으므로 문자열 그대로 보낸다.
+assert.deepEqual(JSON.parse(String(noticeCalls[1]?.init?.body)), {
+  channelId: "1564185374937452697",
+  title: "OpenAI 공고",
+  content: "공고 요약",
+  field: "프론트엔드, AI·데이터",
+});
+await assert.rejects(createRecruitApi(async <T>() => [{ id: 1564185374937452697, name: "x", categoryName: null }] as T).getNoticeChannels(), /응답 형식/);
+assert.throws(() => noticeApi.sendNoticeToChannel({ ...publishedRecruit, fields: [] }, ""), /채널/);
+assert.equal(noticeCalls.length, 2);
 assert.equal(calls.length, 0);
 
 console.log("teacher domain api contract passed");
