@@ -27,7 +27,7 @@ export const SIGNUP_CONSENT_DOCUMENTS: Record<SignupConsentDocument, SignupConse
       },
       {
         title: "제2조 용어의 정의",
-        body: "‘회원’은 이 약관에 동의하고 잡담에 가입한 학생 또는 선생님을 말합니다. ‘상담’은 회원이 선생님에게 진로·취업·생활 등에 관해 신청하는 서비스를 말합니다. ‘공고’는 선생님 또는 학교가 게시하는 취업·교육 관련 안내를 말하며, ‘신청폼’은 공고와 함께 제공되는 질문에 회원이 답변을 제출하는 기능을 말합니다.",
+        body: "‘회원’은 이 약관에 동의하고 잡담에 가입한 학생을 말합니다. ‘상담’은 회원이 선생님에게 진로·취업·생활 등에 관해 신청하는 서비스를 말합니다. ‘공고’는 선생님 또는 학교가 게시하는 취업·교육 관련 안내를 말하며, ‘신청폼’은 공고와 함께 제공되는 질문에 회원이 답변을 제출하는 기능을 말합니다.",
       },
       {
         title: "제3조 약관의 효력과 변경",
@@ -76,7 +76,7 @@ export const SIGNUP_CONSENT_DOCUMENTS: Record<SignupConsentDocument, SignupConse
     ],
   },
   privacy: {
-    title: "개인정보 수집 및 이용 동의",
+    title: "개인정보 수집·이용 동의",
     sections: [
       {
         title: "1. 수집·이용 목적",
