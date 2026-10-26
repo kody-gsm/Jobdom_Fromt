@@ -37,7 +37,7 @@ const signupConsentErrors = validateSignupForm({
   privacyAccepted: false,
 });
 assert.equal(signupConsentErrors.termsAccepted, "이용약관에 동의해주세요.");
-assert.equal(signupConsentErrors.privacyAccepted, "개인정보 수집 및 이용에 동의해주세요.");
+assert.equal(signupConsentErrors.privacyAccepted, "개인정보 수집·이용에 동의해주세요.");
 assert.deepEqual(
   validateSignupForm({
     email: "s25001@gsm.hs.kr",
