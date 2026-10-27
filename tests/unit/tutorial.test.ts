@@ -38,8 +38,11 @@ for (const role of ["STUDENT", "TEACHER", "WEE_TEACHER"] as const) {
   assert.equal(steps[0].target, "navigation");
   assert.equal(steps.at(-1)?.target, "account");
   assert.ok(steps.every((step) => step.title && step.description && step.target));
+  if (role !== "STUDENT") {
+    assert.ok(steps.some((step) => step.id === "banner"));
+  }
   if (role === "WEE_TEACHER") {
-    assert.ok(steps.every((step) => ["teacher-schedule", "teacher-request"].includes(step.scene)));
+    assert.ok(steps.every((step) => ["teacher-schedule", "teacher-request", "banner"].includes(step.scene)));
   }
 }
 

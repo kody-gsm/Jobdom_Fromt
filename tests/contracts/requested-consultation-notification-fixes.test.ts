@@ -24,7 +24,7 @@ assert.equal(getTeacherWorkspaceVariant("김권예소"), "kim-gwon-yeso");
 assert.equal(getTeacherWorkspaceVariant("정윤기"), "jeong-yungi");
 assert.equal(getTeacherWorkspaceVariant("강우빈"), "general");
 assert.equal(canManageHomeBanner("TEACHER"), true);
-assert.equal(canManageHomeBanner("WEE_TEACHER"), false);
+assert.equal(canManageHomeBanner("WEE_TEACHER"), true);
 
 assert.equal(createReservationInput({
   type: "career",
