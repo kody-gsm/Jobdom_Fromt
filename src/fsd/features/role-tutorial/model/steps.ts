@@ -58,10 +58,10 @@ export const getTutorialSteps = (role: TutorialRole): readonly TutorialStep[] =>
   if (role === "STUDENT") return STUDENT_STEPS;
   if (role === "TEACHER") return TEACHER_STEPS;
   return TEACHER_STEPS.filter((step) => ![
-    "banner", "recruit-management", "teacher-form-list", "form-editor", "form-publish", "form-responses",
+    "recruit-management", "teacher-form-list", "form-editor", "form-publish", "form-responses",
   ].includes(step.id)).map((step) => step.id === "teacher-navigation" ? {
     ...step,
     title: "Wee클래스 선생님을 위한 안내예요",
-    description: "Wee클래스 상담 일정과 학생의 상담 요청을 관리하는 방법을 살펴볼게요. 모든 정보는 튜토리얼 전용 예시이며, 실제 상담을 변경하거나 추가하지 않아요. ‘다음’을 눌러 시작해 주세요.",
+    description: "Wee클래스 상담 일정과 학생의 상담 요청을 관리하고 학생 홈 배너를 등록하는 방법을 살펴볼게요. 모든 정보는 튜토리얼 전용 예시이며, 실제 상담을 변경하거나 추가하지 않아요. ‘다음’을 눌러 시작해 주세요.",
   } : step);
 };
