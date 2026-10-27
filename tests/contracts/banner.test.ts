@@ -4,7 +4,7 @@ import { createBannerApi, resolveBannerImageUrl } from "../../src/fsd/entities/b
 import { canManageHomeBanner } from "../../src/fsd/pages/teacher/model/workspace.ts";
 
 assert.equal(canManageHomeBanner("TEACHER"), true);
-assert.equal(canManageHomeBanner("WEE_TEACHER"), false);
+assert.equal(canManageHomeBanner("WEE_TEACHER"), true);
 assert.equal(canManageHomeBanner("STUDENT"), false);
 assert.equal(canManageHomeBanner("ADMIN"), false);
 assert.equal(canManageHomeBanner(null), false);

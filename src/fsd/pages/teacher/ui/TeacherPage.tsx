@@ -418,7 +418,7 @@ export function TeacherPage() {
                 {canManageBanner ? (
                     <section aria-labelledby="banner-title" className="mt-6 border-t border-border pt-5">
                         <h2 id="banner-title" className="font-bold">학생 홈 배너</h2>
-                        <p className="mt-1 text-xs leading-5 text-secondary-text">일반 교사만 학생 대시보드의 배너를 등록할 수 있습니다. 이미지는 필수입니다.</p>
+                        <p className="mt-1 text-xs leading-5 text-secondary-text">일반 교사와 Wee 교사는 학생 대시보드의 배너를 등록할 수 있습니다. 이미지는 필수입니다.</p>
                         <input
                             aria-label="배너 이미지"
                             ref={bannerImageInput}

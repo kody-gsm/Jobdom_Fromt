@@ -30,7 +30,8 @@ export const getTeacherWorkspaceVariant = (
   return "general";
 };
 
-export const canManageHomeBanner = (role: UserRole | null) => role === "TEACHER";
+export const canManageHomeBanner = (role: UserRole | null) =>
+  role === "TEACHER" || role === "WEE_TEACHER";
 
 export const getTeacherAvailablePeriods = (
   kind: ConsultationKind,
