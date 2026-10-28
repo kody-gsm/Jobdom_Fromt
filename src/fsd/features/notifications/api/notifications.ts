@@ -1,5 +1,6 @@
 import { requestWithSession as request } from "@fsd/entities/user";
 import { getSafeInternalPath } from "@fsd/shared/lib";
+import type { ApiRequestInit } from "@fsd/shared/api";
 
 export type NotificationType =
   | "RECRUIT_PUBLISHED"
@@ -66,8 +67,8 @@ export const isNotificationNavigable = (item: NotificationItem): boolean => {
 export const getNotifications = (page = 0, size = 20) =>
   request<PageResponse<NotificationItem>>(`/api/notifications?page=${page}&size=${size}`);
 
-export const getUnreadCount = () =>
-  request<UnreadCountResponse>("/api/notifications/unread-count");
+export const getUnreadCount = (init?: ApiRequestInit) =>
+  request<UnreadCountResponse>("/api/notifications/unread-count", init);
 
 export const markNotificationRead = (id: number) =>
   request<NotificationItem>(`/api/notifications/${id}/read`, { method: "PATCH" });

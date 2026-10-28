@@ -44,13 +44,13 @@ export function TeacherHeader() {
           <Image src="/JobdamIcon.svg" alt="잡담" width={88} height={40} priority />
         </Link>
 
-        <nav aria-label="교사 주요 메뉴" className="col-span-2 row-start-2 flex h-12 items-center gap-6 border-t border-border text-sm font-semibold text-secondary-text sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:h-auto sm:justify-center sm:border-0 sm:text-base lg:gap-12">
+        <nav aria-label="교사 주요 메뉴" className="col-span-2 row-start-2 flex h-12 items-center gap-1 border-t border-border text-xs font-semibold text-secondary-text sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:h-auto sm:justify-center sm:gap-6 sm:border-0 sm:text-base lg:gap-12">
           {visibleNavigation.map((item) => {
             const isActive = item.href === "/teacher"
               ? pathname === item.href
               : pathname.startsWith(item.href);
             return (
-              <Link key={item.href} href={item.href} aria-current={isActive ? "page" : undefined} className={isActive ? "text-brand-accent" : "transition-colors hover:text-ink"}>
+              <Link key={item.href} href={item.href} aria-current={isActive ? "page" : undefined} className={`flex min-w-0 flex-1 items-center justify-center break-keep text-center leading-tight sm:flex-none sm:whitespace-nowrap sm:leading-normal ${isActive ? "text-brand-accent" : "transition-colors hover:text-ink"}`}>
                 {item.href === "/teacher" && role === "WEE_TEACHER" ? "wee클래스 상담" : item.label}
               </Link>
             );

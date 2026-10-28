@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getSession } from "@fsd/entities/user";
 import { tutorialApi } from "../api/tutorialApi.ts";
+import { shouldRenderTutorialChildren } from "../model/presentation.ts";
 import { getTutorialRole } from "../model/progress.ts";
 
 const Tutorial = dynamic(() => import("./Tutorial.tsx").then((module) => module.Tutorial));
@@ -54,10 +55,14 @@ export const RoleTutorialGate = ({ children }: { children: ReactNode }) => {
   }, [userId]);
 
   if (PUBLIC_PATHS.has(pathname)) return children;
-  if (snapshot === "loading") return null;
+  if (snapshot === "loading") return children;
   if (userId === null || !role || completedUsers.has(userId)) return children;
-  if (status?.userId !== userId) return null;
-  if (status.isCompleted) return children;
+  const presentationState = status?.userId !== userId
+    ? "loading"
+    : status.isCompleted
+      ? "completed"
+      : "tutorial";
+  if (shouldRenderTutorialChildren(presentationState)) return children;
 
   const handleComplete = async () => {
     await tutorialApi.complete();

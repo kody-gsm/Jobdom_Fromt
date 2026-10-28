@@ -6,3 +6,4 @@ export { getSafeInternalPath, getSafeLinkUrl } from "./safeUrl.ts";
 export { indentSummaryList, parseSummaryMarkdown, splitSummaryEmphasis } from "./summaryMarkdown.ts";
 export type { SummaryItem } from "./summaryMarkdown.ts";
 export { downloadBlob } from "./downloadBlob.ts";
+export { authenticatedGetCache, createRequestCache } from "./requestCache.ts";

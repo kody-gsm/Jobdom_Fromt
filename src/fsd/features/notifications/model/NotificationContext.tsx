@@ -32,8 +32,10 @@ interface NotificationContextValue {
   clearUnread: () => void;
   notifications: NotificationItem[];
   notificationLoading: boolean;
+  notificationLoaded: boolean;
   notificationError: string | null;
   notificationHasMore: boolean;
+  loadNotifications: (page?: number) => Promise<void>;
   retryNotifications: () => void;
   loadMoreNotifications: () => void;
   markNotificationReadLocally: (id: number) => void;
@@ -62,6 +64,7 @@ export const useNotification = () => {
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notificationLoaded, setNotificationLoaded] = useState(false);
   const [notificationPage, setNotificationPage] = useState(0);
   const [notificationHasMore, setNotificationHasMore] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
@@ -71,6 +74,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const unreadRequestVersion = useRef(0);
   const notificationRequestVersion = useRef(0);
   const notificationIds = useRef(new Set<number>());
+  const notificationLoadedRef = useRef(false);
 
   const decrementUnread = useCallback(
     () => setUnreadCount((count) => Math.max(0, count - 1)),
@@ -86,10 +90,16 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       const result = await getNotifications(page, 20);
       if (requestVersion !== notificationRequestVersion.current) return;
       setNotifications((current) => {
-        const next = page === 0 ? mergeNotifications([], result.content) : mergeNotifications(current, result.content);
+        const next = page === 0 && notificationLoadedRef.current
+          ? mergeNotifications([], result.content)
+          : mergeNotifications(current, result.content);
         notificationIds.current = new Set(next.map((item) => item.id));
         return next;
       });
+      if (page === 0) {
+        notificationLoadedRef.current = true;
+        setNotificationLoaded(true);
+      }
       setNotificationHasMore(!result.last);
       setNotificationPage(page);
     } catch (caught) {
@@ -144,8 +154,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     unreadRequestVersion.current += 1;
     notificationRequestVersion.current += 1;
     notificationIds.current.clear();
+    notificationLoadedRef.current = false;
     setUnreadCount(0);
     setNotifications([]);
+    setNotificationLoaded(false);
     setNotificationPage(0);
     setNotificationHasMore(false);
     setNotificationLoading(false);
@@ -160,10 +172,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     const session = getSession();
     if (!session) return;
 
-    void loadNotifications(0);
     const refreshCount = () => {
       const version = ++unreadRequestVersion.current;
-      void getUnreadCount().then((result) => {
+      void getUnreadCount({ cache: "no-store" }).then((result) => {
         if (!ctrl.signal.aborted && version === unreadRequestVersion.current) {
           setUnreadCount(result.unreadCount);
         }
@@ -173,11 +184,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     const reservationRefresh = () => {
       window.dispatchEvent(new CustomEvent(RESERVATION_CHANGED_EVENT));
     };
-    const handleConnect = () => {
-      refreshCount();
+    const handleConnect = (isReconnect: boolean) => {
+      if (isReconnect) refreshCount();
       reservationRefresh();
-      // SSE가 끊어졌다 재연결된 사이 놓친 알림을 다시 가져옵니다.
-      void loadNotifications(0);
+      // 목록을 한 번 연 뒤 SSE가 재연결되면 놓친 알림을 다시 가져옵니다.
+      if (isReconnect && notificationLoadedRef.current) void loadNotifications(0);
     };
     const polling = window.setInterval(refreshCount, 60_000);
     subscribeNotifications((item) => {
@@ -210,9 +221,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         decrementUnread,
         clearUnread,
         notifications,
+        notificationLoaded,
         notificationLoading,
         notificationError,
         notificationHasMore,
+        loadNotifications,
         retryNotifications,
         loadMoreNotifications,
         markNotificationReadLocally,

@@ -12,6 +12,7 @@ import {
 import type { NotificationItem } from "../api/notifications.ts";
 import { useNotification } from "../model/NotificationContext.tsx";
 import { formatNotificationTime } from "../model/time.ts";
+import { shouldLoadNotificationList } from "../model/presentation.ts";
 
 // ─── Label helpers ────────────────────────────────────────────────────────────
 
@@ -118,16 +119,28 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
     clearUnread,
     decrementUnread,
     notifications,
+    notificationLoaded,
     notificationLoading,
     notificationError,
     notificationHasMore,
     retryNotifications,
+    loadNotifications,
     loadMoreNotifications,
     markNotificationReadLocally,
     markAllNotificationsReadLocally,
   } = useNotification();
   const panelRef = useRef<HTMLDivElement>(null);
   const readingIds = useRef(new Set<number>());
+
+  useEffect(() => {
+    if (shouldLoadNotificationList({
+      notificationLoaded,
+      notificationLoading,
+      notificationError,
+    })) {
+      void loadNotifications(0);
+    }
+  }, [loadNotifications, notificationError, notificationLoaded, notificationLoading]);
 
   // close panel when clicking outside
   useEffect(() => {
@@ -173,7 +186,7 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 rounded-2xl bg-white shadow-xl ring-1 ring-black/10 flex flex-col overflow-hidden z-50"
+      className="fixed inset-x-4 top-28 z-[60] flex max-h-[calc(100dvh-8rem)] w-auto max-w-none flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/10 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:max-h-none sm:w-96 sm:max-w-sm"
       role="dialog"
       aria-label="알림 목록"
     >
