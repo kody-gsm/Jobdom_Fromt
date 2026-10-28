@@ -1,6 +1,6 @@
 import { ApiError } from "./ApiError.ts";
 import type { ApiRequestInit } from "./client.ts";
-import { authenticatedGetCache } from "../lib/requestCache.ts";
+import { authenticatedGetCache } from "@fsd/shared/lib";
 
 const AUTHENTICATED_GET_CACHE_TTL_MS = 30_000;
 
