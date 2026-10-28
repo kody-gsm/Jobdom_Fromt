@@ -25,7 +25,8 @@ assert.match(signup, /verificationCode\.trim\(\)\.length !== 6/);
 assert.match(signup, /values\.password !== values\.confirmPassword/);
 assert.match(signup, /영문, 숫자, 특수문자를 포함해 10자 이상 입력해주세요\./);
 
-assert.match(reset, /getGsmEmailErrorMessage/);
+assert.match(reset, /getResetPasswordEmailErrorMessage/);
+assert.doesNotMatch(reset, /getGsmEmailErrorMessage/);
 assert.match(reset, /isValidPassword/);
 assert.match(reset, /verificationCode\.trim\(\)\.length !== 6/);
 assert.match(reset, /values\.isCodeExpired/);

@@ -63,4 +63,25 @@ const resetErrors = validateResetPasswordForm({
 assert.equal(getFirstResetPasswordErrorField(resetErrors), "email");
 assert.equal(getFirstResetPasswordErrorField({ password: "비밀번호를 입력해주세요." }), "password");
 
+const validResetValues = {
+  verificationCode: "123456",
+  password: "Aa12345678!",
+  confirmPassword: "Aa12345678!",
+  isCodeExpired: false,
+};
+for (const email of ["user@gmail.com", "teacher@gsm.hs.kr", "s25001@gsm.hs.kr", " user@example.com "]) {
+  assert.deepEqual(validateResetPasswordForm({ ...validResetValues, email }), {});
+}
+for (const email of ["", "   ", "user", "user@", "user name@example.com", "user@@example.com"]) {
+  assert.ok(validateResetPasswordForm({ ...validResetValues, email }).email);
+}
+assert.ok(validateSignupForm({
+  email: "user@gmail.com",
+  verificationCode: "123456",
+  password: "Aa12345678!",
+  confirmPassword: "Aa12345678!",
+  termsAccepted: true,
+  privacyAccepted: true,
+}).email);
+
 console.log("auth validation presentation tests passed");

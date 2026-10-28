@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  getGsmEmailErrorMessage,
   getPasswordResetCodeError,
   getPasswordResetError,
   normalizeVerificationCode,
@@ -12,6 +11,7 @@ import { useCountdown } from "@fsd/shared/lib";
 import { resetPassword, sendPasswordResetCode } from "../api/resetPassword.ts";
 import {
   getFirstResetPasswordErrorField,
+  getResetPasswordEmailErrorMessage,
   validateResetPasswordForm,
 } from "./validation.ts";
 import type {
@@ -57,7 +57,7 @@ export const useResetPasswordForm = () => {
   };
 
   const sendCode = async () => {
-    const emailError = getGsmEmailErrorMessage(form.email);
+    const emailError = getResetPasswordEmailErrorMessage(form.email);
     if (emailError) {
       setErrors((current) => ({ ...current, email: emailError }));
       setErrorField("email");
