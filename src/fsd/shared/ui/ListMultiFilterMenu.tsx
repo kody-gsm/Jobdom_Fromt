@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { FiFilter } from "react-icons/fi";
 import type { ListFilterOption } from "./ListFilterMenu.tsx";
 
@@ -22,6 +22,8 @@ export const ListMultiFilterMenu = <T extends string>({
   const [open, setOpen] = useState(false);
   const [pendingValue, setPendingValue] = useState<T[]>(() => [...value]);
   const menuId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const selected = new Set(pendingValue);
   const applied = new Set(value);
   const pendingOptions = options.filter((option) => selected.has(option.value));
@@ -32,6 +34,24 @@ export const ListMultiFilterMenu = <T extends string>({
       ? appliedOptions[0].label
       : `${appliedOptions.length}개 선택`;
 
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    };
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   const toggle = (option: T) => {
     const next = selected.has(option)
       ? pendingValue.filter((current) => current !== option)
@@ -40,9 +60,10 @@ export const ListMultiFilterMenu = <T extends string>({
   };
 
   return (
-    <div className="relative shrink-0">
+    <div ref={containerRef} className="relative shrink-0">
       <button
         type="button"
+        ref={buttonRef}
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-controls={menuId}
@@ -59,7 +80,7 @@ export const ListMultiFilterMenu = <T extends string>({
         <div
           id={menuId}
           role="menu"
-          className="absolute right-0 top-full z-20 mt-2 min-w-52 rounded-xl border border-[#E1E6EB] bg-white p-1.5 shadow-lg"
+          className="absolute left-0 top-full z-[60] mt-2 max-h-[calc(100dvh-10rem)] w-[min(13rem,calc(100vw-3rem))] max-w-[calc(100vw-3rem)] overflow-y-auto rounded-xl border border-[#E1E6EB] bg-white p-1.5 shadow-lg sm:left-auto sm:right-0 sm:max-h-none sm:w-max sm:min-w-52 sm:max-w-none sm:overflow-visible"
         >
           <button
             type="button"
