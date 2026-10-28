@@ -23,7 +23,7 @@ export const ResetPasswordForm = () => {
         value={resetForm.form.email}
         error={resetForm.errorField === "email" ? resetForm.errors.email : undefined}
         onChange={(event) => resetForm.updateField("email", event.target.value)}
-        placeholder="s123@gsm.hs.kr"
+        placeholder="가입한 이메일 주소"
       />
 
       <div className="-mt-2 flex justify-end">

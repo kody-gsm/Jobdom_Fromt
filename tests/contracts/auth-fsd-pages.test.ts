@@ -39,7 +39,8 @@ assert.match(signup, /getSignupError/);
 assert.match(signup, /sendSignupVerificationCode/);
 assert.match(signup, /인증코드가 만료되었습니다\. 재발송해주세요\./);
 
-assert.match(reset, /getGsmEmailErrorMessage/);
+assert.match(reset, /getResetPasswordEmailErrorMessage/);
+assert.doesNotMatch(reset, /getGsmEmailErrorMessage/);
 assert.match(reset, /getPasswordResetError/);
 assert.match(reset, /sendPasswordResetCode/);
 assert.match(reset, /인증코드 6자리를 입력해주세요\./);

@@ -1,4 +1,4 @@
-import { getGsmEmailErrorMessage, isValidPassword } from "@fsd/entities/user";
+import { getRequiredMessage, isValidPassword } from "@fsd/entities/user";
 
 export type ResetPasswordFormValues = {
   email: string;
@@ -12,11 +12,20 @@ export type ResetPasswordFormErrors = Partial<
   Record<Exclude<keyof ResetPasswordFormValues, "isCodeExpired">, string>
 >;
 
+export const getResetPasswordEmailErrorMessage = (email: string) => {
+  const normalizedEmail = email.trim();
+  if (!normalizedEmail) return getRequiredMessage("이메일을");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    return "올바른 이메일 주소를 입력해주세요.";
+  }
+  return "";
+};
+
 export const validateResetPasswordForm = (
   values: ResetPasswordFormValues,
 ): ResetPasswordFormErrors => {
   const errors: ResetPasswordFormErrors = {};
-  const emailError = getGsmEmailErrorMessage(values.email);
+  const emailError = getResetPasswordEmailErrorMessage(values.email);
   if (emailError) errors.email = emailError;
   if (values.verificationCode.trim().length !== 6) {
     errors.verificationCode = "인증코드 6자리를 입력해주세요.";
