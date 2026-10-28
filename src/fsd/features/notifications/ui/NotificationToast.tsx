@@ -38,7 +38,7 @@ const Toast = ({ toast }: { toast: ToastNotification }) => {
       onKeyDown={handleKeyDown}
       tabIndex={toast.targetUrl ? 0 : undefined}
       aria-label={toast.targetUrl ? `${toast.title} 알림 열기` : undefined}
-      className={`flex w-80 cursor-pointer flex-col gap-1 rounded-2xl bg-white px-4 py-3 shadow-lg ring-1 ring-black/5 transition-all duration-300 hover:shadow-xl`}
+      className="flex w-full max-w-80 cursor-pointer flex-col gap-1 rounded-2xl bg-white px-4 py-3 shadow-lg ring-1 ring-black/5 transition-all duration-300 hover:shadow-xl"
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900 leading-snug">{toast.title}</p>
@@ -74,7 +74,7 @@ export const NotificationToastContainer = () => {
   return (
     <div
       aria-label="알림"
-      className="fixed right-4 top-24 z-[100] flex flex-col gap-2 sm:right-6 sm:top-28 lg:right-10 lg:top-32"
+      className="fixed inset-x-4 top-28 z-[100] flex flex-col gap-2 sm:inset-x-auto sm:right-6 sm:top-28 lg:right-10 lg:top-32"
     >
       {toasts.map((toast) => (
         <Toast key={toast.id} toast={toast} />

@@ -27,7 +27,7 @@ export const HomePage = () => {
     <div className="min-h-dvh bg-surface text-ink">
       <StudentHeader />
       {toast ? (
-        <div role="status" className="fixed right-6 top-6 z-[60] rounded-2xl border border-brand bg-brand-soft px-5 py-4 text-sm font-semibold text-brand-accent shadow-lg">
+        <div role="status" className="fixed inset-x-4 top-28 z-[60] rounded-2xl border border-brand bg-brand-soft px-5 py-4 text-sm font-semibold text-brand-accent shadow-lg sm:inset-x-auto sm:right-6 sm:top-6">
           {toast}
         </div>
       ) : null}

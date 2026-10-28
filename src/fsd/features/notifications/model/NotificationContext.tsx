@@ -34,6 +34,7 @@ interface NotificationContextValue {
   notificationLoading: boolean;
   notificationError: string | null;
   notificationHasMore: boolean;
+  loadNotifications: (page?: number) => Promise<void>;
   retryNotifications: () => void;
   loadMoreNotifications: () => void;
   markNotificationReadLocally: (id: number) => void;
@@ -160,7 +161,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     const session = getSession();
     if (!session) return;
 
-    void loadNotifications(0);
     const refreshCount = () => {
       const version = ++unreadRequestVersion.current;
       void getUnreadCount().then((result) => {
@@ -213,6 +213,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         notificationLoading,
         notificationError,
         notificationHasMore,
+        loadNotifications,
         retryNotifications,
         loadMoreNotifications,
         markNotificationReadLocally,
