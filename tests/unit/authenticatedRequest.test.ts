@@ -5,7 +5,9 @@ import { authenticatedGetCache } from "../../src/fsd/shared/lib/requestCache.ts"
 
 authenticatedGetCache.clear();
 let calls = 0;
-const request = async <T>(_path: string, _init?: ApiRequestInit): Promise<T> => {
+const request = async <T>(path: string, init?: ApiRequestInit): Promise<T> => {
+  assert.ok(path.startsWith("/unit/"));
+  assert.ok(init === undefined || typeof init === "object");
   calls += 1;
   return { calls } as T;
 };
