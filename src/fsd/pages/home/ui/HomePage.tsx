@@ -8,19 +8,27 @@ export const HomePage = () => {
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    const raw = window.sessionStorage.getItem("jobdam:consultation-toast");
-    if (!raw) return;
-    window.sessionStorage.removeItem("jobdam:consultation-toast");
-    try {
-      const stored = JSON.parse(raw) as { message?: string; expiresAt?: number };
-      const remaining = (stored.expiresAt ?? 0) - Date.now();
-      if (!stored.message || remaining <= 0) return;
-      setToast(stored.message);
-      const timer = window.setTimeout(() => setToast(null), remaining);
-      return () => window.clearTimeout(timer);
-    } catch {
-      return;
-    }
+    let dismissTimer: number | null = null;
+    const readToast = () => {
+      const raw = window.sessionStorage.getItem("jobdam:consultation-toast");
+      if (!raw) return;
+      window.sessionStorage.removeItem("jobdam:consultation-toast");
+      try {
+        const stored = JSON.parse(raw) as { message?: string; expiresAt?: number };
+        const remaining = (stored.expiresAt ?? 0) - Date.now();
+        if (!stored.message || remaining <= 0) return;
+        setToast(stored.message);
+        dismissTimer = window.setTimeout(() => setToast(null), remaining);
+      } catch {
+        // Malformed session storage should not block the home page.
+      }
+    };
+
+    const readTimer = window.setTimeout(readToast, 0);
+    return () => {
+      window.clearTimeout(readTimer);
+      if (dismissTimer !== null) window.clearTimeout(dismissTimer);
+    };
   }, []);
 
   return (
