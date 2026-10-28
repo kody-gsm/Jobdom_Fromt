@@ -8,26 +8,34 @@ export const HomePage = () => {
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    const raw = window.sessionStorage.getItem("jobdam:consultation-toast");
-    if (!raw) return;
-    window.sessionStorage.removeItem("jobdam:consultation-toast");
-    try {
-      const stored = JSON.parse(raw) as { message?: string; expiresAt?: number };
-      const remaining = (stored.expiresAt ?? 0) - Date.now();
-      if (!stored.message || remaining <= 0) return;
-      setToast(stored.message);
-      const timer = window.setTimeout(() => setToast(null), remaining);
-      return () => window.clearTimeout(timer);
-    } catch {
-      return;
-    }
+    let dismissTimer: number | null = null;
+    const readToast = () => {
+      const raw = window.sessionStorage.getItem("jobdam:consultation-toast");
+      if (!raw) return;
+      window.sessionStorage.removeItem("jobdam:consultation-toast");
+      try {
+        const stored = JSON.parse(raw) as { message?: string; expiresAt?: number };
+        const remaining = (stored.expiresAt ?? 0) - Date.now();
+        if (!stored.message || remaining <= 0) return;
+        setToast(stored.message);
+        dismissTimer = window.setTimeout(() => setToast(null), remaining);
+      } catch {
+        // Malformed session storage should not block the home page.
+      }
+    };
+
+    const readTimer = window.setTimeout(readToast, 0);
+    return () => {
+      window.clearTimeout(readTimer);
+      if (dismissTimer !== null) window.clearTimeout(dismissTimer);
+    };
   }, []);
 
   return (
     <div className="min-h-dvh bg-surface text-ink">
       <StudentHeader />
       {toast ? (
-        <div role="status" className="fixed right-6 top-6 z-[60] rounded-2xl border border-brand bg-brand-soft px-5 py-4 text-sm font-semibold text-brand-accent shadow-lg">
+        <div role="status" className="fixed inset-x-4 top-28 z-[60] rounded-2xl border border-brand bg-brand-soft px-5 py-4 text-sm font-semibold text-brand-accent shadow-lg sm:inset-x-auto sm:right-6 sm:top-6">
           {toast}
         </div>
       ) : null}

@@ -8,12 +8,13 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replac
 
 export function subscribeNotifications(
   onNotification: (item: NotificationItem) => void,
-  onConnect: () => void,
+  onConnect: (isReconnect: boolean) => void,
   signal: AbortSignal,
   onReservation?: (event: ReservationRealtimeEvent) => void,
 ) {
   let stream: EventSource | null = null;
   let retry: ReturnType<typeof setTimeout> | undefined;
+  let hasConnected = false;
 
   const reconnect = () => {
     stream?.close();
@@ -33,7 +34,11 @@ export function subscribeNotifications(
       const { ticket } = await issueNotificationSubscribeTicket();
       if (signal.aborted) return;
       stream = new EventSource(`${API_BASE_URL}/api/notifications/subscribe?ticket=${encodeURIComponent(ticket)}`);
-      stream.addEventListener("connect", onConnect);
+      stream.addEventListener("connect", () => {
+        const isReconnect = hasConnected;
+        hasConnected = true;
+        onConnect(isReconnect);
+      });
       stream.addEventListener("notification", (event) => {
         try {
           onNotification(JSON.parse((event as MessageEvent).data));

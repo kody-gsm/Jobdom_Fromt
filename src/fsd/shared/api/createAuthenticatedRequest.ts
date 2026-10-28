@@ -1,5 +1,8 @@
 import { ApiError } from "./ApiError.ts";
 import type { ApiRequestInit } from "./client.ts";
+import { authenticatedGetCache } from "@fsd/shared/lib";
+
+const AUTHENTICATED_GET_CACHE_TTL_MS = 30_000;
 
 interface RawRequest {
   <T>(
@@ -41,8 +44,27 @@ export const createAuthenticatedRequest = ({
     init: ApiRequestInit = {},
     retryAuth = true,
   ): Promise<T> => {
+    const accessToken = readAccessToken();
+    const method = (init.method ?? "GET").toUpperCase();
+    const isCacheableGet = method === "GET"
+      && !init.signal
+      && init.responseType !== "blob"
+      && init.cache !== "no-store"
+      && Boolean(accessToken);
+    const execute = () => request<T>(path, init, { accessToken });
+
     try {
-      return await request<T>(path, init, { accessToken: readAccessToken() });
+      if (isCacheableGet) {
+        return await authenticatedGetCache.getOrFetch(
+          `${accessToken}:${path}`,
+          execute,
+          AUTHENTICATED_GET_CACHE_TTL_MS,
+        );
+      }
+
+      const result = await execute();
+      if (method !== "GET") authenticatedGetCache.clear();
+      return result;
     } catch (error) {
       const refreshToken = getRefreshToken();
       if (error instanceof ApiError && error.status === 401 && retryAuth && refreshToken) {
@@ -59,7 +81,10 @@ export const createAuthenticatedRequest = ({
         }
       }
 
-      if (error instanceof ApiError && error.status === 401) clearSession();
+      if (error instanceof ApiError && error.status === 401) {
+        authenticatedGetCache.clear();
+        clearSession();
+      }
       throw error;
     }
   };

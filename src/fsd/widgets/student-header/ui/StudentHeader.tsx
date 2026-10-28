@@ -47,7 +47,7 @@ export const StudentHeader = () => {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex h-full flex-1 items-center justify-center whitespace-nowrap text-center transition-colors hover:text-brand-accent sm:h-11 sm:flex-none ${isActive ? "font-bold text-brand" : "font-semibold"}`}
+                className={`flex h-full min-w-0 flex-1 items-center justify-center break-keep px-1 text-center leading-tight transition-colors hover:text-brand-accent sm:h-11 sm:flex-none sm:whitespace-nowrap sm:px-0 sm:leading-normal ${isActive ? "font-bold text-brand" : "font-semibold"}`}
               >
                 {item.label}
               </Link>
@@ -55,7 +55,7 @@ export const StudentHeader = () => {
           })}
         </nav>
 
-        <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-5 text-[#6A7077] sm:col-start-3">
+        <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-2 text-[#6A7077] sm:col-start-3 sm:gap-5">
           <NotificationBell />
           <Link
             href="/profile"
