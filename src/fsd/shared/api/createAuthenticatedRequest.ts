@@ -49,6 +49,7 @@ export const createAuthenticatedRequest = ({
     const isCacheableGet = method === "GET"
       && !init.signal
       && init.responseType !== "blob"
+      && init.cache !== "no-store"
       && Boolean(accessToken);
     const execute = () => request<T>(path, init, { accessToken });
 

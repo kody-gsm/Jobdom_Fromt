@@ -134,14 +134,13 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
 
   useEffect(() => {
     if (shouldLoadNotificationList({
-      notificationCount: notifications.length,
       notificationLoaded,
       notificationLoading,
       notificationError,
     })) {
       void loadNotifications(0);
     }
-  }, [loadNotifications, notificationError, notificationLoaded, notificationLoading, notifications.length]);
+  }, [loadNotifications, notificationError, notificationLoaded, notificationLoading]);
 
   // close panel when clicking outside
   useEffect(() => {
