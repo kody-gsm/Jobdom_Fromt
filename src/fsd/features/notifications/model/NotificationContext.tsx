@@ -32,6 +32,7 @@ interface NotificationContextValue {
   clearUnread: () => void;
   notifications: NotificationItem[];
   notificationLoading: boolean;
+  notificationLoaded: boolean;
   notificationError: string | null;
   notificationHasMore: boolean;
   loadNotifications: (page?: number) => Promise<void>;
@@ -63,6 +64,7 @@ export const useNotification = () => {
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notificationLoaded, setNotificationLoaded] = useState(false);
   const [notificationPage, setNotificationPage] = useState(0);
   const [notificationHasMore, setNotificationHasMore] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
@@ -91,6 +93,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         notificationIds.current = new Set(next.map((item) => item.id));
         return next;
       });
+      if (page === 0) setNotificationLoaded(true);
       setNotificationHasMore(!result.last);
       setNotificationPage(page);
     } catch (caught) {
@@ -147,6 +150,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     notificationIds.current.clear();
     setUnreadCount(0);
     setNotifications([]);
+    setNotificationLoaded(false);
     setNotificationPage(0);
     setNotificationHasMore(false);
     setNotificationLoading(false);
@@ -210,6 +214,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         decrementUnread,
         clearUnread,
         notifications,
+        notificationLoaded,
         notificationLoading,
         notificationError,
         notificationHasMore,
