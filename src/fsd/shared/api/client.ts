@@ -4,7 +4,12 @@ const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
 
 type ParsedApiError = { message: string; code?: string };
-export type ApiRequestInit = RequestInit & { responseType?: "blob" };
+export type ApiRequestInit = RequestInit & {
+  responseType?: "blob";
+  /** Cache URL prefixes affected by a mutation. Omit for conservative full invalidation. */
+  invalidateCache?: readonly string[];
+  timeoutMs?: number;
+};
 
 const parseError = async (response: Response): Promise<ParsedApiError> => {
   if ([502, 503, 504].includes(response.status)) {
@@ -37,7 +42,8 @@ export const request = async <T>(
   init: ApiRequestInit = {},
   options: RequestOptions = {},
 ): Promise<T> => {
-  const { responseType, ...fetchInit } = init;
+  const { responseType, timeoutMs, signal, ...fetchInit } = init;
+  delete fetchInit.invalidateCache;
   const headers = new Headers(init.headers);
   const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
 
@@ -48,24 +54,40 @@ export const request = async <T>(
     headers.set("Authorization", `Bearer ${options.accessToken}`);
   }
 
-  let response: Response;
+  const controller = new AbortController();
+  const abortFromCaller = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abortFromCaller();
+  else signal?.addEventListener("abort", abortFromCaller, { once: true });
+  const defaultTimeout = isFormData || responseType === "blob" ? 120_000 : 30_000;
+  const duration = typeof timeoutMs === "number" && Number.isFinite(timeoutMs) && timeoutMs > 0
+    ? timeoutMs : defaultTimeout;
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, duration);
   try {
-    response = await fetch(`${getApiBaseUrl()}${path}`, { ...fetchInit, headers });
-  } catch {
+    const response = await fetch(`${getApiBaseUrl()}${path}`, { ...fetchInit, headers, signal: controller.signal });
+    if (!response.ok) {
+      const error = await parseError(response);
+      throw new ApiError(error.message, response.status, error.code);
+    }
+    if (response.status === 204) return undefined as T;
+    if (responseType === "blob") return await response.blob() as T;
+
+    const text = await response.text();
+    if (!text) return undefined as T;
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      return JSON.parse(text) as T;
+    }
+    return text as T;
+  } catch (error) {
+    if (timedOut) throw new ApiError("요청 시간이 초과되었습니다. 다시 시도해주세요.", 0, "REQUEST_TIMEOUT");
+    if (signal?.aborted) throw new ApiError("요청이 취소되었습니다.", 0, "REQUEST_ABORTED");
+    if (error instanceof ApiError) throw error;
     throw new ApiError("백엔드 서버에 연결할 수 없습니다.", 0);
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener("abort", abortFromCaller);
   }
-
-  if (!response.ok) {
-    const error = await parseError(response);
-    throw new ApiError(error.message, response.status, error.code);
-  }
-  if (response.status === 204) return undefined as T;
-  if (responseType === "blob") return await response.blob() as T;
-
-  const text = await response.text();
-  if (!text) return undefined as T;
-  if (response.headers.get("content-type")?.includes("application/json")) {
-    return JSON.parse(text) as T;
-  }
-  return text as T;
 };

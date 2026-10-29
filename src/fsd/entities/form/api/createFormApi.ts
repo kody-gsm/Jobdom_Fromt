@@ -15,6 +15,8 @@ interface RequestFn {
   <T>(path: string, init?: ApiRequestInit): Promise<T>;
 }
 
+const FORM_WRITE_INVALIDATION = ["/form", "/student/form", "/teacher/form", "/recruit", "/teacher/recruit"] as const;
+
 export const createFormApi = (request: RequestFn) => ({
   getAll: () => request<FormSummary[]>("/form"),
   getById: (id: number) => request<DynamicForm>(`/form/${id}`),
@@ -24,11 +26,13 @@ export const createFormApi = (request: RequestFn) => ({
     request<FormSubmission>(`/student/form/${id}/submission`, {
       method: "POST",
       body: JSON.stringify({ answers }),
+      invalidateCache: FORM_WRITE_INVALIDATION,
     }),
   updateSubmission: (id: number, answers: FormAnswerInput[]) =>
     request<FormSubmission>(`/student/form/${id}/submission`, {
       method: "PATCH",
       body: JSON.stringify({ answers }),
+      invalidateCache: FORM_WRITE_INVALIDATION,
     }),
   uploadFile: async (id: number, file: File) => {
     const error = getFormFileError(file);
@@ -38,6 +42,7 @@ export const createFormApi = (request: RequestFn) => ({
     return request<FormFileUpload>(`/student/form/${id}/file`, {
       method: "POST",
       body,
+      invalidateCache: FORM_WRITE_INVALIDATION,
     });
   },
   downloadFile: async (fileId: number) => {
@@ -61,6 +66,7 @@ export const createFormApi = (request: RequestFn) => ({
     return request<DynamicForm>("/teacher/form", {
       method: "POST",
       body: JSON.stringify(input),
+      invalidateCache: FORM_WRITE_INVALIDATION,
     });
   },
   updateTeacher: async (id: number, input: FormUpdateInput) => {
@@ -69,12 +75,13 @@ export const createFormApi = (request: RequestFn) => ({
     return request<DynamicForm>(`/teacher/form/${id}`, {
       method: "PATCH",
       body: JSON.stringify(input),
+      invalidateCache: FORM_WRITE_INVALIDATION,
     });
   },
   publishTeacher: (id: number) =>
-    request<DynamicForm>(`/teacher/form/${id}/publish`, { method: "POST" }),
+    request<DynamicForm>(`/teacher/form/${id}/publish`, { method: "POST", invalidateCache: FORM_WRITE_INVALIDATION }),
   closeTeacher: (id: number) =>
-    request<DynamicForm>(`/teacher/form/${id}/close`, { method: "POST" }),
+    request<DynamicForm>(`/teacher/form/${id}/close`, { method: "POST", invalidateCache: FORM_WRITE_INVALIDATION }),
   getSubmissions: (id: number) =>
     request<FormSubmissionSummary[]>(`/teacher/form/${id}/submission`),
   getSubmission: (formId: number, submissionId: number) =>
