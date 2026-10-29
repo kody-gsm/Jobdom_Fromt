@@ -76,27 +76,42 @@ const update = {
   summary: "공고",
 };
 const image = new File(["image"], "notice.png", { type: "image/png" });
+const secondImage = new File(["image-2"], "notice-2.png", { type: "image/png" });
 await recruit.getTeacherAll();
-await recruit.createTeacher(update);
-await recruit.analyze(image);
+await recruit.createTeacher(update, false);
+await recruit.analyze([image, secondImage], false);
 await recruit.updateTeacher(3, update);
+await recruit.addImages(3, [secondImage]);
+await recruit.deleteImage(3, 11);
 await recruit.publishTeacher(3);
 await recruit.deleteTeacher(3);
 
 const recruitCalls = calls.splice(0);
 assert.equal(recruitCalls[0]?.path, "/teacher/recruit");
+// 지원 폼 생성 여부는 공고를 만들 때만 보낸다.
 assert.deepEqual(recruitCalls[1], {
   path: "/teacher/recruit",
-  init: { method: "POST", body: JSON.stringify(update) },
+  init: { method: "POST", body: JSON.stringify({ ...update, createForm: false }) },
 });
 assert.equal(recruitCalls[2]?.path, "/teacher/recruit/analyze");
 assert.equal(recruitCalls[2]?.init?.method, "POST");
-assert.ok(recruitCalls[2]?.init?.body instanceof FormData);
-assert.deepEqual(recruitCalls.slice(3), [
+const analyzeBody = recruitCalls[2]?.init?.body;
+assert.ok(analyzeBody instanceof FormData);
+// 서버는 같은 이름(image)으로 여러 장을 받는다.
+assert.deepEqual(analyzeBody.getAll("image").map((file) => (file as File).name), ["notice.png", "notice-2.png"]);
+assert.equal(analyzeBody.get("createForm"), "false");
+assert.equal(recruitCalls[4]?.path, "/teacher/recruit/3/image");
+assert.equal(recruitCalls[4]?.init?.method, "POST");
+const addImagesBody = recruitCalls[4]?.init?.body;
+assert.ok(addImagesBody instanceof FormData);
+assert.deepEqual(addImagesBody.getAll("image").map((file) => (file as File).name), ["notice-2.png"]);
+assert.equal(addImagesBody.has("createForm"), false);
+assert.deepEqual([recruitCalls[3], ...recruitCalls.slice(5)], [
   {
     path: "/teacher/recruit/3",
     init: { method: "PATCH", body: JSON.stringify(update) },
   },
+  { path: "/teacher/recruit/3/image/11", init: { method: "DELETE" } },
   { path: "/teacher/recruit/3/publish", init: { method: "POST" } },
   { path: "/teacher/recruit/3", init: { method: "DELETE" } },
 ]);

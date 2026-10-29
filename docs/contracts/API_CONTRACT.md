@@ -45,9 +45,17 @@
 - DB 반영 후 응답은 `{ scannedMembers: number, linkedStudents: number, updatedStudents: number }`이다. 각각 조회한 Discord 회원 수, 연결된 학생 수, ID가 갱신·정리된 학생 수이며 0 이상의 정수다.
 - 실행 중 중복 요청을 막고 성공 수치와 한국 시간 기준 완료 시각을 표시한다. 401/403은 관리자 권한 안내, 그 외 실패는 오류와 재시도를 제공한다.
 
+## Recruit images and optional form
+
+- 백엔드 `feat/recruit-optional-form-and-images` 브랜치 계약을 따른다. 2026-10-29 기준 백엔드 `develop`에는 아직 머지되지 않았으며, 배포 전 백엔드의 `docs/recruit-multi-image-migration.sql` 적용이 필요하다.
+- 지원 폼 생성 여부는 공고를 처음 만들 때만 정할 수 있다. 새 공고를 처음 `저장`·`공개`하거나 AI 이미지 분석을 시작하면 `지원 폼을 함께 만들까요?` 모달을 띄우고, 고른 값을 `POST /teacher/recruit` body의 `createForm` 또는 `POST /teacher/recruit/analyze` FormData의 `createForm`으로 보낸다. 이후 폼을 추가하거나 떼어내는 API는 없다.
+- AI 분석은 FormData `image`로 여러 장을 보낸다. 만든 공고에는 `POST /teacher/recruit/{id}/image`(FormData `image` 여러 장)로 이미지를 추가하고 `DELETE /teacher/recruit/{id}/image/{imageId}`로 한 장씩 삭제한다. 공고당 최대 10장, 한 장당 10MB, 이미지 형식만 업로드 전에 먼저 확인한다.
+- 공고 응답의 `images: [{ id, url }]`을 올린 순서대로 보여준다. `imageUrl`은 첫 번째 이미지다. 이미지 URL은 API base(`/backend` 등)를 붙여 표시한다.
+- 폼 없이 만든 공고(`formId: null`)는 공고 화면의 `공개`에서 공개 모달을 열고, 디스코드 채널을 골라 `POST /teacher/recruit/{id}/publish` 후 선택 채널 알림을 보낸다.
+
 ## Recruit publish with linked form
 
-- 교사 공고 화면의 `폼 작성 후 공개`는 공고를 저장(`POST /teacher/recruit` 또는 `PATCH /teacher/recruit/{id}`)한 뒤 응답의 `formId`로 `/teacher/forms?formId={formId}`를 연다. 공고 화면에서 직접 공개하지 않는다.
+- 지원 폼이 있는 공고의 `폼 작성 후 공개`는 공고를 저장(`POST /teacher/recruit` 또는 `PATCH /teacher/recruit/{id}`)한 뒤 응답의 `formId`로 `/teacher/forms?formId={formId}`를 연다. 폼이 있는 공고는 공고 화면에서 직접 공개하지 않는다.
 - 폼 화면은 `GET /teacher/recruit`로 `formId`가 같은 공고를 찾는다. 초안 폼이 초안 공고에 연결되어 있으면 `공고와 함께 공개`로 표시하고 디스코드 알림 채널 선택을 보여준다.
 - 채널 목록은 `GET /api/notices/channels`의 `[{ id: string, name: string, categoryName: string | null }]`을 카테고리별로 표시한다. 기본값은 `기본 공지 채널만`이며, 목록 조회 실패 시 재시도를 제공하고 기본 공지 채널로만 공개할 수 있다.
 - 공개 시 폼 수정 내용을 먼저 저장(`PATCH /teacher/form/{id}`)한 뒤 body 없이 `POST /teacher/recruit/{recruitId}/publish`를 호출한다. 서버는 공고와 연결 폼을 함께 공개하고 기본 공지 채널(`DISCORD_BOT_CHANNEL_ID`)로 공고 알림을 보낸다.

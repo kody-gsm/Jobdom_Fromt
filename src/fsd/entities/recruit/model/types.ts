@@ -8,11 +8,15 @@ export interface Recruit {
   summary: string | null;
   fields?: RecruitField[];
   imageUrl?: string | null;
+  /** 올린 순서대로 담긴 공고 이미지. 첫 번째가 imageUrl과 같다. */
+  images?: RecruitImage[];
   formId?: number | null;
   status: "DRAFT" | "PUBLISHED" | "CLOSED";
   createdAt: string;
   updatedAt: string;
 }
+
+export type RecruitImage = { id: number; url: string };
 
 export type RecruitCategory = "기업" | "공공기관";
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { RecruitNoticeChannel } from "@fsd/entities/recruit";
 import { ApiError } from "@fsd/shared/api";
-import { getNoticeChannels } from "../api/forms";
+import { getNoticeChannels } from "../api/recruitManagement.ts";
 
 type ChannelGroup = { categoryName: string; channels: RecruitNoticeChannel[] };
 
@@ -20,7 +20,8 @@ const getLoadErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : "디스코드 채널 목록을 불러오지 못했습니다.";
 };
 
-export function NoticeChannelPicker({ companyName, value, onChange, disabled }: { companyName: string | null; value: string; onChange: (channelId: string) => void; disabled: boolean }) {
+/** 기본 공지 채널 외에 공고 알림을 추가로 보낼 디스코드 채널을 고른다. 빈 값은 기본 채널만 쓴다는 뜻이다. */
+export function NoticeChannelPicker({ value, onChange, disabled }: { value: string; onChange: (channelId: string) => void; disabled: boolean }) {
   const [channels, setChannels] = useState<RecruitNoticeChannel[] | null>(null);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
@@ -41,10 +42,8 @@ export function NoticeChannelPicker({ companyName, value, onChange, disabled }: 
   }, [revision]);
 
   return (
-    <div className="mt-6 rounded-xl border border-green-100 bg-green-50 p-4">
-      <p className="text-sm font-semibold text-gray-800">{companyName || "연결된"} 공고의 지원 폼입니다.</p>
-      <p className="mt-1 text-xs leading-5 text-gray-600">공개하면 공고와 이 폼이 함께 게시되고 기본 공지 채널로 공고 알림이 발송됩니다. 다른 채널을 고르면 그 채널에도 알림을 추가로 보냅니다.</p>
-      <label className="mt-3 block max-w-sm text-xs font-bold text-gray-600">
+    <div>
+      <label className="block max-w-sm text-xs font-bold text-gray-600">
         디스코드 알림 채널
         <select disabled={disabled || channels === null} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-normal outline-none focus:border-[#02C551] disabled:opacity-60">
           <option value="">기본 공지 채널만</option>

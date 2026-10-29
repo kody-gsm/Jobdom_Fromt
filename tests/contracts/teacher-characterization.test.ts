@@ -52,7 +52,7 @@ const recruit = source(
   "src/fsd/pages/teacher-recruit/ui/TeacherRecruitPage.tsx",
 );
 assert.match(recruit, /취업 공고 지원 현황/);
-assert.match(recruit, /10 \* 1024 \* 1024/);
+assert.match(recruit, /getRecruitImageError/);
 assert.match(recruit, /analyzeRecruit/);
 assert.match(recruit, /getRecruitDashboard/);
 assert.match(recruit, /updateRecruit/);

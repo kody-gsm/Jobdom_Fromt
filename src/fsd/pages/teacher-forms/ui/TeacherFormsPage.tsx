@@ -14,6 +14,7 @@ import type {
 } from "@fsd/entities/form";
 import { FORM_EDITOR_LIMITS, FORM_TEXT_LIMITS, getFormInputLimitError } from "@fsd/entities/form";
 import type { Recruit } from "@fsd/entities/recruit";
+import { NoticeChannelPicker } from "@fsd/features/manage-recruit";
 import { ApiError } from "@fsd/shared/api";
 import { createRequestVersionGuard } from "@fsd/shared/lib";
 import {
@@ -27,7 +28,6 @@ import {
   updateForm,
   type PublishFormResult,
 } from "../api/forms";
-import { NoticeChannelPicker } from "./NoticeChannelPicker";
 
 type DraftQuestion = FormQuestionInput & { key: string };
 
@@ -378,7 +378,13 @@ export function TeacherFormsPage() {
               </fieldset>
 
               {message && <p role="status" className={`mt-6 wrap-anywhere rounded-xl px-4 py-3 text-sm ${message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{message.text}</p>}
-              {isPublishingWithRecruit && <NoticeChannelPicker companyName={linkedRecruit?.companyName ?? null} value={channelId} onChange={setChannelId} disabled={working} />}
+              {isPublishingWithRecruit && (
+                <div className="mt-6 rounded-xl border border-green-100 bg-green-50 p-4">
+                  <p className="text-sm font-semibold text-gray-800">{linkedRecruit?.companyName || "연결된"} 공고의 지원 폼입니다.</p>
+                  <p className="mb-3 mt-1 text-xs leading-5 text-gray-600">공개하면 공고와 이 폼이 함께 게시되고 기본 공지 채널로 공고 알림이 발송됩니다. 다른 채널을 고르면 그 채널에도 알림을 추가로 보냅니다.</p>
+                  <NoticeChannelPicker value={channelId} onChange={setChannelId} disabled={working} />
+                </div>
+              )}
               <div className="mt-7 flex flex-wrap justify-end gap-3">
                 {status === "PUBLISHED" && <button type="button" onClick={copyLink} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">링크 복사</button>}
                 {status === "PUBLISHED" && <button type="button" disabled={working} onClick={close} className="h-12 rounded-xl bg-gray-800 px-6 font-semibold text-white">마감</button>}

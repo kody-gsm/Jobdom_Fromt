@@ -73,9 +73,10 @@ assert.deepEqual(JSON.parse(calls[7].body || "{}"), { email: "s123@gsm.hs.kr", v
 assert.equal(calls[0].authorization, "Bearer test-access-token");
 
 const recruitInput = { companyName: "잡담", interviewDate: null, deadline: null, summary: null, fields: ["FRONTEND", "BACKEND"] as const };
-await recruitApi.createTeacher({ ...recruitInput, fields: [...recruitInput.fields] });
+await recruitApi.createTeacher({ ...recruitInput, fields: [...recruitInput.fields] }, true);
 assert.equal(calls.at(-1)?.url, "/backend/teacher/recruit");
 assert.deepEqual(JSON.parse(calls.at(-1)?.body || "{}").fields, ["FRONTEND", "BACKEND"]);
+assert.equal(JSON.parse(calls.at(-1)?.body || "{}").createForm, true);
 await recruitApi.updateTeacher(1, { ...recruitInput, fields: [] });
 assert.equal(calls.at(-1)?.method, "PATCH");
 assert.deepEqual(JSON.parse(calls.at(-1)?.body || "{}").fields, []);

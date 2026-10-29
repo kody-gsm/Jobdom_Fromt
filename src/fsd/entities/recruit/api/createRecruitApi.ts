@@ -19,23 +19,36 @@ const createRecruitNotice = (recruit: Recruit) => ({
   link: typeof window === "undefined" ? undefined : `${window.location.origin}/recruit/${recruit.id}`,
 });
 
+// 서버는 같은 이름(image)으로 여러 장을 받는다.
+const createImageBody = (images: readonly File[], fields: Record<string, string> = {}) => {
+  const body = new FormData();
+  images.forEach((image) => body.append("image", image));
+  Object.entries(fields).forEach(([name, value]) => body.append(name, value));
+  return body;
+};
+
 export const createRecruitApi = (request: RequestFn) => ({
   getAll: () => request<Recruit[]>("/recruit"),
   getById: (id: number) => request<Recruit>(`/recruit/${id}`),
   getTeacherAll: () => request<Recruit[]>("/teacher/recruit"),
-  createTeacher: (input: RecruitUpdate) =>
+  /** createForm은 공고를 처음 만들 때만 정할 수 있다. 이후 지원 폼을 추가하거나 떼어낼 수 없다. */
+  createTeacher: (input: RecruitUpdate, createForm: boolean) =>
     request<Recruit>("/teacher/recruit", {
       method: "POST",
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, createForm }),
     }),
-  analyze: (image: File) => {
-    const body = new FormData();
-    body.append("image", image);
-    return request<Recruit>("/teacher/recruit/analyze", {
+  analyze: (images: readonly File[], createForm: boolean) =>
+    request<Recruit>("/teacher/recruit/analyze", {
       method: "POST",
-      body,
-    });
-  },
+      body: createImageBody(images, { createForm: String(createForm) }),
+    }),
+  addImages: (id: number, images: readonly File[]) =>
+    request<Recruit>(`/teacher/recruit/${id}/image`, {
+      method: "POST",
+      body: createImageBody(images),
+    }),
+  deleteImage: (id: number, imageId: number) =>
+    request<Recruit>(`/teacher/recruit/${id}/image/${imageId}`, { method: "DELETE" }),
   updateTeacher: (id: number, input: RecruitUpdate) =>
     request<Recruit>(`/teacher/recruit/${id}`, {
       method: "PATCH",

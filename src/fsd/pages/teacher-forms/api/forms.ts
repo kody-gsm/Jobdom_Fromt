@@ -2,16 +2,16 @@ import { createFormApi } from "@fsd/entities/form";
 import type { DynamicForm } from "@fsd/entities/form";
 import { createRecruitApi } from "@fsd/entities/recruit";
 import { requestWithSession } from "@fsd/entities/user";
+import { publishRecruitWithNotice } from "@fsd/features/manage-recruit";
+import type { RecruitChannelNotice } from "@fsd/features/manage-recruit";
 
 const formApi = createFormApi(requestWithSession);
 const recruitApi = createRecruitApi(requestWithSession);
 
 export const getTeacherForms = formApi.getTeacherAll;
 export const getTeacherRecruits = recruitApi.getTeacherAll;
-export const getNoticeChannels = recruitApi.getNoticeChannels;
 
-/** 선택 채널 알림은 공개가 끝난 뒤 따로 보내므로 실패해도 공개 결과는 유지한다. */
-export type PublishFormResult = { form: DynamicForm; channelNotice: "none" | "sent" | "failed" };
+export type PublishFormResult = { form: DynamicForm; channelNotice: RecruitChannelNotice };
 export const getTeacherForm = formApi.getTeacherById;
 export const getFormSubmissions = formApi.getSubmissions;
 export const createForm = formApi.createTeacher;
@@ -21,17 +21,7 @@ export const publishForm = async (formId: number, channelId: string | null): Pro
   const recruit = (await recruitApi.getTeacherAll()).find((candidate) => candidate.formId === formId);
   if (recruit?.status !== "DRAFT") return { form: await formApi.publishTeacher(formId), channelNotice: "none" };
 
-  const published = await recruitApi.publishTeacher(recruit.id);
-  let channelNotice: PublishFormResult["channelNotice"] = "none";
-  if (channelId) {
-    try {
-      await recruitApi.sendNoticeToChannel(published, channelId);
-      channelNotice = "sent";
-    } catch {
-      // 공고와 폼은 이미 공개되었으므로 선택 채널 발송 실패는 결과로만 알린다.
-      channelNotice = "failed";
-    }
-  }
+  const { channelNotice } = await publishRecruitWithNotice(recruit.id, channelId);
   return { form: await formApi.getTeacherById(formId), channelNotice };
 };
 export const closeForm = formApi.closeTeacher;

@@ -55,10 +55,11 @@ assert.doesNotMatch(forms, /const editable = status === "DRAFT"/);
 
 // 초안 공고에 딸린 폼은 공고와 함께 공개하고, 고른 디스코드 채널에도 공고 알림을 추가로 보낸다.
 const formsApi = read("src/fsd/pages/teacher-forms/api/forms.ts");
-const channelPicker = read("src/fsd/pages/teacher-forms/ui/NoticeChannelPicker.tsx");
+const channelPicker = read("src/fsd/features/manage-recruit/ui/NoticeChannelPicker.tsx");
 assert.match(forms, /const linkedRecruit = selectedId === null \? undefined : recruits\.find\(\(recruit\) => recruit\.formId === selectedId\)/);
 assert.match(forms, /const isPublishingWithRecruit = status === "DRAFT" && linkedRecruit\?\.status === "DRAFT"/);
-assert.match(forms, /isPublishingWithRecruit && <NoticeChannelPicker/);
+assert.ok(forms.includes(`<NoticeChannelPicker value={channelId} onChange={setChannelId} disabled={working} />`));
+assert.ok(forms.includes(`import { NoticeChannelPicker } from "@fsd/features/manage-recruit";`));
 assert.match(forms, /공고와 함께 공개/);
 assert.match(forms, /publishForm\(selectedId, channelId \|\| null\)/);
 assert.match(forms, /setChannelId\(""\)/);
@@ -67,9 +68,7 @@ assert.match(channelPicker, /getNoticeChannels\(controller\.signal\)/);
 assert.match(channelPicker, /<option value="">기본 공지 채널만<\/option>/);
 assert.match(channelPicker, /<optgroup/);
 assert.match(channelPicker, /다시 불러오기/);
-assert.match(formsApi, /recruitApi\.publishTeacher\(recruit\.id\)/);
-assert.match(formsApi, /recruitApi\.sendNoticeToChannel\(published, channelId\)/);
-assert.match(formsApi, /channelNotice = "failed"/);
+assert.match(formsApi, /await publishRecruitWithNotice\(recruit\.id, channelId\)/);
 assert.match(read("src/fsd/pages/teacher-forms/api/forms.ts"), /getFormSubmissions = formApi\.getSubmissions/);
 
 assert.match(submissionsRoute, /@fsd\/pages\/teacher-form-submissions/);

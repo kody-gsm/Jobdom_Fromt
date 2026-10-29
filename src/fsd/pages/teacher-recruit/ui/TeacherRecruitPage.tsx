@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { formatRecruitFields, RECRUIT_FIELD_OPTIONS } from "@fsd/entities/recruit";
+import { formatRecruitFields, getRecruitImageError, MAX_RECRUIT_IMAGES, RECRUIT_FIELD_OPTIONS, RECRUIT_IMAGE_ACCEPT } from "@fsd/entities/recruit";
+import type { RecruitImage } from "@fsd/entities/recruit";
 import { SummaryMarkdown } from "@fsd/shared/ui";
 import { indentSummaryList } from "@fsd/shared/lib";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
@@ -9,17 +10,34 @@ import { useRouter } from "next/navigation";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { ApiError } from "@fsd/shared/api";
 import {
+  addRecruitImages,
   analyzeRecruit,
   createRecruit,
   deleteRecruit,
+  deleteRecruitImage,
   getRecruitDashboard,
+  publishRecruitWithNotice,
   updateRecruit,
   type Recruit,
   type RecruitDashboardRow,
+  type RecruitChannelNotice,
   type RecruitUpdate,
 } from "@fsd/features/manage-recruit";
+import { RecruitFormChoiceDialog } from "./RecruitFormChoiceDialog.tsx";
+import { RecruitImageGallery, RecruitImageManager } from "./RecruitImageManager.tsx";
+import { RecruitPublishDialog } from "./RecruitPublishDialog.tsx";
 
 const blank: RecruitUpdate = { companyName: "", interviewDate: "", deadline: "", summary: "", fields: [] };
+const toRecruitUpdate = (recruit: Recruit): RecruitUpdate => ({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "", fields: recruit.fields ?? [] });
+const getErrorText = (caught: unknown, fallback: string) => caught instanceof Error ? caught.message : fallback;
+const getPublishedMessage = (channelNotice: RecruitChannelNotice) => {
+  if (channelNotice === "failed") return { text: "공고는 공개했지만 선택한 디스코드 채널로 알림을 보내지 못했습니다. 기본 공지 채널 알림은 서버에서 발송됩니다.", error: true };
+  if (channelNotice === "sent") return { text: "공고를 공개하고 선택한 디스코드 채널에도 알렸습니다." };
+  return { text: "공고를 공개했습니다." };
+};
+
+/** 새 공고는 처음 만들 때 지원 폼 생성 여부를 물은 뒤에 저장·공개·이미지 분석을 이어간다. */
+type PendingCreate = { intent: "save" | "publish" } | { intent: "analyze"; images: File[] };
 
 export function TeacherRecruitPage() {
   const router = useRouter();
@@ -33,6 +51,10 @@ export function TeacherRecruitPage() {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
+  const [pendingCreate, setPendingCreate] = useState<PendingCreate | null>(null);
+  const [choiceError, setChoiceError] = useState("");
+  const [publishTarget, setPublishTarget] = useState<Recruit | null>(null);
+  const [publishError, setPublishError] = useState("");
 
   const load = async (preferredId?: number) => {
     try {
@@ -95,55 +117,130 @@ export function TeacherRecruitPage() {
     const recruit = row.recruit;
     setSelectedId(recruit.id);
     setCreating(false);
-    setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "", fields: recruit.fields ?? [] });
+    setForm(toRecruitUpdate(recruit));
     setEditing(true);
     setMessage(null);
   };
 
-  const analyze = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) return setMessage({ text: "이미지는 10MB 이하만 업로드할 수 있습니다.", error: true });
+  const analyze = (event: ChangeEvent<HTMLInputElement>) => {
+    const images = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (images.length === 0) return;
+    const imageError = getRecruitImageError(images);
+    if (imageError) return setMessage({ text: imageError, error: true });
+    setChoiceError("");
+    setPendingCreate({ intent: "analyze", images });
+  };
+
+  // 폼이 있는 공고는 폼 화면에서 함께 공개하고, 폼 없는 공고는 공개 모달에서 바로 공개한다.
+  const continuePublish = async (recruit: Recruit) => {
+    if (recruit.formId) {
+      router.push(`/teacher/forms?formId=${recruit.formId}`);
+      return;
+    }
+    await load(recruit.id);
+    setEditing(false);
+    setCreating(false);
+    setPublishError("");
+    setPublishTarget(recruit);
+  };
+
+  const createWithFormChoice = async (createForm: boolean) => {
+    if (!pendingCreate || working) return;
     try {
       setWorking(true);
-      setMessage({ text: "AI가 공고 이미지를 읽고 있습니다." });
-      const recruit = await analyzeRecruit(file);
-      await load(recruit.id);
-      setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "", fields: recruit.fields ?? [] });
+      setChoiceError("");
+      if (pendingCreate.intent === "analyze") {
+        const recruit = await analyzeRecruit(pendingCreate.images, createForm);
+        setPendingCreate(null);
+        await load(recruit.id);
+        setForm(toRecruitUpdate(recruit));
+        setCreating(false);
+        setEditing(true);
+        setMessage({ text: `공고 이미지 ${pendingCreate.images.length}장으로 초안을 만들었습니다. 내용을 확인해주세요.` });
+        return;
+      }
+      const recruit = await createRecruit(form, createForm);
+      setPendingCreate(null);
+      setSelectedId(recruit.id);
       setCreating(false);
-      setEditing(true);
-      setMessage({ text: "공고 초안을 만들었습니다. 내용을 확인해주세요." });
+      if (pendingCreate.intent === "publish") return await continuePublish(recruit);
+      await load(recruit.id);
+      setEditing(false);
+      setMessage({ text: createForm ? "공고와 지원 폼을 저장했습니다." : "공고를 지원 폼 없이 저장했습니다." });
     } catch (caught) {
-      setMessage({ text: caught instanceof Error ? caught.message : "이미지 분석에 실패했습니다.", error: true });
+      setChoiceError(getErrorText(caught, pendingCreate.intent === "analyze" ? "이미지 분석에 실패했습니다." : "공고를 저장하지 못했습니다."));
     } finally {
       setWorking(false);
-      event.target.value = "";
     }
   };
 
-  // 공고는 연결된 지원 폼을 작성한 뒤 폼 화면에서 함께 공개한다.
-  const save = async (openForm = false) => {
+  const save = async (publish = false) => {
     if (!form.companyName?.trim()) return setMessage({ text: "회사명을 입력해주세요.", error: true });
+    if (selectedId === null) {
+      setChoiceError("");
+      setPendingCreate({ intent: publish ? "publish" : "save" });
+      return;
+    }
     try {
       setWorking(true);
-      const isNew = selectedId === null;
-      const recruit = isNew ? await createRecruit(form) : await updateRecruit(selectedId, form);
-      if (isNew) {
-        setSelectedId(recruit.id);
-        setCreating(false);
-        await load(recruit.id);
-      }
-      if (openForm && recruit.formId) {
-        router.push(`/teacher/forms?formId=${recruit.formId}`);
-        return;
-      }
+      const recruit = await updateRecruit(selectedId, form);
+      if (publish) return await continuePublish(recruit);
       await load(recruit.id);
       setEditing(false);
       setCreating(false);
-      if (openForm) return setMessage({ text: "공고는 저장했지만 연결된 지원 폼을 찾지 못해 공개를 진행할 수 없습니다.", error: true });
       setMessage({ text: "공고를 저장했습니다." });
     } catch (caught) {
-      setMessage({ text: caught instanceof Error ? caught.message : "공고를 저장하지 못했습니다.", error: true });
+      setMessage({ text: getErrorText(caught, "공고를 저장하지 못했습니다."), error: true });
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const publish = async (channelId: string | null) => {
+    if (!publishTarget || working) return;
+    try {
+      setWorking(true);
+      setPublishError("");
+      const { recruit, channelNotice } = await publishRecruitWithNotice(publishTarget.id, channelId);
+      setPublishTarget(null);
+      await load(recruit.id);
+      setMessage(getPublishedMessage(channelNotice));
+    } catch (caught) {
+      setPublishError(getErrorText(caught, "공고를 공개하지 못했습니다."));
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const addImages = async (event: ChangeEvent<HTMLInputElement>) => {
+    const images = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!selected || images.length === 0) return;
+    const imageError = getRecruitImageError(images, selected.recruit.images?.length ?? 0);
+    if (imageError) return setMessage({ text: imageError, error: true });
+    try {
+      setWorking(true);
+      await addRecruitImages(selected.recruit.id, images);
+      await load(selected.recruit.id);
+      setMessage({ text: `공고 이미지 ${images.length}장을 추가했습니다.` });
+    } catch (caught) {
+      setMessage({ text: getErrorText(caught, "공고 이미지를 추가하지 못했습니다."), error: true });
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const removeImage = async (image: RecruitImage) => {
+    if (!selected || working) return;
+    if (!window.confirm("이 공고 이미지를 삭제할까요? 삭제 후 복구할 수 없습니다.")) return;
+    try {
+      setWorking(true);
+      await deleteRecruitImage(selected.recruit.id, image.id);
+      await load(selected.recruit.id);
+      setMessage({ text: "공고 이미지를 삭제했습니다." });
+    } catch (caught) {
+      setMessage({ text: getErrorText(caught, "공고 이미지를 삭제하지 못했습니다."), error: true });
     } finally {
       setWorking(false);
     }
@@ -250,15 +347,16 @@ export function TeacherRecruitPage() {
 
               <aside className="min-w-0 bg-[#fbfcfb] p-5 sm:p-6">
                 {creating ? (
-                  <Editor row={null} form={form} setForm={setForm} working={working} cancel={() => { setCreating(false); setEditing(false); }} save={save} analyze={analyze} />
+                  <Editor row={null} form={form} setForm={setForm} working={working} cancel={() => { setCreating(false); setEditing(false); }} save={save} analyze={analyze} addImages={addImages} removeImage={removeImage} />
                 ) : !selected ? <div className="grid h-full min-h-64 place-items-center text-center text-sm text-gray-400">왼쪽에서 공고를 선택해주세요.</div> : editing ? (
-                  <Editor row={selected} form={form} setForm={setForm} working={working} cancel={() => setEditing(false)} save={save} analyze={analyze} />
+                  <Editor row={selected} form={form} setForm={setForm} working={working} cancel={() => setEditing(false)} save={save} analyze={analyze} addImages={addImages} removeImage={removeImage} />
                 ) : (
                   <>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0"><Status status={selected.recruit.status} /><h2 className="mt-3 wrap-anywhere break-keep text-2xl font-bold leading-snug">{selected.recruit.companyName || "회사명 미입력"}</h2><p className="mt-1 text-xs text-gray-400">공고 ID #{selected.recruit.id}</p></div>
                       <div className="flex shrink-0 gap-2"><button type="button" onClick={() => startEditing(selected)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600">수정</button><button type="button" disabled={working} onClick={() => void remove()} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-600 disabled:opacity-50">삭제</button></div>
                     </div>
+                    <RecruitImageGallery images={selected.recruit.images ?? []} />
                     <dl className="mt-5 grid grid-cols-2 gap-3">
                       <div className="col-span-2"><Info label="분야" value={formatRecruitFields(selected.recruit.fields)} /></div>
                       <Info label="지원 마감" value={selected.recruit.deadline} /><Info label="면접 일정" value={selected.recruit.interviewDate} />
@@ -284,6 +382,8 @@ export function TeacherRecruitPage() {
           </section>
         </div>
       </main>
+      {pendingCreate && <RecruitFormChoiceDialog pending={working} error={choiceError} onChoose={(createForm) => void createWithFormChoice(createForm)} onClose={() => setPendingCreate(null)} />}
+      {publishTarget && <RecruitPublishDialog companyName={publishTarget.companyName} pending={working} error={publishError} onConfirm={(channelId) => void publish(channelId)} onClose={() => setPublishTarget(null)} />}
     </>
   );
 }
@@ -301,11 +401,15 @@ function Info({ label, value }: { label: string; value: string | null }) {
   return <div className="min-w-0 rounded-xl border border-gray-200 bg-white p-3"><dt className="text-xs font-semibold text-gray-500">{label}</dt><dd className="mt-1 wrap-anywhere break-keep text-sm font-semibold leading-6 text-gray-800">{value || "—"}</dd></div>;
 }
 
-function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: RecruitDashboardRow | null; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (openForm?: boolean) => Promise<void>; analyze: (event: ChangeEvent<HTMLInputElement>) => Promise<void> }) {
+function Editor({ row, form, setForm, working, cancel, save, analyze, addImages, removeImage }: { row: RecruitDashboardRow | null; form: RecruitUpdate; setForm: React.Dispatch<React.SetStateAction<RecruitUpdate>>; working: boolean; cancel: () => void; save: (publish?: boolean) => Promise<void>; analyze: (event: ChangeEvent<HTMLInputElement>) => void; addImages: (event: ChangeEvent<HTMLInputElement>) => Promise<void>; removeImage: (image: RecruitImage) => Promise<void> }) {
   const update = (key: Exclude<keyof RecruitUpdate, "fields">, value: string) => setForm((current) => ({ ...current, [key]: value }));
   const isDraft = row === null || row.recruit.status === "DRAFT";
   const isClosed = row?.recruit.status === "CLOSED";
-  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "공고 수정" : "공고 작성"}</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div><label className={`mt-5 block cursor-pointer rounded-xl border border-dashed border-[#02C551] bg-[#effbf3] p-4 ${working ? "pointer-events-none opacity-60" : ""}`}><span className="block text-sm font-bold text-[#02a946]">이미지로 AI 초안 채우기 <span className="font-normal text-gray-500">(선택)</span></span><span className="mt-1 block text-xs leading-5 text-gray-500">이미지 없이 직접 작성해도 됩니다. 이미지를 넣으면 AI가 공고 내용을 읽어 초안을 만듭니다.</span><span className="mt-3 inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-bold text-[#02a946]">공고 이미지 선택</span><input type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" onChange={analyze} className="sr-only" /></label><div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><fieldset disabled={working} className="rounded-xl border border-gray-200 p-3">
+  const hasForm = Boolean(row?.recruit.formId);
+  let publishHint = "처음 저장하거나 공개할 때 지원 폼을 함께 만들지 고릅니다. 폼을 만들면 폼 작성 후 공고와 함께 게시하고, 만들지 않으면 공고만 바로 공개합니다.";
+  if (row && hasForm) publishHint = "공개하려면 연결된 지원 폼을 먼저 작성해주세요. 폼 화면에서 디스코드 알림 채널을 고르고 공개하면 공고와 폼이 함께 게시됩니다.";
+  else if (row) publishHint = "지원 폼 없이 만든 공고입니다. 공개하면 디스코드 알림 채널을 고른 뒤 공고만 게시합니다.";
+  return <div><div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "공고 수정" : "공고 작성"}</h2><button type="button" onClick={cancel} className="text-sm font-semibold text-gray-400">닫기</button></div>{row ? <RecruitImageManager images={row.recruit.images ?? []} disabled={working} onAdd={(event) => void addImages(event)} onDelete={(image) => void removeImage(image)} /> : <label className={`mt-5 block cursor-pointer rounded-xl border border-dashed border-[#02C551] bg-[#effbf3] p-4 ${working ? "pointer-events-none opacity-60" : ""}`}><span className="block text-sm font-bold text-[#02a946]">이미지로 AI 초안 채우기 <span className="font-normal text-gray-500">(선택)</span></span><span className="mt-1 block text-xs leading-5 text-gray-500">이미지 없이 직접 작성해도 됩니다. 여러 장으로 나뉜 공고는 최대 {MAX_RECRUIT_IMAGES}장까지 함께 고르면 AI가 한 번에 읽어 초안을 만들고 이미지도 공고에 첨부합니다.</span><span className="mt-3 inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-bold text-[#02a946]">공고 이미지 선택</span><input type="file" multiple accept={RECRUIT_IMAGE_ACCEPT} onChange={analyze} className="sr-only" /></label>}<div className="mt-5 space-y-4"><Field label="회사명" value={form.companyName || ""} onChange={(value) => update("companyName", value)} /><Field label="지원 마감" value={form.deadline || ""} onChange={(value) => update("deadline", value)} /><Field label="면접 일정" value={form.interviewDate || ""} onChange={(value) => update("interviewDate", value)} /><fieldset disabled={working} className="rounded-xl border border-gray-200 p-3">
       <legend className="px-1 text-xs font-bold text-gray-500">분야 (복수 선택)</legend>
       <div className="grid grid-cols-2 gap-3">
         {RECRUIT_FIELD_OPTIONS.map(({ value, label }) => (
@@ -317,7 +421,7 @@ function Editor({ row, form, setForm, working, cancel, save, analyze }: { row: R
           </label>
         ))}
       </div>
-    </fieldset><SummaryEditor value={form.summary || ""} onChange={(value) => update("summary", value)} /></div>{isDraft && <p className="mt-5 rounded-xl bg-[#effbf3] px-3 py-2.5 text-xs leading-5 text-gray-600">공개하려면 연결된 지원 폼을 먼저 작성해주세요. 폼 화면에서 디스코드 알림 채널을 고르고 공개하면 공고와 폼이 함께 게시됩니다.</p>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">폼 작성 후 공개</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
+    </fieldset><SummaryEditor value={form.summary || ""} onChange={(value) => update("summary", value)} /></div>{isDraft && <p className="mt-5 rounded-xl bg-[#effbf3] px-3 py-2.5 text-xs leading-5 text-gray-600">{publishHint}</p>}<div className="mt-2 grid grid-cols-2 gap-2"><button type="button" disabled={working} onClick={() => void save(false)} className="h-11 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 disabled:opacity-50">저장</button>{isDraft ? <button type="button" disabled={working} onClick={() => void save(true)} className="h-11 rounded-xl bg-[#02C551] text-sm font-bold text-white disabled:opacity-50">{hasForm ? "폼 작성 후 공개" : "공개"}</button> : <span className={`inline-flex h-11 items-center justify-center rounded-xl text-sm font-bold ${isClosed ? "bg-gray-100 text-gray-600" : "bg-brand-soft text-brand-accent"}`}>{isClosed ? "마감됨" : "공개됨"}</span>}</div></div>;
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
