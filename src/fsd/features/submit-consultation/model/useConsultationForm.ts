@@ -103,7 +103,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     general: createEmptyConsultationDraft(),
   });
   const draftHydratedRef = useRef(false);
-  const [isRestoringDraft, setIsRestoringDraft] = useState(true);
   const draftSaveTimer = useRef<number | null>(null);
   const pendingDraftRef = useRef<ConsultationDraftSnapshot | null>(null);
   const pendingTeacherIdRef = useRef<number | null>(null);
@@ -147,7 +146,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       title,
       content,
       category,
-      teacherId: pendingTeacherIdRef.current ?? selectedTeacher?.id ?? null,
+      teacherId: pendingTeacherIdRef.current ?? pending?.teacherId ?? selectedTeacher?.id ?? null,
       date: pending ? pending.date : selectedDate,
       period: pending ? pending.period : selectedTime,
     };
@@ -185,7 +184,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     const draft = { ...draftsRef.current[counselType] };
     pendingDraftRef.current = draft;
     pendingTeacherIdRef.current = draft.teacherId;
-    setIsRestoringDraft(true);
     setTitleState(draft.title);
     setContentState(draft.content);
     setCategory(draft.category);
@@ -206,7 +204,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         pendingTeacherIdRef.current = null;
         if (restoredTeacher === null) {
           pendingDraftRef.current = null;
-          setIsRestoringDraft(false);
         }
         setSelectedTeacher(restoredTeacher);
         setTeacherStatus("ready");
@@ -232,11 +229,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       availabilityActionsRef.current.toggleTime(pending.period);
     }
     pendingDraftRef.current = null;
-    setIsRestoringDraft(false);
   }, [availabilityStatus, selectedDate, selectedTeacher?.id]);
 
   useEffect(() => {
-    if (!draftHydratedRef.current || isRestoringDraft || draftPersistenceDisabledRef.current) return;
+    if (!draftHydratedRef.current || draftPersistenceDisabledRef.current) return;
+    // Save current text while the pending snapshot protects unrestored selection.
+    // Lookup completion can also clear that snapshot without changing text.
     if (draftSaveTimer.current !== null) window.clearTimeout(draftSaveTimer.current);
     draftSaveTimer.current = window.setTimeout(() => {
       draftSaveTimer.current = null;
@@ -245,7 +243,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     return () => {
       if (draftSaveTimer.current !== null) window.clearTimeout(draftSaveTimer.current);
     };
-  }, [persistCurrentDraft, isRestoringDraft]);
+  }, [persistCurrentDraft, teacherStatus, availabilityStatus]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -292,7 +290,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const toggleTeacher = (teacher: ConsultationTeacherOption) => {
     pendingDraftRef.current = null;
     pendingTeacherIdRef.current = null;
-    setIsRestoringDraft(false);
     const isSelected = selectedTeacher?.id === teacher.id;
     setSelectedTeacher(isSelected ? null : teacher);
     clearPeriodSelection();
@@ -301,7 +298,6 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const toggleDate = (date: string) => {
     pendingDraftRef.current = null;
-    setIsRestoringDraft(false);
     toggleAvailabilityDate(date);
     if (errorTarget === "date") setErrorTarget(null);
   };

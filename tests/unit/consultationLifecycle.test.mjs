@@ -133,6 +133,50 @@ test("A2: slow slot lookup does not autosave away the saved period", async () =>
   assert.equal(form.value.selectedTime, "9교시");
 });
 
+for (const condition of ["pending teachers", "failed teachers", "failed slots"]) {
+  test(`draft edits survive unmount while restoration has ${condition}`, async () => {
+    seedDraft();
+    if (condition === "failed slots") slots = deferred();
+    const form = mount();
+    if (condition === "failed teachers") teachers.reject(new Error("teacher lookup failed"));
+    if (condition === "failed slots") {
+      teachers.resolve([teacher]);
+      await environment.settle();
+      slots.reject(new Error("slot lookup failed"));
+    }
+    await environment.settle();
+    form.value.setTitle("조회 중에도 저장한 새 제목");
+    form.value.setContent("조회 실패 뒤에도 저장한 새 내용");
+    await environment.settle();
+    await advance(2_000);
+    const expected = {
+      ...savedDraft,
+      title: "조회 중에도 저장한 새 제목",
+      content: "조회 실패 뒤에도 저장한 새 내용",
+    };
+    assert.deepEqual(readConsultationDrafts(environment.storage, key).career, expected);
+    form.unmount();
+    const restored = mount();
+    await environment.settle();
+    assert.equal(restored.value.title, expected.title);
+    assert.equal(restored.value.content, expected.content);
+    assert.deepEqual(readConsultationDrafts(environment.storage, key).career, expected);
+  });
+}
+
+test("new draft edits autosave while the initial teacher list is pending", async () => {
+  const form = mount();
+  form.value.setTitle("처음 작성한 제목");
+  form.value.setContent("첫 조회 중 작성한 내용");
+  await environment.settle();
+  await advance(500);
+  assert.equal(readConsultationDrafts(environment.storage, key).career.title, "처음 작성한 제목");
+  form.unmount();
+  const restored = mount();
+  await environment.settle();
+  assert.equal(restored.value.content, "첫 조회 중 작성한 내용");
+});
+
 test("B2: first availability request uses the saved date without a default-date waterfall", async () => {
   seedDraft();
   slots = deferred();
@@ -232,6 +276,7 @@ test("submit preserves the POST contract and invalidates only its consultation k
 test("missing saved teacher clears dependent selection and autosaves the valid draft", async () => {
   seedDraft();
   const form = mount();
+  await advance(500);
   teachers.resolve([{ id: 99, name: "다른 교사" }]);
   await environment.settle();
   assert.equal(form.value.teacherStatus, "ready");
@@ -248,6 +293,7 @@ test("missing saved teacher clears dependent selection and autosaves the valid d
 test("invalid saved date cannot replay its period on a different date", async () => {
   writeConsultationDraft(environment.storage, key, "career", { ...savedDraft, date: "2026-10-29" });
   const form = mount();
+  await advance(500);
   teachers.resolve([teacher]);
   await environment.settle();
   assert.equal(form.value.selectedTeacher?.id, 3);
@@ -256,6 +302,10 @@ test("invalid saved date cannot replay its period on a different date", async ()
   assert.deepEqual(statusCalls().map(({ path }) => path), [
     "/student/course/status?teacherId=3&date=2026-10-30",
   ]);
+  await advance(400);
+  const saved = readConsultationDrafts(environment.storage, key).career;
+  assert.equal(saved.date, "2026-10-30");
+  assert.equal(saved.period, null);
 });
 
 test("A2: manual date selection wins while the saved teacher finishes loading", async () => {
