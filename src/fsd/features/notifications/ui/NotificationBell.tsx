@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useNotification } from "../model/NotificationContext.tsx";
+import { useNotificationUnreadCount } from "../model/NotificationContext.tsx";
 import { NotificationPanel } from "./NotificationPanel";
 
 export const NotificationBell = () => {
-  const { unreadCount } = useNotification();
+  const unreadCount = useNotificationUnreadCount();
   const [open, setOpen] = useState(false);
 
   return (
