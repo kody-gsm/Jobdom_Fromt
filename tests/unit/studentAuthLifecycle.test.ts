@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { createRequire } from "node:module";
+import * as React from "react";
 import * as sessionStorageModel from "../../src/fsd/entities/user/model/session.ts";
 import * as lifecycle from "../../src/fsd/entities/user/model/lifecycle.ts";
 import * as role from "../../src/fsd/entities/user/model/role.ts";
@@ -11,11 +13,22 @@ import * as signupValidation from "../../src/fsd/features/signup/model/validatio
 import * as resetValidation from "../../src/fsd/features/reset-password/model/validation.ts";
 import * as countdown from "../../src/fsd/shared/lib/countdown.ts";
 import { ApiError } from "../../src/fsd/shared/api/ApiError.ts";
+import { createAuthenticatedRequest } from "../../src/fsd/shared/api/createAuthenticatedRequest.ts";
+import type { ApiRequestInit } from "../../src/fsd/shared/api/client.ts";
+import { createActivityTrackingRequest } from "../../src/fsd/entities/user/api/createActivityTrackingRequest.ts";
 import { createLoginAction } from "../../src/fsd/features/login/api/createLoginAction.ts";
 import type { AuthSession } from "../../src/fsd/entities/user/model/types.ts";
 import { createAuthHookRuntime, deferred, installAuthBrowser, loadAuthModule, settleAuthTasks } from "./studentAuthTestHarness.ts";
 
 const user = { ...sessionStorageModel, ...lifecycle, ...role, ...authErrors, ...credentials, ...avatar };
+const createSessionRequests = (request: Parameters<typeof createAuthenticatedRequest>[0]["request"]) =>
+  loadAuthModule<typeof import("../../src/fsd/entities/user/api/sessionRequest.ts")>("src/fsd/entities/user/api/sessionRequest.ts", {
+    "@fsd/shared/api": { ApiError, request, createAuthenticatedRequest },
+    "../model/session.ts": sessionStorageModel,
+    "../model/lifecycle.ts": lifecycle,
+    "./createActivityTrackingRequest.ts": { createActivityTrackingRequest },
+    "./recordActivity.ts": { ACTIVITY_API_ENABLED: false, recordActivity() {} },
+  });
 const auth = (userId = 1, expired = true): AuthSession => ({
   accessToken: `x.${btoa(JSON.stringify({ role: "STUDENT", exp: (Date.now() / 1000) + (expired ? -10 : 3600), userId }))}.x`,
   refreshToken: `refresh-${userId}`, tokenType: "Bearer", userId,
@@ -106,7 +119,8 @@ for (const outcome of ["success", "401", "403"] as const) {
         const login = createLoginAction({ request: async <T>() => await manual.promise as T, saveSession: lifecycle.saveSession });
         const { useLoginForm } = loadAuthModule<typeof import("../../src/fsd/features/login/model/useLoginForm.ts")>("src/fsd/features/login/model/useLoginForm.ts", {
           react: runtime.react, "next/navigation": { useRouter: () => router },
-          "@fsd/entities/user": user, "@fsd/shared/api": { ApiError, request: async () => restore.promise },
+          "@fsd/entities/user": { ...user, ...createSessionRequests(async <T>() => await restore.promise as T) },
+          "@fsd/shared/api": { ApiError, request: async () => restore.promise },
           "../api/login.ts": { login }, "./validation.ts": loginValidation,
         });
         const view = runtime.mount(useLoginForm);
@@ -145,7 +159,8 @@ test("manual submit invalidates restore before the manual login response arrives
     const runtime = createAuthHookRuntime();
     const router = { push() {}, replace() { assert.fail("restore must not navigate during manual login"); } };
     const { useLoginForm } = loadAuthModule<typeof import("../../src/fsd/features/login/model/useLoginForm.ts")>("src/fsd/features/login/model/useLoginForm.ts", {
-      react: runtime.react, "next/navigation": { useRouter: () => router }, "@fsd/entities/user": user,
+      react: runtime.react, "next/navigation": { useRouter: () => router },
+      "@fsd/entities/user": { ...user, ...createSessionRequests(async <T>() => await restore.promise as T) },
       "@fsd/shared/api": { ApiError, request: async () => restore.promise },
       "../api/login.ts": { login: createLoginAction({ request: async <T>() => await manual.promise as T, saveSession: lifecycle.saveSession }) },
       "./validation.ts": loginValidation,
@@ -244,3 +259,74 @@ test("ordinary token refresh during avatar upload retains the successful image",
     view.unmount();
   } finally { browser.restore(); }
 });
+
+const renderer = createRequire(import.meta.url)("react-test-renderer") as {
+  create: (element: React.ReactElement) => { unmount: () => void };
+};
+
+for (const lateOutcome of ["success", "401", "503"] as const) {
+  test(`renderer: background reissue redirects login once and ignores competing restore ${lateOutcome}`, async () => {
+    const browser = installAuthBrowser();
+    const previousActEnvironment = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
+    let root: ReturnType<typeof renderer.create> | undefined;
+    try {
+      const old = auth();
+      lifecycle.saveSession(old, true);
+      const version = sessionStorageModel.getSessionVersion();
+      const backgroundResponse = deferred<AuthSession>();
+      const competingRestore = deferred<AuthSession>();
+      // With shared reissue there is no competing raw request to consume this fixture.
+      void competingRestore.promise.catch(() => undefined);
+      let reissues = 0;
+      const rawRequest: Parameters<typeof createAuthenticatedRequest>[0]["request"] = async <T>(path: string, _init?: ApiRequestInit, options?: { accessToken?: string | null }): Promise<T> => {
+        if (path === "/auth/reissue") {
+          reissues += 1;
+          return await (reissues === 1 ? backgroundResponse.promise : competingRestore.promise) as T;
+        }
+        assert.equal(path, "/notifications/unread-count");
+        if (options?.accessToken === old.accessToken) throw new ApiError("expired", 401);
+        return { count: 1 } as T;
+      };
+      const sessionRequests = createSessionRequests(rawRequest);
+      const background = sessionRequests.requestWithSession("/notifications/unread-count", { cache: "no-store" });
+      await settleAuthTasks();
+      assert.equal(reissues, 1);
+      const navigations: string[] = [];
+      const router = { push(path: string) { navigations.push(path); }, replace(path: string) { navigations.push(path); } };
+      const { useLoginForm } = loadAuthModule<typeof import("../../src/fsd/features/login/model/useLoginForm.ts")>("src/fsd/features/login/model/useLoginForm.ts", {
+        react: React, "next/navigation": { useRouter: () => router },
+        "@fsd/entities/user": { ...user, ...sessionRequests }, "@fsd/shared/api": { ApiError, request: rawRequest },
+        "../api/login.ts": { login: async () => { assert.fail("automatic restoration must not submit credentials"); } },
+        "./validation.ts": loginValidation,
+      });
+      function Host() { useLoginForm(); return null; }
+      await React.act(async () => { root = renderer.create(React.createElement(Host)); });
+      const fresh: AuthSession = {
+        ...auth(1, false),
+        accessToken: `x.${btoa(JSON.stringify({ role: "WEE_TEACHER", exp: Date.now() / 1000 + 3600 }))}.x`,
+        refreshToken: "background-fresh-refresh", role: "WEE_TEACHER",
+      };
+      await React.act(async () => {
+        backgroundResponse.resolve(fresh);
+        await background;
+        await settleAuthTasks();
+      });
+      await React.act(async () => {
+        if (lateOutcome === "success") competingRestore.resolve({ ...auth(1, false), refreshToken: "obsolete-restore-refresh" });
+        else competingRestore.reject(new ApiError("obsolete restore", Number(lateOutcome)));
+        await settleAuthTasks();
+      });
+      assert.deepEqual(navigations, ["/teacher"]);
+      assert.equal(lifecycle.getSession()?.accessToken, fresh.accessToken);
+      assert.equal(lifecycle.getSession()?.refreshToken, fresh.refreshToken);
+      assert.equal(sessionStorageModel.getSessionVersion(), version);
+      assert.equal(reissues, 1, "login must join the background refresh rather than send a competing POST");
+    } finally {
+      if (root) await React.act(async () => { root?.unmount(); });
+      if (previousActEnvironment) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousActEnvironment);
+      else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+      browser.restore();
+    }
+  });
+}

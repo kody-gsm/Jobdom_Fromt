@@ -9,12 +9,12 @@ import {
   getSession,
   getSessionVersion,
   isAccessTokenExpired,
-  saveSession,
+  reissueSession,
   clearSession,
   restoreRememberedSession,
   readRememberLoginPreference,
 } from "@fsd/entities/user";
-import { ApiError, request } from "@fsd/shared/api";
+import { ApiError } from "@fsd/shared/api";
 import { login } from "../api/login.ts";
 import { getFirstLoginErrorField, validateLoginForm } from "./validation.ts";
 import type { LoginFormErrors, LoginFormValues } from "./validation.ts";
@@ -38,41 +38,44 @@ export const useLoginForm = () => {
     const requestVersion = ++restoreRequestVersion.current;
     const sessionVersion = getSessionVersion();
     const initialSession = getSession();
+    let hasRedirected = false;
     const isCurrent = () => {
       const latest = getSession();
       return requestVersion === restoreRequestVersion.current
         && sessionVersion === getSessionVersion()
-        && latest?.accessToken === initialSession?.accessToken
-        && latest?.refreshToken === initialSession?.refreshToken
         && latest?.userId === initialSession?.userId;
     };
+    const finishRestore = () => {
+      if (!isCurrent()) return false;
+      if (hasRedirected) return true;
+      const current = getSession();
+      if (!current || isAccessTokenExpired(current.accessToken)) return false;
+      hasRedirected = true;
+      router.replace(getRoleHomePath(current.role));
+      return true;
+    };
     const invalidateRestore = () => { restoreRequestVersion.current += 1; };
-    window.addEventListener("jobdam-session", invalidateRestore);
-    window.addEventListener("storage", invalidateRestore);
+    const onSessionChanged = () => { finishRestore(); };
+    window.addEventListener("jobdam-session", onSessionChanged);
+    window.addEventListener("storage", onSessionChanged);
     const restore = async () => {
-      const remembered = await restoreRememberedSession();
-      if (!isCurrent()) return;
-      if (remembered) {
-        router.replace(getRoleHomePath(remembered.role));
-        return;
-      }
+      await restoreRememberedSession();
+      if (!isCurrent() || finishRestore()) return;
       const current = getSession();
       if (!current) return;
-      if (!isAccessTokenExpired(current.accessToken)) {
-        router.replace(getRoleHomePath(current.role));
-        return;
-      }
       try {
-        const response = await request<Omit<typeof current, "role">>("/auth/reissue", {
-          method: "POST",
-          body: JSON.stringify({ refreshToken: current.refreshToken }),
-        });
-        if (!isCurrent()) return;
-        const preference = readRememberLoginPreference();
-        const session = saveSession(response, preference.enabled, { isRefresh: true });
-        router.replace(getRoleHomePath(session.role));
+        await reissueSession(current.refreshToken, isCurrent);
+        finishRestore();
       } catch (error) {
-        if (isCurrent() && error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        if (finishRestore()) return;
+        const latest = getSession();
+        if (
+          isCurrent()
+          && latest?.accessToken === current.accessToken
+          && latest?.refreshToken === current.refreshToken
+          && error instanceof ApiError
+          && (error.status === 401 || error.status === 403)
+        ) {
           clearSession();
         }
       }
@@ -80,8 +83,8 @@ export const useLoginForm = () => {
     void restore();
     return () => {
       invalidateRestore();
-      window.removeEventListener("jobdam-session", invalidateRestore);
-      window.removeEventListener("storage", invalidateRestore);
+      window.removeEventListener("jobdam-session", onSessionChanged);
+      window.removeEventListener("storage", onSessionChanged);
     };
   }, [router]);
 

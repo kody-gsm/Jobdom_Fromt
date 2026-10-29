@@ -191,3 +191,27 @@ test("wired authenticated request never retries an obsolete 401 as an account re
     assert.equal(lifecycle.getSession()?.userId, 2);
   } finally { browser.restore(); }
 });
+
+test("a login-owned reissue shares one POST with a background subscriber after the login unmounts", async () => {
+  const browser = installAuthBrowser();
+  try {
+    lifecycle.saveSession(auth(), true);
+    const response = deferred<AuthSession>();
+    let calls = 0;
+    const sessionRequests = loadAuthModule<typeof import("../../src/fsd/entities/user/api/sessionRequest.ts")>("src/fsd/entities/user/api/sessionRequest.ts", {
+      "@fsd/shared/api": { ApiError, createAuthenticatedRequest, request: async <T>() => { calls += 1; return await response.promise as T; } },
+      "../model/session.ts": storage,
+      "../model/lifecycle.ts": lifecycle,
+      "./createActivityTrackingRequest.ts": { createActivityTrackingRequest },
+      "./recordActivity.ts": { ACTIVITY_API_ENABLED: false, recordActivity() {} },
+    });
+    let isMounted = true;
+    const loginRestore = sessionRequests.reissueSession("refresh-1", () => isMounted);
+    const background = sessionRequests.reissueSession("refresh-1");
+    isMounted = false;
+    response.resolve({ ...auth(), accessToken: "fresh-access", refreshToken: "fresh-refresh" });
+    await Promise.all([loginRestore, background]);
+    assert.equal(calls, 1);
+    assert.equal(lifecycle.getSession()?.accessToken, "fresh-access", "the active background subscriber still owns the refresh");
+  } finally { browser.restore(); }
+});

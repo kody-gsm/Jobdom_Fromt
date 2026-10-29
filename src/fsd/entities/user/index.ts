@@ -34,7 +34,7 @@ export {
   restoreRememberedSession,
   saveSession,
 } from "./model/lifecycle.ts";
-export { requestWithSession } from "./api/sessionRequest.ts";
+export { reissueSession, requestWithSession } from "./api/sessionRequest.ts";
 export {
   getUserProfile,
   resolveProfileImageUrl,
