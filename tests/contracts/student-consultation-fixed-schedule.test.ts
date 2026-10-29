@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { CONSULTATION_SCHEDULE_ROWS } from "../../src/fsd/features/submit-consultation/model/schedulePresentation.ts";
+
+assert.deepEqual(CONSULTATION_SCHEDULE_ROWS.map(({ period }) => period), [
+  "1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "9교시",
+]);
 
 const schedule = readFileSync(resolve(process.cwd(), "src/fsd/entities/consultation/model/schedule.ts"), "utf8");
 const helper = readFileSync(resolve(process.cwd(), "src/fsd/features/submit-consultation/model/schedulePresentation.ts"), "utf8");
