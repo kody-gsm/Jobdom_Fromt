@@ -5,6 +5,7 @@ export {
   clearRememberLoginPreference,
   clearStoredSession,
   isRememberedSession,
+  getSessionVersion,
   persistSession,
   readAccessToken,
   isAccessTokenExpired,

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   clearRememberLoginPreference,
   getLoginErrorMessage as getAuthErrorMessage,
   getRoleHomePath,
   getSession,
+  getSessionVersion,
   isAccessTokenExpired,
   saveSession,
   clearSession,
@@ -31,19 +32,34 @@ export const useLoginForm = () => {
   const [errorField, setErrorField] = useState<keyof LoginFormValues | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const restoreRequestVersion = useRef(0);
 
   useEffect(() => {
-    let isActive = true;
+    const requestVersion = ++restoreRequestVersion.current;
+    const sessionVersion = getSessionVersion();
+    const initialSession = getSession();
+    const isCurrent = () => {
+      const latest = getSession();
+      return requestVersion === restoreRequestVersion.current
+        && sessionVersion === getSessionVersion()
+        && latest?.accessToken === initialSession?.accessToken
+        && latest?.refreshToken === initialSession?.refreshToken
+        && latest?.userId === initialSession?.userId;
+    };
+    const invalidateRestore = () => { restoreRequestVersion.current += 1; };
+    window.addEventListener("jobdam-session", invalidateRestore);
+    window.addEventListener("storage", invalidateRestore);
     const restore = async () => {
       const remembered = await restoreRememberedSession();
+      if (!isCurrent()) return;
       if (remembered) {
-        if (isActive) router.replace(getRoleHomePath(remembered.role));
+        router.replace(getRoleHomePath(remembered.role));
         return;
       }
       const current = getSession();
       if (!current) return;
       if (!isAccessTokenExpired(current.accessToken)) {
-        if (isActive) router.replace(getRoleHomePath(current.role));
+        router.replace(getRoleHomePath(current.role));
         return;
       }
       try {
@@ -51,18 +67,21 @@ export const useLoginForm = () => {
           method: "POST",
           body: JSON.stringify({ refreshToken: current.refreshToken }),
         });
+        if (!isCurrent()) return;
         const preference = readRememberLoginPreference();
-        const session = saveSession(response, preference.enabled);
-        if (isActive) router.replace(getRoleHomePath(session.role));
+        const session = saveSession(response, preference.enabled, { isRefresh: true });
+        router.replace(getRoleHomePath(session.role));
       } catch (error) {
-        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        if (isCurrent() && error instanceof ApiError && (error.status === 401 || error.status === 403)) {
           clearSession();
         }
       }
     };
     void restore();
     return () => {
-      isActive = false;
+      invalidateRestore();
+      window.removeEventListener("jobdam-session", invalidateRestore);
+      window.removeEventListener("storage", invalidateRestore);
     };
   }, [router]);
 
@@ -97,6 +116,7 @@ export const useLoginForm = () => {
     setSubmitError("");
     if (Object.keys(nextErrors).length > 0) return;
 
+    restoreRequestVersion.current += 1;
     try {
       setIsSubmitting(true);
       const session = await login(

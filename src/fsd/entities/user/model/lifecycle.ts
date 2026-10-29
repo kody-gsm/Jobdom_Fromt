@@ -1,4 +1,5 @@
 import type { AuthSession } from "./types.ts";
+import type { SessionPersistenceOptions } from "./session.ts";
 import { decodeUserRole } from "./role.ts";
 import {
   backfillRememberLoginEmail,
@@ -17,12 +18,13 @@ const notifySessionChanged = () => {
 export const saveSession = (
   response: Omit<AuthSession, "role">,
   rememberLogin = false,
+  options: SessionPersistenceOptions = {},
 ) => {
   const session: AuthSession = {
     ...response,
     role: decodeUserRole(response.accessToken),
   };
-  persistSession(session, rememberLogin);
+  persistSession(session, rememberLogin, options);
   notifySessionChanged();
   return session;
 };

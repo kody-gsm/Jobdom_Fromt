@@ -10,14 +10,23 @@ for (const path of [countdownPath, countdownHookPath, passwordFieldPath]) {
   assert.equal(existsSync(path), true, `${path} must exist`);
 }
 
-const { formatCountdown } = await import("../../src/fsd/shared/lib/countdown.ts");
+const { formatCountdown, getCountdownSecondsLeft } = await import("../../src/fsd/shared/lib/countdown.ts");
 assert.equal(formatCountdown(180), "03:00");
 assert.equal(formatCountdown(65), "01:05");
 assert.equal(formatCountdown(-10), "00:00");
 
 const countdownHook = readFileSync(countdownHookPath, "utf8");
 assert.match(countdownHook, /window\.setInterval/);
-assert.match(countdownHook, /Math\.max\(0, current - 1\)/);
+for (const [deadline, now, expected] of [
+  [null, 1000, 0],
+  [181000, 1000, 180],
+  [181000, 1001, 180],
+  [181000, 180001, 1],
+  [181000, 181000, 0],
+  [181000, 182000, 0],
+] as const) {
+  assert.equal(getCountdownSecondsLeft(deadline, now), expected);
+}
 const passwordField = readFileSync(passwordFieldPath, "utf8");
 const textField = readFileSync(textFieldPath, "utf8");
 assert.match(passwordField, /TextField/);
