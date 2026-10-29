@@ -78,6 +78,20 @@
 - 성공 응답은 Blob으로 읽어 답변의 `fileName`으로 저장한다. 기본 JSON/text 응답과 오류 파싱은 유지한다.
 - 다운로드 중 중복 요청을 막고, 권한 부족·파일 없음·네트워크 실패는 오류로 표시하여 재시도할 수 있게 한다.
 
+## Student form list metadata
+
+- 2026-10-30 확인한 backend `develop`의 `GET /form`은 초안을 제외한 공개·마감 폼을 반환하며, 각 항목의 `submitted: boolean`으로 현재 학생의 제출 여부를 제공한다. `GET /form/{id}`도 마감 폼을 조회할 수 있고, 마감 후 제출 제한은 유지된다.
+- 프론트는 `submitted`가 있으면 항목별 제출 조회를 생략한다. 배포 시점 차이로 필드가 없으면 기존 `GET /student/form/{id}/submission`을 제한된 동시 수로 조회하되 목록 첫 표시를 막지 않는다. 실패를 미제출로 단정하지 않는다.
+
+## Frontend request lifetime and cache
+
+- 인증 GET은 계정의 access token과 URL을 키로 30초 재사용하고 진행 중 요청을 공유한다. caller signal, Blob, `cache: "no-store"` 요청은 공유하지 않는다.
+- 명시적인 새로고침·상담 변경 이벤트·재시도는 `no-store`로 이전 값을 무효화하고 서버를 다시 조회한다.
+- `invalidateCache`는 프론트 내부 URL prefix 목록이며 fetch나 서버로 전송하지 않는다. 변경 API는 영향을 받는 조회만 무효화하고, 빈 목록은 캐시를 유지한다. 지정하지 않은 변경 API는 기존 전체 무효화를 유지한다.
+- 캐시는 최대 100개 값을 보관하며 조회/저장 시 만료 값을 제거한다. 무효화 전에 시작한 요청은 뒤늦게 캐시를 채우지 않는다.
+- 기본 요청 제한은 30초, FormData 업로드·Blob 다운로드는 120초다. `timeoutMs`로 개별 조정할 수 있으며 응답 본문 수신까지 포함한다. timeout/사용자 취소는 각각 `REQUEST_TIMEOUT`/`REQUEST_ABORTED` 코드의 status 0 오류다.
+- 한 호출자의 취소가 다른 소비자의 공유 GET을 중단하지 않도록, signal을 가진 요청은 캐시 공유에서 제외한다.
+
 ## Refactoring API code
 
 큰 `api.ts`를 분리하는 것은 허용하지만 외부 동작은 유지한다. `shared/api`는 HTTP 기반 책임을, `features/<feature>/api`는 도메인 endpoint 책임을 갖는다.

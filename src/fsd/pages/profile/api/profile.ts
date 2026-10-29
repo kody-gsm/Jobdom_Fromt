@@ -51,15 +51,15 @@ export type ProfileReservationResult = {
 const getReservationErrorMessage = (caught: unknown) =>
   caught instanceof Error ? caught.message : "상담 예약을 불러오지 못했습니다.";
 
-export const fetchProfileReservations = async (): Promise<ProfileReservationResult> => {
+export const fetchProfileReservations = async (fresh = false): Promise<ProfileReservationResult> => {
   const session = getSession();
   if (session?.role === "TEACHER" || session?.role === "WEE_TEACHER") {
     return { reservations: [], errors: {} };
   }
 
   const [courseResult, commonResult] = await Promise.allSettled([
-    consultationApi.getUpcoming("course"),
-    consultationApi.getUpcoming("common"),
+    consultationApi.getUpcoming("course", fresh ? { cache: "no-store" } : undefined),
+    consultationApi.getUpcoming("common", fresh ? { cache: "no-store" } : undefined),
   ]);
 
   const errors: ProfileReservationResult["errors"] = {};
