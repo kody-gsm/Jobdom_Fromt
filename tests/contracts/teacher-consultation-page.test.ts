@@ -7,11 +7,11 @@ assert.deepEqual(getTeacherConsultationKinds("WEE_TEACHER"), ["common"]);
 assert.deepEqual(getTeacherConsultationKinds("STUDENT"), []);
 assert.deepEqual(getTeacherConsultationKinds("ADMIN"), []);
 
-const generalTeacherPeriods = ["1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시"];
+const generalTeacherPeriods = ["1교시", "2교시", "3교시", "4교시", "점심시간", "5교시", "6교시", "7교시", "8교시", "9교시"];
 assert.deepEqual(getTeacherAvailablePeriods("common", "일반 교사"), generalTeacherPeriods);
 assert.deepEqual(getTeacherAvailablePeriods("common", "임경원"), generalTeacherPeriods);
 assert.deepEqual(getTeacherAvailablePeriods("course", "일반 교사"), generalTeacherPeriods);
-assert.deepEqual(getTeacherAvailablePeriods("course", "임경원"), [...generalTeacherPeriods, "8교시", "9교시", "저녁시간"]);
+assert.deepEqual(getTeacherAvailablePeriods("course", "임경원"), [...generalTeacherPeriods, "저녁시간"]);
 
 const read = (path: string) => readFileSync(path, "utf8");
 const route = read("app/teacher/page.tsx");

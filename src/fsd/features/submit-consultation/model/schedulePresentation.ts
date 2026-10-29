@@ -1,7 +1,7 @@
 import { CONSULTATION_SCHEDULE } from "@fsd/entities/consultation";
 
 const STUDENT_CONSULTATION_PERIODS = new Set([
-  ...Array.from({ length: 7 }, (_, index) => `${index + 1}교시`),
+  ...Array.from({ length: 9 }, (_, index) => `${index + 1}교시`),
   "점심시간",
 ]);
 

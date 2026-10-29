@@ -18,7 +18,7 @@ export const TEACHERS: ConsultationTeacher[] = [
 ];
 
 const BLOCKED_GENERAL_PERIODS = new Set(["4교시"]);
-const GENERAL_END_PERIODS = new Set(["8교시", "9교시", "저녁시간"]);
+const GENERAL_END_PERIODS = new Set(["저녁시간"]);
 const GENERAL_PERIODS = CONSULTATION_SCHEDULE
   .map(({ period }) => period)
   .filter((period) =>
