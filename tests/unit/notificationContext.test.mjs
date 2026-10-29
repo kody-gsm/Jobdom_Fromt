@@ -72,7 +72,8 @@ const setup = async (t, { authenticated = true, strict = false } = {}) => {
   });
   globalThis.window = window;
   globalThis.document = new EventTarget();
-  let session = authenticated ? { userId: 1 } : null;
+  let session = authenticated ? { userId: 1, accessToken: "initial-token" } : null;
+  let sessionVersion = 0;
   const counts = [];
   const lists = [];
   const streams = [];
@@ -97,7 +98,10 @@ const setup = async (t, { authenticated = true, strict = false } = {}) => {
   };
   const dependencies = {
     "../api/notifications.ts": api,
-    "@fsd/entities/user": { getSession: () => session },
+    "@fsd/entities/user": {
+      getSession: () => session,
+      getSessionVersion: () => sessionVersion,
+    },
     "@fsd/entities/consultation": { RESERVATION_CHANGED_EVENT: "reservation-changed" },
     "../api/notificationStream.ts": {
       subscribeNotifications: (receive, connect, signal, reservation) => {
@@ -136,8 +140,12 @@ const setup = async (t, { authenticated = true, strict = false } = {}) => {
   });
   return {
     counts, lists, streams, writes, intervals, values, renders, window,
-    changeSession: async (next) => {
-      await act(async () => { session = next; window.dispatchEvent(new Event("jobdam-session")); });
+    changeSession: async (next, { isRefresh = false, emit = true } = {}) => {
+      await act(async () => {
+        session = next;
+        if (!isRefresh) sessionVersion++;
+        if (emit) window.dispatchEvent(new Event("jobdam-session"));
+      });
     },
     receive: async (...items) => {
       await act(async () => { for (const notification of items) streams.at(-1).receive(notification); });
@@ -408,3 +416,128 @@ test("list API forwards freshness and cancellation options to transport", async 
     path: "/api/notifications?page=1&size=20", init: { cache: "no-store", signal },
   });
 });
+
+// The write promise represents the API boundary, including its 401/reissue/retry.
+// The provider must retain write ownership while that boundary rotates tokens.
+for (const kind of ["single", "all"]) {
+  const beginRead = (renderer) => {
+    if (kind === "single") {
+      renderer.root.findAllByType("li")[0].findByType("button").props.onClick();
+    } else {
+      renderer.root.findAllByType("button")
+        .find((button) => button.children.includes("모두 읽음")).props.onClick();
+    }
+  };
+
+  const pendingRead = async (t) => {
+    const h = await setup(t);
+    const renderer = await h.renderUi("NotificationBell");
+    await act(async () => renderer.root.findByProps({ "aria-expanded": false }).props.onClick());
+    await h.settle(h.counts[0], { unreadCount: 1 });
+    await h.settle(h.lists[0], page([item(1)]));
+    await act(async () => beginRead(renderer));
+    assert.equal(h.writes.length, 1);
+    return h;
+  };
+
+  test(`${kind} read survives same-owner refresh when reconnect reads finish before the retried write`, async (t) => {
+    const h = await pendingRead(t);
+    await h.changeSession({ userId: 1, accessToken: "rotated-token" }, { isRefresh: true });
+    assert.equal(h.streams[0].signal.aborted, true, "SSE still reconnects with new credentials");
+    assert.equal(h.streams.length, 2);
+    await h.settle(h.counts[1], { unreadCount: 1 });
+    await h.settle(h.lists[1], page([item(1)]));
+    await h.settle(h.writes[0], kind === "single" ? item(1, { isRead: true }) : undefined);
+    assert.equal(h.values.list.notifications[0].isRead, true, "successful retry reconciles the active row");
+    assert.equal(h.values.unread, 0);
+    assert.equal(h.counts.length, 3, "completion refreshes the active connection's count");
+    await h.settle(h.counts[2], { unreadCount: 0 });
+    assert.equal(h.values.unread, 0);
+  });
+
+  test(`${kind} read queues a trailing refresh on the new connection while its count is pending`, async (t) => {
+    const h = await pendingRead(t);
+    await h.changeSession({ userId: 1, accessToken: "rotated-token" }, { isRefresh: true });
+    await h.settle(h.lists[1], page([item(1)]));
+    await h.settle(h.writes[0], kind === "single" ? item(1, { isRead: true }) : undefined);
+    assert.equal(h.values.list.notifications[0].isRead, true);
+    assert.equal(h.counts.length, 2, "must coalesce with the new connection's pending count");
+    await h.settle(h.counts[1], { unreadCount: 1 });
+    assert.equal(h.values.unread, 0, "the pre-write count cannot undo the completion");
+    assert.equal(h.counts.length, 3, "a fresh trailing GET follows the obsolete count");
+    await h.settle(h.counts[2], { unreadCount: 0 });
+  });
+
+  test(`${kind} read stays read when the reconnect list resolves its pre-write unread snapshot afterward`, async (t) => {
+    const h = await pendingRead(t);
+    await h.changeSession({ userId: 1, accessToken: "rotated-token" }, { isRefresh: true });
+    const reconnectSnapshot = page([item(1), item(2)]);
+    assert.equal(h.lists.length, 2, "the reconnect list is pending before the PATCH completes");
+    await h.settle(h.writes[0], kind === "single" ? item(1, { isRead: true }) : undefined);
+    await h.receive(item(3));
+    await h.settle(h.lists[1], reconnectSnapshot);
+    assert.deepEqual(h.values.list.notifications.map(({ id, isRead }) => ({ id, isRead })), [
+      { id: 3, isRead: false },
+      { id: 2, isRead: kind === "all" },
+      { id: 1, isRead: true },
+    ], "the late snapshot must retain successful reads and preserve new unread arrivals");
+    assert.equal(h.values.list.notificationLoaded, true);
+    assert.equal(h.values.list.notificationLoading, false);
+    await h.settle(h.counts[1], { unreadCount: 2 });
+    assert.equal(h.counts.length, 3, "the active count still drains its trailing refresh");
+    const unreadCount = kind === "all" ? 1 : 2;
+    await h.settle(h.counts[2], { unreadCount });
+    assert.equal(h.values.unread, unreadCount);
+
+    await h.changeSession({ userId: 2 });
+    await h.settle(h.lists.at(-1), page([item(1), item(2)]));
+    assert.ok(h.values.list.notifications.every((entry) => !entry.isRead), "read reconciliation cannot leak into another owner");
+  });
+
+  for (const cleanup of ["replace", "logout-login-same-user", "silent-replace", "unmount"]) {
+    test(`${kind} read completion after same-owner refresh is suppressed by ${cleanup}`, async (t) => {
+      const h = await pendingRead(t);
+      await h.changeSession({ userId: 1, accessToken: "rotated-token" }, { isRefresh: true });
+      await h.settle(h.counts[1], { unreadCount: 1 });
+      await h.settle(h.lists[1], page([item(1)]));
+      if (cleanup === "replace") {
+        await h.changeSession({ userId: 2 });
+      } else if (cleanup === "logout-login-same-user") {
+        await h.changeSession(null);
+        await h.changeSession({ userId: 1, accessToken: "new-login-token" });
+      } else if (cleanup === "silent-replace") {
+        await h.changeSession({ userId: 2 }, { emit: false });
+      } else {
+        await h.unmount();
+      }
+      if (cleanup === "replace" || cleanup === "logout-login-same-user") {
+        await h.settle(h.counts.at(-1), { unreadCount: 5 });
+        await h.settle(h.lists.at(-1), page([item(1)]));
+      }
+      const before = {
+        unread: h.values.unread,
+        notifications: h.values.list.notifications,
+        renders: { ...h.renders },
+        counts: h.counts.length,
+        lists: h.lists.length,
+      };
+      await h.settle(h.writes[0], kind === "single" ? item(1, { isRead: true }) : undefined);
+      assert.equal(h.values.unread, before.unread);
+      assert.equal(h.values.list.notifications, before.notifications);
+      assert.deepEqual(h.renders, before.renders);
+      assert.equal(h.counts.length, before.counts);
+      assert.equal(h.lists.length, before.lists);
+    });
+  }
+
+  test(`${kind} read failure after same-owner refresh retries the active list`, async (t) => {
+    const h = await pendingRead(t);
+    await h.changeSession({ userId: 1, accessToken: "rotated-token" }, { isRefresh: true });
+    await h.settle(h.counts[1], { unreadCount: 1 });
+    await h.settle(h.lists[1], page([item(1)]));
+    await h.reject(h.writes[0]);
+    assert.equal(h.values.list.notifications[0].isRead, false);
+    assert.equal(h.lists.length, 3, "failure retries using active connection ownership");
+    assert.equal(h.lists[2].init.signal, h.streams[1].signal);
+  });
+}

@@ -19,7 +19,7 @@ import {
 import type { NotificationItem } from "../api/notifications.ts";
 import { RESERVATION_CHANGED_EVENT } from "@fsd/entities/consultation";
 import { subscribeNotifications } from "../api/notificationStream.ts";
-import { getSession } from "@fsd/entities/user";
+import { getSession, getSessionVersion } from "@fsd/entities/user";
 
 export interface ToastNotification {
   id: number;
@@ -111,7 +111,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const notificationLoadedRef = useRef(false);
   const pagination = useRef({ page: 0, hasMore: false, loading: false });
   const notificationReads = useRef({ ids: new Set<number>(), all: false });
+  const pendingListReadChanges = useRef<{ ids: Set<number>; all: boolean } | null>(null);
   const refreshCountRef = useRef<(() => void) | null>(null);
+  const providerLifetime = useRef<symbol | null>(null);
 
   const decrementUnread = useCallback(
     () => setUnreadCount((count) => Math.max(0, count - 1)),
@@ -123,17 +125,23 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     const ctrl = abortRef.current;
     if (!ctrl || ctrl.signal.aborted) return;
     const requestVersion = ++notificationRequestVersion.current;
+    const readChanges = { ids: new Set<number>(), all: false };
+    pendingListReadChanges.current = readChanges;
     pagination.current.loading = true;
     setNotificationLoading(true);
     setNotificationError(null);
     try {
       const result = await getNotifications(page, 20, { cache: "no-store", signal: ctrl.signal });
       if (ctrl.signal.aborted || requestVersion !== notificationRequestVersion.current) return;
+      // A successful PATCH can finish after this GET captured an unread snapshot.
+      const content = result.content.map((item) => readChanges.all || readChanges.ids.has(item.id)
+        ? { ...item, isRead: true }
+        : item);
       const shouldReplace = page === 0 && notificationLoadedRef.current;
       setNotifications((current) => {
         const next = shouldReplace
-          ? mergeNotifications([], result.content)
-          : mergeNotifications(current, result.content);
+          ? mergeNotifications([], content)
+          : mergeNotifications(current, content);
         notificationIds.current = new Set(next.map((item) => item.id));
         return next;
       });
@@ -150,6 +158,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       }
     } finally {
       if (!ctrl.signal.aborted && requestVersion === notificationRequestVersion.current) {
+        pendingListReadChanges.current = null;
         pagination.current.loading = false;
         setNotificationLoading(false);
       }
@@ -167,48 +176,61 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   }, [loadNotifications]);
 
   const markNotificationReadLocally = useCallback((id: number) => {
+    pendingListReadChanges.current?.ids.add(id);
     setNotifications((current) => current.map((item) => item.id === id ? { ...item, isRead: true } : item));
   }, []);
 
   const markAllNotificationsReadLocally = useCallback(() => {
+    if (pendingListReadChanges.current) pendingListReadChanges.current.all = true;
     setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
   }, []);
 
+  const createWriteGuard = useCallback(() => {
+    const owner = getSession();
+    const version = getSessionVersion();
+    const lifetime = providerLifetime.current;
+    if (!owner || !lifetime) return null;
+    // Token rotation replaces the SSE connection, but preserves write ownership.
+    return () => providerLifetime.current === lifetime
+      && getSessionVersion() === version
+      && getSession()?.userId === owner.userId;
+  }, []);
+
   const readNotification = useCallback(async (id: number) => {
-    const ctrl = abortRef.current;
+    const isCurrentOwner = createWriteGuard();
     const reading = notificationReads.current;
-    if (!ctrl || ctrl.signal.aborted || reading.ids.has(id)) return;
+    if (!isCurrentOwner || reading.ids.has(id)) return;
     reading.ids.add(id);
     try {
       await markNotificationRead(id);
-      if (ctrl.signal.aborted) return;
+      if (!isCurrentOwner()) return;
       markNotificationReadLocally(id);
       decrementUnread();
       refreshCountRef.current?.();
     } catch {
-      if (!ctrl.signal.aborted) retryNotifications();
+      if (isCurrentOwner()) retryNotifications();
     } finally {
       reading.ids.delete(id);
     }
-  }, [decrementUnread, markNotificationReadLocally, retryNotifications]);
+  }, [createWriteGuard, decrementUnread, markNotificationReadLocally, retryNotifications]);
 
   const readAllNotifications = useCallback(async () => {
-    const ctrl = abortRef.current;
+    const isCurrentOwner = createWriteGuard();
     const reading = notificationReads.current;
-    if (!ctrl || ctrl.signal.aborted || reading.all) return;
+    if (!isCurrentOwner || reading.all) return;
     reading.all = true;
     try {
       await markAllNotificationsRead();
-      if (ctrl.signal.aborted) return;
+      if (!isCurrentOwner()) return;
       markAllNotificationsReadLocally();
       clearUnread();
       refreshCountRef.current?.();
     } catch {
-      if (!ctrl.signal.aborted) retryNotifications();
+      if (isCurrentOwner()) retryNotifications();
     } finally {
       reading.all = false;
     }
-  }, [clearUnread, markAllNotificationsReadLocally, retryNotifications]);
+  }, [createWriteGuard, clearUnread, markAllNotificationsReadLocally, retryNotifications]);
 
   const pushToast = useCallback((item: NotificationItem) => {
     const isDuplicate = notificationIds.current.has(item.id);
@@ -239,6 +261,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     notificationLoadedRef.current = false;
     pagination.current = { page: 0, hasMore: false, loading: false };
     notificationReads.current = { ids: new Set<number>(), all: false };
+    pendingListReadChanges.current = null;
     setUnreadCount(0);
     setNotifications([]);
     setNotificationLoaded(false);
@@ -301,6 +324,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   }, [disconnect, loadNotifications, pushToast]);
 
   useEffect(() => {
+    providerLifetime.current = Symbol("notification-provider");
     const handleSession = () => {
       if (getSession()) void connect();
       else disconnect();
@@ -308,6 +332,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     handleSession();
     window.addEventListener("jobdam-session", handleSession);
     return () => {
+      providerLifetime.current = null;
       window.removeEventListener("jobdam-session", handleSession);
       disconnect();
     };
