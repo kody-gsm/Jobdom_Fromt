@@ -1,16 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   getNotificationTargetUrl,
   isNotificationNavigable,
-  markAllNotificationsRead,
-  markNotificationRead,
-  NotificationType,
 } from "../api/notifications.ts";
-import type { NotificationItem } from "../api/notifications.ts";
-import { useNotification } from "../model/NotificationContext.tsx";
+import type { NotificationItem, NotificationType } from "../api/notifications.ts";
+import { useNotificationActions, useNotificationList } from "../model/NotificationContext.tsx";
 import { formatNotificationTime } from "../model/time.ts";
 import { shouldLoadNotificationList } from "../model/presentation.ts";
 
@@ -116,21 +113,20 @@ interface NotificationPanelProps {
 
 export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
   const {
-    clearUnread,
-    decrementUnread,
     notifications,
     notificationLoaded,
     notificationLoading,
     notificationError,
     notificationHasMore,
+  } = useNotificationList();
+  const {
     retryNotifications,
     loadNotifications,
     loadMoreNotifications,
-    markNotificationReadLocally,
-    markAllNotificationsReadLocally,
-  } = useNotification();
+    readNotification,
+    readAllNotifications,
+  } = useNotificationActions();
   const panelRef = useRef<HTMLDivElement>(null);
-  const readingIds = useRef(new Set<number>());
 
   useEffect(() => {
     if (shouldLoadNotificationList({
@@ -153,34 +149,6 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
     return () => document.removeEventListener("pointerdown", handlePointerDown, true);
   }, [onClose]);
 
-  const handleRead = useCallback(
-    async (id: number) => {
-      if (readingIds.current.has(id)) return;
-      readingIds.current.add(id);
-      try {
-        await markNotificationRead(id);
-        markNotificationReadLocally(id);
-        decrementUnread();
-      } catch {
-        retryNotifications();
-      } finally {
-        readingIds.current.delete(id);
-      }
-    },
-    [decrementUnread, markNotificationReadLocally, retryNotifications],
-  );
-
-
-  const handleReadAll = useCallback(async () => {
-    try {
-      await markAllNotificationsRead();
-      markAllNotificationsReadLocally();
-      clearUnread();
-    } catch {
-      retryNotifications();
-    }
-  }, [clearUnread, markAllNotificationsReadLocally, retryNotifications]);
-
   const unreadInList = notifications.filter((n) => !n.isRead).length;
 
   return (
@@ -196,7 +164,7 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
         {unreadInList > 0 && (
           <button
             type="button"
-            onClick={handleReadAll}
+            onClick={readAllNotifications}
             className="text-xs text-[#02C551] font-medium hover:underline focus:outline-none"
           >
             모두 읽음
@@ -225,7 +193,7 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
               <NotificationRow
                 key={item.id}
                 item={item}
-                onRead={handleRead}
+                onRead={readNotification}
               />
             ))}
           </ul>

@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   clearRememberLoginPreference,
   getLoginErrorMessage as getAuthErrorMessage,
   getRoleHomePath,
   getSession,
+  getSessionVersion,
   isAccessTokenExpired,
-  saveSession,
+  reissueSession,
   clearSession,
   restoreRememberedSession,
   readRememberLoginPreference,
 } from "@fsd/entities/user";
-import { ApiError, request } from "@fsd/shared/api";
+import { ApiError } from "@fsd/shared/api";
 import { login } from "../api/login.ts";
 import { getFirstLoginErrorField, validateLoginForm } from "./validation.ts";
 import type { LoginFormErrors, LoginFormValues } from "./validation.ts";
@@ -31,38 +32,59 @@ export const useLoginForm = () => {
   const [errorField, setErrorField] = useState<keyof LoginFormValues | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const restoreRequestVersion = useRef(0);
 
   useEffect(() => {
-    let isActive = true;
+    const requestVersion = ++restoreRequestVersion.current;
+    const sessionVersion = getSessionVersion();
+    const initialSession = getSession();
+    let hasRedirected = false;
+    const isCurrent = () => {
+      const latest = getSession();
+      return requestVersion === restoreRequestVersion.current
+        && sessionVersion === getSessionVersion()
+        && latest?.userId === initialSession?.userId;
+    };
+    const finishRestore = () => {
+      if (!isCurrent()) return false;
+      if (hasRedirected) return true;
+      const current = getSession();
+      if (!current || isAccessTokenExpired(current.accessToken)) return false;
+      hasRedirected = true;
+      router.replace(getRoleHomePath(current.role));
+      return true;
+    };
+    const invalidateRestore = () => { restoreRequestVersion.current += 1; };
+    const onSessionChanged = () => { finishRestore(); };
+    window.addEventListener("jobdam-session", onSessionChanged);
+    window.addEventListener("storage", onSessionChanged);
     const restore = async () => {
-      const remembered = await restoreRememberedSession();
-      if (remembered) {
-        if (isActive) router.replace(getRoleHomePath(remembered.role));
-        return;
-      }
+      await restoreRememberedSession();
+      if (!isCurrent() || finishRestore()) return;
       const current = getSession();
       if (!current) return;
-      if (!isAccessTokenExpired(current.accessToken)) {
-        if (isActive) router.replace(getRoleHomePath(current.role));
-        return;
-      }
       try {
-        const response = await request<Omit<typeof current, "role">>("/auth/reissue", {
-          method: "POST",
-          body: JSON.stringify({ refreshToken: current.refreshToken }),
-        });
-        const preference = readRememberLoginPreference();
-        const session = saveSession(response, preference.enabled);
-        if (isActive) router.replace(getRoleHomePath(session.role));
+        await reissueSession(current.refreshToken, isCurrent);
+        finishRestore();
       } catch (error) {
-        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        if (finishRestore()) return;
+        const latest = getSession();
+        if (
+          isCurrent()
+          && latest?.accessToken === current.accessToken
+          && latest?.refreshToken === current.refreshToken
+          && error instanceof ApiError
+          && (error.status === 401 || error.status === 403)
+        ) {
           clearSession();
         }
       }
     };
     void restore();
     return () => {
-      isActive = false;
+      invalidateRestore();
+      window.removeEventListener("jobdam-session", onSessionChanged);
+      window.removeEventListener("storage", onSessionChanged);
     };
   }, [router]);
 
@@ -97,6 +119,7 @@ export const useLoginForm = () => {
     setSubmitError("");
     if (Object.keys(nextErrors).length > 0) return;
 
+    restoreRequestVersion.current += 1;
     try {
       setIsSubmitting(true);
       const session = await login(

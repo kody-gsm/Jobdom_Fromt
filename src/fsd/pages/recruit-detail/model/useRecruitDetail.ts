@@ -16,7 +16,6 @@ export const useRecruitDetail = (recruitId: number) => {
   const [formError, setFormError] = useState("");
   const [formMessage, setFormMessage] = useState("");
   const recruitRef = useRef<Recruit | null>(null);
-  const formsRef = useRef<FormSummary[] | null>(null);
   const formRequestVersion = useRef(0);
 
   const loadForms = useCallback(() => {
@@ -25,13 +24,18 @@ export const useRecruitDetail = (recruitId: number) => {
     setFormLoading(true);
     setFormError("");
     setFormMessage("");
+    setForm(null);
+    const data = recruitRef.current;
+    if (data?.formId == null) {
+      setFormLoading(false);
+      return;
+    }
+    const formId = data.formId;
 
     void studentFormApi.getAll()
       .then((forms) => {
         if (formRequestVersion.current !== version) return;
-        formsRef.current = forms;
-        const data = recruitRef.current;
-        if (data) setForm(findRecruitForm(data.formId ?? null, forms));
+        setForm(findRecruitForm(formId, forms));
       })
       .catch((caught) => {
         if (formRequestVersion.current !== version) return;
@@ -49,7 +53,6 @@ export const useRecruitDetail = (recruitId: number) => {
       if (!active) return;
       formRequestVersion.current += 1;
       recruitRef.current = null;
-      formsRef.current = null;
       setItem(null);
       setError("");
       setForm(null);
@@ -61,21 +64,21 @@ export const useRecruitDetail = (recruitId: number) => {
         .then((data) => {
           if (!active) return;
           recruitRef.current = data;
-          if (formsRef.current) {
-            setForm(findRecruitForm(data.formId ?? null, formsRef.current));
-          }
           setItem(data);
           document.title = `잡담 | ${data.companyName || "취업 공고"}`;
+          loadForms();
         })
         .catch((caught) => {
-          if (active) setError(getRecruitErrorMessage(caught, "공고를 불러오지 못했습니다."));
+          if (active) {
+            setError(getRecruitErrorMessage(caught, "공고를 불러오지 못했습니다."));
+            setFormLoading(false);
+          }
         });
-
-      loadForms();
     });
 
     return () => {
       active = false;
+      recruitRef.current = null;
       formRequestVersion.current += 1;
     };
   }, [loadForms, recruitId]);

@@ -122,7 +122,7 @@ export const useSignupForm = () => {
 
   const submit = async () => {
     const nextErrors = validateSignupForm(form);
-    if (isCodeSent && verificationCountdown.isExpired) {
+    if (isCodeSent && verificationCountdown.checkExpired()) {
       nextErrors.verificationCode = "인증코드가 만료되었습니다. 재발송해주세요.";
     }
     setErrors(nextErrors);

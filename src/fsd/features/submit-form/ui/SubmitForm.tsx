@@ -24,7 +24,7 @@ import type {
   FormValue,
 } from "@fsd/entities/form";
 import { ApiError } from "@fsd/shared/api";
-import { formatDeadlineDate } from "@fsd/shared/lib";
+import { formatDeadlineDate, useDeadlineClock } from "@fsd/shared/lib";
 import { ActionButton, ContentCard, FileDownload } from "@fsd/shared/ui";
 import { formApi } from "../api/form";
 
@@ -54,6 +54,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const submissionLoadVersion = useRef(0);
   const activeFormId = useRef(formId);
   const mounted = useRef(false);
+  const now = useDeadlineClock([form?.deadline]);
 
   const isCurrent = useCallback((requestVersion: number, targetFormId: number) =>
     mounted.current &&
@@ -140,13 +141,14 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const retryForm = () => loadForm(formRequestVersion.current, formId);
 
   const setValue = (questionId: number, value: FormValue) => {
+    if (!form || formLoading || submissionLoading || submissionError || submitting || isFormClosed(form)) return;
     setValues((current) => ({ ...current, [questionId]: value }));
     setMessage(null);
   };
 
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form) return;
+    if (!form || formLoading || submissionLoading || submissionError || submitting) return;
     if (isFormClosed(form)) {
       setMessage({
         text: form.status === "CLOSED"
@@ -236,7 +238,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   if (formLoading || !form) {
     return <p className="py-20 text-center text-gray-400">불러오는 중…</p>;
   }
-  const isExpired = isFormClosed(form);
+  const isExpired = isFormClosed(form, now);
 
   return (
     <form onSubmit={submitForm}>
@@ -266,7 +268,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
               index={index}
               value={values[question.id]}
               onChange={(value) => setValue(question.id, value)}
-              disabled={isExpired || submitting}
+              disabled={isExpired || submitting || submissionLoading || Boolean(submissionError)}
             />
           ))
         )}

@@ -7,7 +7,7 @@ export const uploadProfileAvatar = async (file: File) => {
   formData.append("image", file);
   const response = await requestWithSession<ProfileImageUploadResponse>(
     "/auth/profile/image",
-    { method: "PATCH", body: formData },
+    { method: "PATCH", body: formData, invalidateCache: ["/auth/profile"] },
   );
   return resolveProfileImageUrl(response.profileImageUrl);
 };

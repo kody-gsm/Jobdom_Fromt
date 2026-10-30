@@ -21,6 +21,8 @@ export interface FormSummary {
   description: string | null;
   deadline: string | null;
   status: FormStatus;
+  /** Student list metadata; older deployments and teacher responses may omit it. */
+  submitted?: boolean;
   questionCount: number;
   createdAt: string;
 }

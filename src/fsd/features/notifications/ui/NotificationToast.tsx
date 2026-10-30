@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useNotification } from "../model/NotificationContext.tsx";
+import { useNotificationActions, useNotificationToasts } from "../model/NotificationContext.tsx";
 import type { ToastNotification } from "../model/NotificationContext.tsx";
 
 const TOAST_AUTO_DISMISS_MS = 4000;
@@ -10,7 +10,7 @@ const TOAST_AUTO_DISMISS_MS = 4000;
 // ─── Single Toast ─────────────────────────────────────────────────────────────
 
 const Toast = ({ toast }: { toast: ToastNotification }) => {
-  const { dismissToast } = useNotification();
+  const { dismissToast } = useNotificationActions();
   const router = useRouter();
 
   useEffect(() => {
@@ -67,7 +67,7 @@ const Toast = ({ toast }: { toast: ToastNotification }) => {
 // ─── Toast Container ──────────────────────────────────────────────────────────
 
 export const NotificationToastContainer = () => {
-  const { toasts } = useNotification();
+  const toasts = useNotificationToasts();
 
   if (toasts.length === 0) return null;
 
