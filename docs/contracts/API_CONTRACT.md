@@ -47,7 +47,7 @@
 
 ## Recruit images and optional form
 
-- 백엔드 `feat/recruit-optional-form-and-images` 브랜치 계약을 따른다. 2026-10-29 기준 백엔드 `develop`에는 아직 머지되지 않았으며, 배포 전 백엔드의 `docs/recruit-multi-image-migration.sql` 적용이 필요하다.
+- 백엔드 `develop`에 머지된 공고 다중 이미지·선택적 지원 폼 API(kody-gsm/Jobdam_BackEnd#148)를 따른다. 운영 배포 전 백엔드의 `docs/recruit-multi-image-migration.sql` 적용이 필요하다.
 - 지원 폼 생성 여부는 공고를 처음 만들 때만 정할 수 있다. 새 공고를 처음 `저장`·`공개`하거나 AI 이미지 분석을 시작하면 `지원 폼을 함께 만들까요?` 모달을 띄우고, 고른 값을 `POST /teacher/recruit` body의 `createForm` 또는 `POST /teacher/recruit/analyze` FormData의 `createForm`으로 보낸다. 이후 폼을 추가하거나 떼어내는 API는 없다.
 - AI 분석은 FormData `image`로 여러 장을 보낸다. 만든 공고에는 `POST /teacher/recruit/{id}/image`(FormData `image` 여러 장)로 이미지를 추가하고 `DELETE /teacher/recruit/{id}/image/{imageId}`로 한 장씩 삭제한다. 공고당 최대 10장, 한 장당 10MB, 이미지 형식만 업로드 전에 먼저 확인한다.
 - 공고 응답의 `images: [{ id, url }]`을 올린 순서대로 보여준다. `imageUrl`은 첫 번째 이미지다. 이미지 URL은 API base(`/backend` 등)를 붙여 표시한다.
@@ -85,6 +85,20 @@
 - 기존 Bearer 인증과 401 토큰 재발급을 사용한다. 응답의 `fileDownloadUrl`을 외부 링크로 직접 열지 않는다.
 - 성공 응답은 Blob으로 읽어 답변의 `fileName`으로 저장한다. 기본 JSON/text 응답과 오류 파싱은 유지한다.
 - 다운로드 중 중복 요청을 막고, 권한 부족·파일 없음·네트워크 실패는 오류로 표시하여 재시도할 수 있게 한다.
+
+## Student form list metadata
+
+- 2026-10-30 확인한 backend `develop`의 `GET /form`은 초안을 제외한 공개·마감 폼을 반환하며, 각 항목의 `submitted: boolean`으로 현재 학생의 제출 여부를 제공한다. `GET /form/{id}`도 마감 폼을 조회할 수 있고, 마감 후 제출 제한은 유지된다.
+- 프론트는 `submitted`가 있으면 항목별 제출 조회를 생략한다. 배포 시점 차이로 필드가 없으면 기존 `GET /student/form/{id}/submission`을 제한된 동시 수로 조회하되 목록 첫 표시를 막지 않는다. 실패를 미제출로 단정하지 않는다.
+
+## Frontend request lifetime and cache
+
+- 인증 GET은 계정의 access token과 URL을 키로 30초 재사용하고 진행 중 요청을 공유한다. caller signal, Blob, `cache: "no-store"` 요청은 공유하지 않는다.
+- 명시적인 새로고침·상담 변경 이벤트·재시도는 `no-store`로 이전 값을 무효화하고 서버를 다시 조회한다.
+- `invalidateCache`는 프론트 내부 URL prefix 목록이며 fetch나 서버로 전송하지 않는다. 변경 API는 영향을 받는 조회만 무효화하고, 빈 목록은 캐시를 유지한다. 지정하지 않은 변경 API는 기존 전체 무효화를 유지한다.
+- 캐시는 최대 100개 값을 보관하며 조회/저장 시 만료 값을 제거한다. 무효화 전에 시작한 요청은 뒤늦게 캐시를 채우지 않는다.
+- 기본 요청 제한은 30초, FormData 업로드·Blob 다운로드는 120초다. `timeoutMs`로 개별 조정할 수 있으며 응답 본문 수신까지 포함한다. timeout/사용자 취소는 각각 `REQUEST_TIMEOUT`/`REQUEST_ABORTED` 코드의 status 0 오류다.
+- 한 호출자의 취소가 다른 소비자의 공유 GET을 중단하지 않도록, signal을 가진 요청은 캐시 공유에서 제외한다.
 
 ## Refactoring API code
 

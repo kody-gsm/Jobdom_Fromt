@@ -3,9 +3,7 @@ import { isFormClosed } from "@fsd/entities/form";
 
 export type FormListFilter = "ALL" | "OPEN" | "CLOSED" | "SUBMITTED";
 
-export type StudentFormSummary = FormSummary & {
-  submitted?: boolean;
-};
+export type StudentFormSummary = FormSummary;
 
 export { isFormClosed } from "@fsd/entities/form";
 

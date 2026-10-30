@@ -55,7 +55,7 @@ const getConsultationErrorTarget = (
   if (message === "제목을 입력해주세요") return "title";
   if (message === "내용을 입력해주세요") return "content";
   if (message === "상담 카테고리를 선택해주세요") return "category";
-    if (message === "선생님을 선택해주세요") return "teacher";
+  if (message === "선생님을 선택해주세요") return "teacher";
   if (message === "날짜를 선택해주세요") return "date";
   if (message === "교시를 선택해주세요") return "period";
   return null;
@@ -92,6 +92,10 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   const [toast, setToast] = useState<ConsultationToast | null>(null);
   const [errorTarget, setErrorTarget] = useState<ConsultationErrorTarget | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const navigationTimer = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
+  const submissionStateRef = useRef<"idle" | "pending" | "success">("idle");
+  const draftPersistenceDisabledRef = useRef(false);
   const draftStorageRef = useRef<ConsultationDraftStorage | null>(null);
   const draftStorageKeyRef = useRef("");
   const draftsRef = useRef({
@@ -99,9 +103,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     general: createEmptyConsultationDraft(),
   });
   const draftHydratedRef = useRef(false);
-  const skipNextDraftSaveRef = useRef(false);
   const draftSaveTimer = useRef<number | null>(null);
-  const pendingDraftSelectionRef = useRef<Pick<ConsultationDraftSnapshot, "date" | "period"> | null>(null);
+  const pendingDraftRef = useRef<ConsultationDraftSnapshot | null>(null);
+  const pendingTeacherIdRef = useRef<number | null>(null);
 
   const {
     timetable,
@@ -111,6 +115,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     availabilityError,
     retryAvailability,
     dates,
+    selectDate: selectAvailabilityDate,
     toggleDate: toggleAvailabilityDate,
     toggleTime: toggleAvailabilityTime,
     isTimeUnavailable,
@@ -120,35 +125,37 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   } = useConsultationAvailability({ counselType, selectedTeacher });
 
   const availabilityActionsRef = useRef({
-    toggleDate: toggleAvailabilityDate,
+    selectDate: selectAvailabilityDate,
     toggleTime: toggleAvailabilityTime,
     isTimeUnavailable,
   });
   useEffect(() => {
     availabilityActionsRef.current = {
-      toggleDate: toggleAvailabilityDate,
+      selectDate: selectAvailabilityDate,
       toggleTime: toggleAvailabilityTime,
       isTimeUnavailable,
     };
-  }, [toggleAvailabilityDate, toggleAvailabilityTime, isTimeUnavailable]);
+  }, [selectAvailabilityDate, toggleAvailabilityTime, isTimeUnavailable]);
 
   const persistCurrentDraft = useCallback(() => {
     const storage = draftStorageRef.current;
     const key = draftStorageKeyRef.current;
-    if (!storage || !key || !draftHydratedRef.current) return;
+    if (!storage || !key || !draftHydratedRef.current || draftPersistenceDisabledRef.current) return;
+    const pending = pendingDraftRef.current;
     const draft: ConsultationDraftSnapshot = {
       title,
       content,
       category,
-      teacherId: selectedTeacher?.id ?? null,
-      date: selectedDate,
-      period: selectedTime,
+      teacherId: pendingTeacherIdRef.current ?? pending?.teacherId ?? selectedTeacher?.id ?? null,
+      date: pending ? pending.date : selectedDate,
+      period: pending ? pending.period : selectedTime,
     };
     draftsRef.current[counselType] = draft;
     writeConsultationDraft(storage, key, counselType, draft);
   }, [counselType, title, content, category, selectedTeacher?.id, selectedDate, selectedTime]);
 
   const clearCurrentDraft = () => {
+    draftPersistenceDisabledRef.current = true;
     if (draftSaveTimer.current !== null) {
       window.clearTimeout(draftSaveTimer.current);
       draftSaveTimer.current = null;
@@ -173,26 +180,31 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   useEffect(() => {
     if (!draftHydratedRef.current) return;
-    const draft = draftsRef.current[counselType];
-    skipNextDraftSaveRef.current = true;
+    // The restoration source must survive autosave and slow teacher/slot reads.
+    const draft = { ...draftsRef.current[counselType] };
+    pendingDraftRef.current = draft;
+    pendingTeacherIdRef.current = draft.teacherId;
     setTitleState(draft.title);
     setContentState(draft.content);
     setCategory(draft.category);
     setSelectedTeacher(null);
-    pendingDraftSelectionRef.current = { date: draft.date, period: draft.period };
+    availabilityActionsRef.current.selectDate(draft.date);
   }, [counselType]);
 
   useEffect(() => {
     let active = true;
+    const draft = pendingDraftRef.current;
     void getConsultationTeachers(toConsultationKind(counselType))
       .then((items) => {
         if (!active) return;
         setTeachers(items);
-        const draft = draftsRef.current[counselType];
-        const restoredTeacher = draft.teacherId !== null && items.some((item) => item.id === draft.teacherId)
+        const restoredTeacher = draft && pendingTeacherIdRef.current === draft.teacherId
           ? items.find((item) => item.id === draft.teacherId) ?? null
           : null;
-        if (restoredTeacher === null) pendingDraftSelectionRef.current = null;
+        pendingTeacherIdRef.current = null;
+        if (restoredTeacher === null) {
+          pendingDraftRef.current = null;
+        }
         setSelectedTeacher(restoredTeacher);
         setTeacherStatus("ready");
       })
@@ -206,30 +218,23 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   }, [counselType]);
 
   useEffect(() => {
-    const pending = pendingDraftSelectionRef.current;
-    if (!pending || availabilityStatus !== "success") return;
+    const pending = pendingDraftRef.current;
+    if (!pending || selectedTeacher?.id !== pending.teacherId || availabilityStatus !== "success") return;
 
-    if (pending.date && dates.some((date) => date.value === pending.date)) {
-      if (selectedDate !== pending.date) {
-        availabilityActionsRef.current.toggleDate(pending.date);
-        return;
-      }
-    } else if (pending.date) {
-      pending.date = null;
-    }
-
-    if (pending.period && !availabilityActionsRef.current.isTimeUnavailable(pending.period)) {
+    if (
+      pending.date === selectedDate &&
+      pending.period &&
+      !availabilityActionsRef.current.isTimeUnavailable(pending.period)
+    ) {
       availabilityActionsRef.current.toggleTime(pending.period);
     }
-    pendingDraftSelectionRef.current = null;
-  }, [availabilityStatus, dates, selectedDate]);
+    pendingDraftRef.current = null;
+  }, [availabilityStatus, selectedDate, selectedTeacher?.id]);
 
   useEffect(() => {
-    if (!draftHydratedRef.current) return;
-    if (skipNextDraftSaveRef.current) {
-      skipNextDraftSaveRef.current = false;
-      return;
-    }
+    if (!draftHydratedRef.current || draftPersistenceDisabledRef.current) return;
+    // Save current text while the pending snapshot protects unrestored selection.
+    // Lookup completion can also clear that snapshot without changing text.
     if (draftSaveTimer.current !== null) window.clearTimeout(draftSaveTimer.current);
     draftSaveTimer.current = window.setTimeout(() => {
       draftSaveTimer.current = null;
@@ -238,14 +243,16 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     return () => {
       if (draftSaveTimer.current !== null) window.clearTimeout(draftSaveTimer.current);
     };
-  }, [persistCurrentDraft]);
+  }, [persistCurrentDraft, teacherStatus, availabilityStatus]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
       if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
-    },
-    [],
-  );
+      if (navigationTimer.current !== null) window.clearTimeout(navigationTimer.current);
+    };
+  }, []);
 
   const showToast = (message: string, type: ConsultationToast["type"] = "error") => {
     setToast({ message, type });
@@ -269,6 +276,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const handleTabChange = (type: ConsultationType) => {
+    if (type === counselType || submissionStateRef.current !== "idle") return;
     persistCurrentDraft();
     setCounselType(type);
     setTeachers([]);
@@ -280,6 +288,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const toggleTeacher = (teacher: ConsultationTeacherOption) => {
+    pendingDraftRef.current = null;
+    pendingTeacherIdRef.current = null;
     const isSelected = selectedTeacher?.id === teacher.id;
     setSelectedTeacher(isSelected ? null : teacher);
     clearPeriodSelection();
@@ -287,6 +297,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const toggleDate = (date: string) => {
+    pendingDraftRef.current = null;
     toggleAvailabilityDate(date);
     if (errorTarget === "date") setErrorTarget(null);
   };
@@ -308,6 +319,9 @@ export const useConsultationForm = (initialType: ConsultationType) => {
   };
 
   const handleCancel = () => {
+    pendingDraftRef.current = null;
+    pendingTeacherIdRef.current = null;
+    if (navigationTimer.current !== null) window.clearTimeout(navigationTimer.current);
     clearCurrentDraft();
     setTitle("");
     setContent("");
@@ -334,6 +348,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isMountedRef.current || submissionStateRef.current !== "idle") return;
 
     const validationMessage = getValidationMessage();
     if (validationMessage) {
@@ -358,6 +373,7 @@ export const useConsultationForm = (initialType: ConsultationType) => {
     };
 
     setErrorTarget(null);
+    submissionStateRef.current = "pending";
     try {
       setSubmitting(true);
       await submitConsultation(toConsultationKind(counselType), {
@@ -365,6 +381,8 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         teacherId: teacherId,
         category,
       });
+      if (!isMountedRef.current) return;
+      submissionStateRef.current = "success";
       try {
         window.sessionStorage.setItem(
           "jobdam:consultation-toast",
@@ -375,8 +393,12 @@ export const useConsultationForm = (initialType: ConsultationType) => {
       }
       showToast("상담 신청 요청을 보냈습니다", "success");
       clearCurrentDraft();
-      window.setTimeout(() => router.push("/"), 700);
+      navigationTimer.current = window.setTimeout(() => {
+        navigationTimer.current = null;
+        router.push("/");
+      }, 700);
     } catch (error) {
+      if (!isMountedRef.current) return;
       if (
         error instanceof ApiError &&
         isUnavailableSlotError(error) &&
@@ -391,7 +413,10 @@ export const useConsultationForm = (initialType: ConsultationType) => {
         error instanceof ApiError ? error.message : "상담 신청에 실패했습니다",
       );
     } finally {
-      setSubmitting(false);
+      if (submissionStateRef.current === "pending") {
+        submissionStateRef.current = "idle";
+        if (isMountedRef.current) setSubmitting(false);
+      }
     }
   };
 

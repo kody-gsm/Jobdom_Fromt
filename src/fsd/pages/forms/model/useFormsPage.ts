@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "@fsd/shared/api";
-import { createRequestVersionGuard } from "@fsd/shared/lib";
+import { createRequestVersionGuard, useDeadlineClock } from "@fsd/shared/lib";
 import { formsApi } from "../api/forms.ts";
 import {
   filterForms,
   type FormListFilter,
   type StudentFormSummary,
 } from "./formFilters.ts";
+
+const SUBMISSION_CHECK_CONCURRENCY = 4;
 
 const loadSubmissionState = async (form: StudentFormSummary): Promise<StudentFormSummary> => {
   try {
@@ -20,6 +22,24 @@ const loadSubmissionState = async (form: StudentFormSummary): Promise<StudentFor
   }
 };
 
+const loadMissingSubmissionStates = async (
+  forms: StudentFormSummary[],
+  isCurrent: () => boolean,
+  onResult: (form: StudentFormSummary) => void,
+) => {
+  const missing = forms.filter((form) => typeof form.submitted !== "boolean");
+  let index = 0;
+  const worker = async () => {
+    while (isCurrent() && index < missing.length) {
+      const form = missing[index++];
+      const updated = await loadSubmissionState(form);
+      if (!isCurrent()) return;
+      if (updated !== form) onResult(updated);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(SUBMISSION_CHECK_CONCURRENCY, missing.length) }, worker));
+};
+
 export const useFormsPage = () => {
   const [forms, setForms] = useState<StudentFormSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +48,7 @@ export const useFormsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const requests = useRef(createRequestVersionGuard());
   const mounted = useRef(true);
+  const now = useDeadlineClock(forms.map((form) => form.deadline));
 
   const loadForms = useCallback((resetState = true) => {
     const requestVersion = requests.current.next();
@@ -37,12 +58,16 @@ export const useFormsPage = () => {
     }
     return formsApi
       .getAll()
-      .then(async (result) => {
+      .then((result) => {
         if (!mounted.current || !requests.current.isLatest(requestVersion)) return;
         setForms(result);
-        const formsWithSubmissionState = await Promise.all(result.map(loadSubmissionState));
-        if (!mounted.current || !requests.current.isLatest(requestVersion)) return;
-        setForms(formsWithSubmissionState);
+        setLoading(false);
+        const isCurrent = () => mounted.current && requests.current.isLatest(requestVersion);
+        void loadMissingSubmissionStates(result, isCurrent, (updated) => {
+          setForms((current) => isCurrent()
+            ? current.map((form) => form.id === updated.id ? updated : form)
+            : current);
+        });
       })
       .catch((caught) => {
         if (!mounted.current || !requests.current.isLatest(requestVersion)) return;
@@ -62,22 +87,27 @@ export const useFormsPage = () => {
   }, []);
 
   useEffect(() => {
+    let active = true;
     mounted.current = true;
     const requestGuard = requests.current;
-    queueMicrotask(() => void loadForms(false));
+    queueMicrotask(() => {
+      if (active) void loadForms(false);
+    });
     return () => {
+      active = false;
       mounted.current = false;
       requestGuard.next();
     };
   }, [loadForms]);
 
   const visibleForms = useMemo(
-    () => filterForms(forms, filter, searchQuery),
-    [filter, forms, searchQuery],
+    () => filterForms(forms, filter, searchQuery, now),
+    [filter, forms, now, searchQuery],
   );
 
   return {
     forms,
+    now,
     loading,
     error,
     retry: () => loadForms(),
