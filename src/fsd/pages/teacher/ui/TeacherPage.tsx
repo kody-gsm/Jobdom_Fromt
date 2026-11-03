@@ -20,6 +20,15 @@ import {
 
 type SelectedRequest = { reservation: TeacherReservation; approved: boolean };
 const WEEKDAYS = ["월", "화", "수", "목", "금"];
+const NO_RESERVATIONS: never[] = [];
+const groupBySlot = <T extends { date: string; period: string }>(items: readonly T[]) => {
+    const groups = new Map<string, T[]>();
+    for (const item of items) {
+        const slot = reservationSlot(item);
+        groups.set(slot, [...(groups.get(slot) ?? []), item]);
+    }
+    return groups;
+};
 
 export function TeacherPage() {
     const [teacherName, setTeacherName] = useState("선생님");
@@ -134,7 +143,11 @@ export function TeacherPage() {
     }, [loadReservations]);
 
     useEffect(() => {
-        const timer = window.setInterval(() => setToday(new Date()), 60_000);
+        // 날짜가 바뀔 때만 상태를 바꿔서 매 분 페이지 전체를 다시 그리지 않는다.
+        const timer = window.setInterval(() => {
+            const now = new Date();
+            setToday((current) => dateKey(current) === dateKey(now) ? current : now);
+        }, 60_000);
         return () => window.clearInterval(timer);
     }, []);
 
@@ -154,7 +167,9 @@ export function TeacherPage() {
         ...Array<null>(new Date(year, month, 1).getDay()).fill(null),
         ...Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, index) => new Date(year, month, index + 1)),
     ];
-    const week = useMemo(() => getWeek(selectedDate), [selectedDate]);
+    // 같은 주 안에서 날짜를 바꿀 때는 같은 배열을 유지해 주간 시간 금지 상태를 다시 불러오지 않는다.
+    const weekStartKey = dateKey(getWeek(selectedDate)[0]);
+    const week = useMemo(() => getWeek(new Date(`${weekStartKey}T00:00:00`)), [weekStartKey]);
     const teacherVariant = getTeacherWorkspaceVariant(teacherName);
     const periods = getTeacherAvailablePeriods(kind, teacherName);
     const teacherKinds = getTeacherConsultationKinds(teacherRole);
@@ -162,6 +177,12 @@ export function TeacherPage() {
     const todayKey = dateKey(today);
     const upcomingPending = useMemo(() => pending.filter((item) => item.date >= todayKey), [pending, todayKey]);
     const upcomingApproved = useMemo(() => approved, [approved]);
+    const reservationDates = useMemo(
+        () => new Set([...upcomingPending, ...upcomingApproved].map((item) => item.date)),
+        [upcomingPending, upcomingApproved],
+    );
+    const approvedBySlot = useMemo(() => groupBySlot(upcomingApproved), [upcomingApproved]);
+    const pendingBySlot = useMemo(() => groupBySlot(upcomingPending), [upcomingPending]);
     const loadSlotStatuses = useCallback(async () => {
         const allowedKinds = getTeacherConsultationKinds(teacherRole);
         if (teacherId === null || !allowedKinds.includes(kind)) {
@@ -268,8 +289,7 @@ export function TeacherPage() {
                 setApproved((items) => items.filter((item) => reservationSlot(item) !== slot));
                 setPending((items) => items.filter((item) => reservationSlot(item) !== slot));
             }
-            await loadReservations();
-            await loadSlotStatuses();
+            await Promise.all([loadReservations(), loadSlotStatuses()]);
         } catch (error) {
             setSlotError(error instanceof Error ? error.message : "시간 금지 상태를 변경하지 못했습니다.");
         } finally {
@@ -400,10 +420,10 @@ export function TeacherPage() {
                         {["일", "월", "화", "수", "목", "금", "토"].map((day) => <span key={day} className="py-2 text-sm text-muted">{day}</span>)}
                         {dates.map((date, index) => {
                             if (!date) return <span key={`blank-${index}`} />;
-                            const isToday = dateKey(date) === dateKey(today);
-                            const isSelected = dateKey(date) === dateKey(selectedDate);
-                            const hasReservation = upcomingPending.some((item) => item.date === dateKey(date))
-                                || upcomingApproved.some((item) => item.date === dateKey(date));
+                            const key = dateKey(date);
+                            const isToday = key === todayKey;
+                            const isSelected = key === dateKey(selectedDate);
+                            const hasReservation = reservationDates.has(key);
                             return (
                                 <button key={dateKey(date)} onClick={() => setSelectedDate(date)}
                                     aria-label={dateKey(date)} aria-current={isToday ? "date" : undefined} aria-pressed={isSelected}
@@ -541,8 +561,8 @@ export function TeacherPage() {
                                 const isPast = currentDate < todayKey;
                                 const slot = `${currentDate}_${period}`;
                                 const classItem = teacherVariant === "im-gyeongwon" ? WEEKLY_CLASS_SCHEDULE[WEEKDAYS[index]]?.[period] : undefined;
-                                const confirmed = upcomingApproved.filter((item) => reservationSlot(item) === slot);
-                                const waiting = isPast ? [] : upcomingPending.filter((item) => reservationSlot(item) === slot);
+                                const confirmed = approvedBySlot.get(slot) ?? NO_RESERVATIONS;
+                                const waiting = isPast ? NO_RESERVATIONS : pendingBySlot.get(slot) ?? NO_RESERVATIONS;
                                 const isLocked = !isPast && lockedSlots.has(slot);
                                 const isModeActive = !isPast && (isLockMode || isForceMode);
                                 return <td key={slot}
