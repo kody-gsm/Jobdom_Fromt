@@ -6,12 +6,10 @@ import { FiArrowLeft, FiArrowRight, FiCheckCircle, FiShield } from "react-icons/
 import { ActionButton } from "@fsd/shared/ui";
 import type { TutorialMode } from "../model/presentation.ts";
 import type { TutorialRole } from "../model/progress.ts";
-import { getCardPosition, padRect, type Size } from "../model/spotlight.ts";
 import { getTutorialSteps } from "../model/steps.ts";
-import { useTutorialTarget } from "../model/useTutorialTarget.ts";
+import { useSpotlight } from "../model/useSpotlight.ts";
 
 const COMPACT_QUERY = "(max-width: 767px)";
-const CARD_WIDTH = 360;
 
 const getNextLabel = (isLastStep: boolean, isCompleting: boolean, hasError: boolean, mode: TutorialMode) => {
   if (!isLastStep) return "다음";
@@ -30,17 +28,6 @@ const useIsCompact = () => {
     return () => query.removeEventListener("change", sync);
   }, []);
   return isCompact;
-};
-
-const useViewport = () => {
-  const [viewport, setViewport] = useState<Size>({ width: 1280, height: 800 });
-  useEffect(() => {
-    const sync = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
-    sync();
-    window.addEventListener("resize", sync);
-    return () => window.removeEventListener("resize", sync);
-  }, []);
-  return viewport;
 };
 
 type TutorialProps = {
@@ -63,10 +50,11 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
   const isLastStep = stepIndex === steps.length - 1;
   const isOnStepRoute = pathname === step.route;
   const isCompact = useIsCompact();
-  const viewport = useViewport();
-  const { rect, status } = useTutorialTarget(step.target, isOnStepRoute, isCompact);
   const card = useRef<HTMLElement>(null);
+  const dim = useRef<SVGPathElement>(null);
+  const outline = useRef<SVGPathElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
+  const status = useSpotlight(step.target, isOnStepRoute, isCompact, { dim, outline, card });
 
   // 각 단계는 실제 화면에서 진행하므로 해당 화면으로 이동한다.
   useEffect(() => {
@@ -94,10 +82,6 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
       document.body.style.paddingBottom = previous;
     };
   }, [isCompact, cardHeight]);
-
-  const spotlight = rect ? padRect(rect) : null;
-  const cardWidth = Math.min(CARD_WIDTH, viewport.width - 32);
-  const position = getCardPosition(spotlight, { width: cardWidth, height: cardHeight }, viewport);
 
   const complete = async () => {
     if (isCompleting) return;
@@ -130,7 +114,7 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
     buttons[nextIndex]?.focus();
   };
 
-  const statusMessage = !isOnStepRoute || status === "searching"
+  const statusMessage = status === "searching"
     ? "화면을 불러오는 중이에요…"
     : status === "missing"
       ? "지금은 이 화면에 표시할 항목이 없어요. 설명을 확인하고 다음으로 넘어가 주세요."
@@ -140,21 +124,10 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
     <>
       {/* 실제 화면은 inert로 잠기고, 이 층이 클릭을 한 번 더 막는다. 스크롤은 그대로 할 수 있다. */}
       <div aria-hidden="true" className="fixed inset-0 z-[100]">
-        {spotlight ? (
-          <div
-            data-tutorial-spotlight
-            className="pointer-events-none fixed rounded-2xl outline outline-[3px] outline-offset-2 outline-brand"
-            style={{
-              top: spotlight.top,
-              left: spotlight.left,
-              width: spotlight.width,
-              height: spotlight.height,
-              boxShadow: "0 0 0 9999px rgb(30 38 48 / 62%)",
-            }}
-          />
-        ) : (
-          <div className="fixed inset-0 bg-[rgb(30_38_48/62%)]" />
-        )}
+        <svg data-tutorial-spotlight className="pointer-events-none absolute inset-0 h-full w-full">
+          <path ref={dim} d="M0 0H10000V10000H0Z" fillRule="evenodd" fill="rgb(30 38 48 / 62%)" />
+          <path ref={outline} d="" fill="none" strokeWidth={3} className="stroke-brand" />
+        </svg>
       </div>
 
       <section
@@ -165,9 +138,11 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
         aria-describedby="tutorial-description tutorial-safety"
         onKeyDown={handleKeyDown}
         className={`fixed z-[101] overflow-y-auto rounded-2xl border border-border bg-white p-5 text-ink shadow-[0_16px_64px_rgb(19_35_58/20%)] ${
-          isCompact ? "inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] max-h-[45dvh]" : "max-h-[calc(100dvh-32px)]"
+          isCompact
+            ? "inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] max-h-[45dvh]"
+            : "left-0 top-0 max-h-[calc(100dvh-32px)] w-[min(360px,calc(100vw-32px))] will-change-transform"
         }`}
-        style={isCompact ? undefined : { top: position.top, left: position.left, width: cardWidth }}
+        style={isCompact ? undefined : { visibility: "hidden" }}
       >
         <div className="flex items-center justify-between gap-3 text-xs font-bold">
           <span className="text-brand-accent">{step.section}</span>

@@ -20,7 +20,14 @@ assert.doesNotMatch(gate, /localStorage|sessionStorage/);
 assert.match(gate, /inert=\{mode !== null\}>\{children\}<\/div>/);
 assert.equal(existsSync("src/fsd/features/role-tutorial/ui/TutorialPreview.tsx"), false);
 assert.match(tutorial, /router\.push\(step\.route\)/);
-assert.match(tutorial, /useTutorialTarget\(step\.target/);
+assert.match(tutorial, /useSpotlight\(step\.target/);
+
+// 스크롤할 때마다 React 상태로 다시 렌더링하거나 화면 전체 그림자를 다시 그리지 않는다.
+const spotlightHook = read("src/fsd/features/role-tutorial/model/useSpotlight.ts");
+assert.match(spotlightHook, /requestAnimationFrame/);
+assert.match(spotlightHook, /setAttribute\("d"/);
+assert.match(spotlightHook, /style\.transform/);
+assert.doesNotMatch(tutorial, /9999px|boxShadow/);
 
 // 완료 저장이 끝나기 전에는 튜토리얼을 닫지 않고, 실패하면 다시 시도할 수 있다.
 assert.match(tutorial, /await onComplete\(\)/);

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createTutorialApi } from "../../src/fsd/features/role-tutorial/api/createTutorialApi.ts";
 import { getTutorialRole } from "../../src/fsd/features/role-tutorial/model/progress.ts";
 import { getTutorialSteps } from "../../src/fsd/features/role-tutorial/model/steps.ts";
-import { getCardPosition, padRect, unionRects } from "../../src/fsd/features/role-tutorial/model/spotlight.ts";
+import { clipRect, getCardPosition, getDimPath, getHolesPath, mergeNearbyRects, padRect, unionRects } from "../../src/fsd/features/role-tutorial/model/spotlight.ts";
 
 assert.equal(getTutorialRole("ADMIN"), null);
 assert.equal(getTutorialRole(undefined), null);
@@ -86,5 +86,26 @@ for (const target of [
   assert.ok(position.top >= 16 && position.top + card.height <= viewport.height - 16);
 }
 assert.equal(getCardPosition({ top: 0, left: 0, width: 1280, height: 800 }, card, viewport).placement, "corner");
+
+// 떨어져 있는 요소는 하나의 큰 상자로 묶지 않고 요소마다 따로 강조한다.
+const separated = [{ top: 100, left: 20, width: 120, height: 40 }, { top: 100, left: 600, width: 120, height: 40 }];
+assert.equal(getHolesPath(separated).match(/M/g)?.length, 2);
+assert.equal(getHolesPath([]), "");
+const dimPath = getDimPath(separated, viewport);
+assert.ok(dimPath.startsWith("M0 0H1280V800H0Z"));
+assert.equal(dimPath.match(/M/g)?.length, 3);
+assert.equal(getDimPath([], viewport), "M0 0H1280V800H0Z");
+
+// 거의 맞닿은 요소(여백 포함 12px 이내)만 하나로 합치고, 멀리 떨어진 요소는 그대로 둔다.
+assert.deepEqual(
+  mergeNearbyRects([{ top: 100, left: 20, width: 500, height: 96 }, { top: 200, left: 20, width: 500, height: 86 }]),
+  [{ top: 100, left: 20, width: 500, height: 186 }],
+);
+assert.equal(mergeNearbyRects(separated).length, 2);
+assert.equal(mergeNearbyRects([{ top: 0, left: 0, width: 10, height: 10 }, { top: 0, left: 20, width: 10, height: 10 }, { top: 0, left: 40, width: 10, height: 10 }]).length, 1);
+
+// 화면 밖으로 나간 부분은 잘라서 보이는 만큼만 강조한다.
+assert.deepEqual(clipRect({ top: -100, left: 10, width: 200, height: 1200 }, viewport), { top: 0, left: 10, width: 200, height: 800 });
+assert.equal(clipRect({ top: 900, left: 10, width: 200, height: 100 }, viewport), null);
 
 console.log("tutorial tests passed");
