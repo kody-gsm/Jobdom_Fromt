@@ -188,6 +188,23 @@ test("failed count requests still drain queued reconnect/poll refreshes", async 
   assert.equal(h.values.unread, 4);
 });
 
+test("hidden tabs skip the minute poll and refresh once when they become visible", async (t) => {
+  const h = await setup(t);
+  await h.settle(h.counts[0], { unreadCount: 1 });
+  globalThis.document.visibilityState = "hidden";
+  await act(async () => {
+    for (const poll of h.intervals.values()) poll();
+  });
+  assert.equal(h.counts.length, 1, "hidden tabs must not poll the unread count");
+  globalThis.document.visibilityState = "visible";
+  await act(async () => {
+    globalThis.document.dispatchEvent(new Event("visibilitychange"));
+  });
+  assert.equal(h.counts.length, 2);
+  await h.settle(h.counts[1], { unreadCount: 3 });
+  assert.equal(h.values.unread, 3);
+});
+
 test("events during the trailing request schedule another serialized refresh", async (t) => {
   const h = await setup(t);
   await h.receive(item(1));

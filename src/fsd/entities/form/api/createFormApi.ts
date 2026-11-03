@@ -58,7 +58,7 @@ export const createFormApi = (request: RequestFn) => ({
     }
     return file;
   },
-  getTeacherAll: () => request<FormSummary[]>("/teacher/form"),
+  getTeacherAll: (init?: Pick<ApiRequestInit, "cache">) => request<FormSummary[]>("/teacher/form", init),
   getTeacherById: (id: number) => request<DynamicForm>(`/teacher/form/${id}`),
   createTeacher: async (input: FormInput) => {
     const error = getFormInputLimitError(input);
@@ -82,8 +82,8 @@ export const createFormApi = (request: RequestFn) => ({
     request<DynamicForm>(`/teacher/form/${id}/publish`, { method: "POST", invalidateCache: FORM_WRITE_INVALIDATION }),
   closeTeacher: (id: number) =>
     request<DynamicForm>(`/teacher/form/${id}/close`, { method: "POST", invalidateCache: FORM_WRITE_INVALIDATION }),
-  getSubmissions: (id: number) =>
-    request<FormSubmissionSummary[]>(`/teacher/form/${id}/submission`),
-  getSubmission: (formId: number, submissionId: number) =>
-    request<FormSubmission>(`/teacher/form/${formId}/submission/${submissionId}`),
+  getSubmissions: (id: number, init?: Pick<ApiRequestInit, "cache">) =>
+    request<FormSubmissionSummary[]>(`/teacher/form/${id}/submission`, init),
+  getSubmission: (formId: number, submissionId: number, init?: Pick<ApiRequestInit, "signal">) =>
+    request<FormSubmission>(`/teacher/form/${formId}/submission/${submissionId}`, init),
 });

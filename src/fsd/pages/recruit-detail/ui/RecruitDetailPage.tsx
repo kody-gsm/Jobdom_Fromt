@@ -92,7 +92,7 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
                   신청서 확인 불가
                 </button>
               ) : form ? (
-                <Link href={`/forms/${form.id}`} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</Link>
+                <Link href={`/forms/${form.id}`} data-tutorial-target="recruit-apply" className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</Link>
               ) : (
                 <button type="button" onClick={showMissingForm} className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 font-bold text-white hover:bg-brand-hover">신청폼 보기</button>
               )}

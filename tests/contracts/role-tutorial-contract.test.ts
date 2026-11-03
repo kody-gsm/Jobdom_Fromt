@@ -17,10 +17,13 @@ assert.match(gate, /AbortController/);
 assert.doesNotMatch(gate, /localStorage|sessionStorage/);
 
 // 안내는 실제 화면 위에서 진행한다. 실제 화면은 언마운트하지 않고 잠그기만 하며, 가짜 예시 화면을 두지 않는다.
-assert.match(gate, /inert=\{mode !== null\}>\{children\}<\/div>/);
+// 안내 중에는 연습용 서버가 모든 요청에 답한다. 화면은 연습/실제 전환 때만 새로 그린다.
+assert.match(gate, /startPractice\(/);
+assert.match(gate, /stopPractice\(\)/);
+assert.match(gate, /key=\{practiceKey \?\? "live"\}/);
 assert.equal(existsSync("src/fsd/features/role-tutorial/ui/TutorialPreview.tsx"), false);
 assert.match(tutorial, /router\.push\(step\.route\)/);
-assert.match(tutorial, /useSpotlight\(step\.target/);
+assert.match(tutorial, /useSpotlight\(getStepTargets\(step\)/);
 
 // 스크롤할 때마다 React 상태로 다시 렌더링하거나 화면 전체 그림자를 다시 그리지 않는다.
 const spotlightHook = read("src/fsd/features/role-tutorial/model/useSpotlight.ts");
@@ -47,7 +50,10 @@ const sourceFiles = (dir: string): string[] => readdirSync(dir).flatMap((name) =
 const screenSource = sourceFiles("src/fsd").map((path) => readFileSync(path, "utf8")).join("\n");
 for (const role of ["STUDENT", "TEACHER", "WEE_TEACHER"] as const) {
   for (const step of getTutorialSteps(role)) {
-    assert.ok(screenSource.includes(`data-tutorial-target="${step.target}"`), `${role} ${step.id}: ${step.target} 요소가 실제 화면에 없습니다.`);
+    for (const target of [step.target, ...(step.extraTargets ?? [])]) {
+      const attribute = new RegExp(`data-tutorial-target=(?:"${target}"|\\{[^}]*"${target}"[^}]*\\})`);
+      assert.match(screenSource, attribute, `${role} ${step.id}: ${target} 요소가 실제 화면에 없습니다.`);
+    }
   }
 }
 

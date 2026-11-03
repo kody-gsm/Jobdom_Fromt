@@ -25,6 +25,7 @@
 !/tests/unit/submissionExport.test.ts
 !/tests/unit/submissionSheet.test.ts
 !/tests/unit/tutorial.test.ts
+!/tests/unit/practiceServer.test.ts
 
 # next.js
 /.next/

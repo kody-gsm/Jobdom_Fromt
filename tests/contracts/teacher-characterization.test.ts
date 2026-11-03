@@ -42,7 +42,7 @@ const submissionsApi = read("src/fsd/pages/teacher-form-submissions/api/submissi
 assert.match(submissions, /getFormSubmissionSheet/);
 assert.match(submissionsApi, /getTeacherForm/);
 assert.match(submissionsApi, /getFormSubmissions/);
-assert.match(submissionsApi, /getFormSubmission\(formId, id\)/);
+assert.match(submissionsApi, /getFormSubmission\(formId, id, \{ signal \}\)/);
 assert.match(submissions, /\/teacher\/forms/);
 assert.match(submissions, /제출된 응답이 없습니다/);
 assert.match(submissions, /TeacherHeader/);

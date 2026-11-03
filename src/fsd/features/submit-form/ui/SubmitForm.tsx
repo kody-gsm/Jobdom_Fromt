@@ -241,7 +241,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const isExpired = isFormClosed(form, now);
 
   return (
-    <form onSubmit={submitForm}>
+    <form onSubmit={submitForm} data-tutorial-target="form-fields">
       <ContentCard className="overflow-hidden p-0">
       <header className="bg-brand p-7 text-white sm:p-9">
         <h1 className="wrap-anywhere break-keep text-3xl font-bold">{form.title}</h1>
@@ -315,6 +315,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
           </ActionButton>
         ) : (
           <ActionButton
+            data-tutorial-target="form-submit"
             type="submit"
             disabled={isExpired || submitting || submissionLoading || Boolean(submissionError)}
             className="w-full bg-brand hover:bg-brand-hover"
@@ -547,7 +548,7 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
 };
 
 const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
-  <section className="min-w-0">
+  <section data-tutorial-target="form-submitted" className="min-w-0">
     <h2 className="text-xl font-bold">제출한 응답</h2>
     <div className="mt-5 space-y-4">
       {submission.answers.map(({ fileId, ...answer }) => (

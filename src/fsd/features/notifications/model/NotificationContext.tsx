@@ -313,14 +313,24 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       // 목록을 한 번 연 뒤 SSE가 재연결되면 놓친 알림을 다시 가져옵니다.
       if (isReconnect && notificationLoadedRef.current) void loadNotifications(0);
     };
-    const polling = window.setInterval(refreshCount, 60_000);
+    // 보이지 않는 탭에서는 1분마다 개수를 묻지 않고, 탭이 다시 보일 때 한 번 확인한다.
+    const polling = window.setInterval(() => {
+      if (document.visibilityState !== "hidden") refreshCount();
+    }, 60_000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshCount();
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
     subscribeNotifications((item) => {
       if (!ctrl.signal.aborted) {
         pushToast(item);
         refreshCount();
       }
     }, handleConnect, ctrl.signal, reservationRefresh);
-    ctrl.signal.addEventListener("abort", () => window.clearInterval(polling), { once: true });
+    ctrl.signal.addEventListener("abort", () => {
+      window.clearInterval(polling);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    }, { once: true });
   }, [disconnect, loadNotifications, pushToast]);
 
   useEffect(() => {

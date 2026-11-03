@@ -74,12 +74,13 @@ assert.match(read("src/fsd/pages/teacher-forms/api/forms.ts"), /getFormSubmissio
 
 assert.match(submissionsRoute, /@fsd\/pages\/teacher-form-submissions/);
 assert.doesNotMatch(submissionsRoute, /useState|getFormSubmissions/);
-assert.match(submissions, /getFormSubmissionSheet\(formId, controller\.signal\)/);
+// 받은 응답부터 표에 보여 주도록 진행 상황 콜백을 함께 넘긴다.
+assert.match(submissions, /getFormSubmissionSheet\(formId, controller\.signal, \(/);
 assert.match(submissionsApi, /createFormApi\(requestWithSession\)/);
 assert.match(submissionsApi, /getTeacherForm = formApi\.getTeacherById/);
 assert.match(submissionsApi, /getFormSubmissions = formApi\.getSubmissions/);
 assert.match(submissionsApi, /getFormSubmission = formApi\.getSubmission/);
-assert.match(submissionsApi, /getFormSubmission\(formId, id\)/);
+assert.match(submissionsApi, /getFormSubmission\(formId, id, \{ signal \}\)/);
 assert.match(submissions, /<table/);
 assert.match(submissions, /submissions\.map\(\(submission, rowIndex\)/);
 assert.match(submissions, /answers\.get\(question\.id\)/);
