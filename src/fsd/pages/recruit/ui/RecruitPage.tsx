@@ -37,7 +37,7 @@ export const RecruitPage = () => {
       <main className="mx-auto w-full max-w-[1180px] px-6 py-10 lg:px-10 lg:py-12">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">취업 공고</h1>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div data-tutorial-target="recruit-search" className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <label className="relative min-w-0 sm:w-64">
               <span className="sr-only">공고 검색</span>
               <input
@@ -73,7 +73,7 @@ export const RecruitPage = () => {
           </div>
         ) : null}
 
-        <section className="mt-6 grid gap-5 md:grid-cols-2" aria-live="polite">
+        <section data-tutorial-target="recruit-list" className="mt-6 grid gap-5 md:grid-cols-2" aria-live="polite">
           {loading ? (
             <EmptyState text="취업 공고를 불러오는 중…" />
           ) : !error && visibleItems.length === 0 ? (

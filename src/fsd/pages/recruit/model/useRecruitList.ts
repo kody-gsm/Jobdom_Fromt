@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Recruit, RecruitField } from "@fsd/entities/recruit";
 import { ApiError } from "@fsd/shared/api";
+import { useDeadlineClock } from "@fsd/shared/lib";
 import { getRecruits } from "../api/recruit.ts";
 import { filterRecruits, type RecruitListFilter } from "./recruitFilters.ts";
 
@@ -12,6 +13,7 @@ export const useRecruitList = () => {
   const [fieldFilters, setFieldFilters] = useState<RecruitField[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const requestVersion = useRef(0);
+  const now = useDeadlineClock(items.map((item) => item.deadline));
 
   const load = useCallback(() => {
     const version = requestVersion.current + 1;
@@ -49,8 +51,8 @@ export const useRecruitList = () => {
   }, [load]);
 
   const visibleItems = useMemo(
-    () => filterRecruits(items, filter, searchQuery, new Date(), fieldFilters),
-    [filter, fieldFilters, items, searchQuery],
+    () => filterRecruits(items, filter, searchQuery, now, fieldFilters),
+    [filter, fieldFilters, items, now, searchQuery],
   );
 
   return {

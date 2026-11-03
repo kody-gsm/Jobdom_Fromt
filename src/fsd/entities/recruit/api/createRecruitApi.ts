@@ -1,9 +1,12 @@
+import type { ApiRequestInit } from "@fsd/shared/api";
 import { formatRecruitFields } from "../model/fields.ts";
 import type { Recruit, RecruitNoticeChannel, RecruitUpdate } from "../model/types.ts";
 
 interface RequestFn {
-  <T>(path: string, init?: RequestInit): Promise<T>;
+  <T>(path: string, init?: ApiRequestInit): Promise<T>;
 }
+
+const RECRUIT_INVALIDATION_PATHS = ["/recruit", "/teacher/recruit", "/form", "/teacher/form"];
 
 const isNoticeChannel = (value: unknown): value is RecruitNoticeChannel =>
   typeof value === "object" && value !== null
@@ -20,12 +23,13 @@ const createRecruitNotice = (recruit: Recruit) => ({
 });
 
 export const createRecruitApi = (request: RequestFn) => ({
-  getAll: () => request<Recruit[]>("/recruit"),
+  getAll: (init?: Pick<ApiRequestInit, "cache">) => request<Recruit[]>("/recruit", init),
   getById: (id: number) => request<Recruit>(`/recruit/${id}`),
   getTeacherAll: () => request<Recruit[]>("/teacher/recruit"),
   createTeacher: (input: RecruitUpdate) =>
     request<Recruit>("/teacher/recruit", {
       method: "POST",
+      invalidateCache: RECRUIT_INVALIDATION_PATHS,
       body: JSON.stringify(input),
     }),
   analyze: (image: File) => {
@@ -33,17 +37,19 @@ export const createRecruitApi = (request: RequestFn) => ({
     body.append("image", image);
     return request<Recruit>("/teacher/recruit/analyze", {
       method: "POST",
+      invalidateCache: RECRUIT_INVALIDATION_PATHS,
       body,
     });
   },
   updateTeacher: (id: number, input: RecruitUpdate) =>
     request<Recruit>(`/teacher/recruit/${id}`, {
       method: "PATCH",
+      invalidateCache: RECRUIT_INVALIDATION_PATHS,
       body: JSON.stringify(input),
     }),
   // 공개 시 서버가 기본 공지 채널로 알림을 보낸다.
   publishTeacher: (id: number) =>
-    request<Recruit>(`/teacher/recruit/${id}/publish`, { method: "POST" }),
+    request<Recruit>(`/teacher/recruit/${id}/publish`, { method: "POST", invalidateCache: RECRUIT_INVALIDATION_PATHS }),
   getNoticeChannels: async (signal?: AbortSignal) => {
     const result = await request<unknown>("/api/notices/channels", { signal });
     if (!Array.isArray(result) || !result.every(isNoticeChannel)) {
@@ -56,9 +62,10 @@ export const createRecruitApi = (request: RequestFn) => ({
     if (!/^\d+$/.test(channelId)) throw new Error("디스코드 알림 채널을 다시 선택해주세요.");
     return request<string>("/api/notices/send", {
       method: "POST",
+      invalidateCache: [],
       body: JSON.stringify({ channelId, ...createRecruitNotice(recruit) }),
     });
   },
   deleteTeacher: (id: number) =>
-    request<void>(`/teacher/recruit/${id}`, { method: "DELETE" }),
+    request<void>(`/teacher/recruit/${id}`, { method: "DELETE", invalidateCache: RECRUIT_INVALIDATION_PATHS }),
 });

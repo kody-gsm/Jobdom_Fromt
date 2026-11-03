@@ -2,10 +2,18 @@ import assert from "node:assert/strict";
 import { createConsultationApi } from "../../src/fsd/entities/consultation/api/createConsultationApi.ts";
 import { createFormApi } from "../../src/fsd/entities/form/api/createFormApi.ts";
 import { createRecruitApi } from "../../src/fsd/entities/recruit/api/createRecruitApi.ts";
+import type { ApiRequestInit } from "../../src/fsd/shared/api/client.ts";
 
 const calls: Array<{ path: string; init?: RequestInit }> = [];
-const request = async <T>(path: string, init?: RequestInit) => {
-  calls.push({ path, init });
+const request = async <T>(path: string, init?: ApiRequestInit) => {
+  // Compare the HTTP contract independently of frontend cache metadata.
+  if (init) {
+    const { invalidateCache, ...wireInit } = init;
+    if (init.method && init.method !== "GET") assert.ok(invalidateCache?.length);
+    calls.push({ path, init: wireInit });
+  } else {
+    calls.push({ path, init });
+  }
   return {} as T;
 };
 

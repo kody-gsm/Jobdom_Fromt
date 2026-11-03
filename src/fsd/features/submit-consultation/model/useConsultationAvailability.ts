@@ -68,9 +68,12 @@ export const useConsultationAvailability = ({
 
   const updateSelectedDate = (nextDate: string | null) => {
     if (selectedDateRef.current !== nextDate) {
+      availabilityRequestVersion.current += 1;
       selectedDateRef.current = nextDate;
       setSelectedTime(null);
       setServerUnavailablePeriods(new Set());
+      setAvailabilityStatus("idle");
+      setAvailabilityError("");
     }
     setSelectedDate(nextDate);
   };
@@ -118,7 +121,7 @@ export const useConsultationAvailability = ({
     };
   }, [candidateDates]);
 
-  const retryAvailability = useCallback(() => {
+  const loadAvailability = useCallback((shouldRefresh = false) => {
     const requestVersion = ++availabilityRequestVersion.current;
     const teacherId = selectedTeacher?.id ?? null;
     const date = selectedDate;
@@ -136,7 +139,12 @@ export const useConsultationAvailability = ({
       setAvailabilityError("");
       setServerUnavailablePeriods(new Set());
       setSelectedTime(null);
-      void getConsultationSlotStatus(toConsultationKind(counselType), teacherId, date)
+      void getConsultationSlotStatus(
+        toConsultationKind(counselType),
+        teacherId,
+        date,
+        shouldRefresh ? { cache: "no-store" } : {},
+      )
         .then((items) => {
           if (availabilityRequestVersion.current !== requestVersion) return;
           const unavailable = getUnavailablePeriods(items);
@@ -156,12 +164,14 @@ export const useConsultationAvailability = ({
     });
   }, [counselType, selectedDate, selectedTeacher]);
 
+  const retryAvailability = useCallback(() => loadAvailability(true), [loadAvailability]);
+
   useEffect(() => {
-    retryAvailability();
+    loadAvailability();
     return () => {
       availabilityRequestVersion.current += 1;
     };
-  }, [retryAvailability]);
+  }, [loadAvailability]);
 
   useEffect(() => {
     const advanceAfterLastPeriod = () => {
@@ -197,6 +207,7 @@ export const useConsultationAvailability = ({
   };
 
   const clearPeriodSelection = () => {
+    availabilityRequestVersion.current += 1;
     setSelectedTime(null);
     setServerUnavailablePeriods(new Set());
     setAvailabilityStatus("idle");
@@ -209,6 +220,7 @@ export const useConsultationAvailability = ({
   };
 
   const reset = () => {
+    availabilityRequestVersion.current += 1;
     selectedDateRef.current = null;
     setSelectedDate(null);
     setSelectedTime(null);
@@ -225,6 +237,11 @@ export const useConsultationAvailability = ({
     availabilityError,
     retryAvailability,
     dates,
+    selectDate: (date: string | null) => {
+      if (date !== null && dates.some((item) => item.value === date)) {
+        updateSelectedDate(date);
+      }
+    },
     toggleDate: (date: string) =>
       updateSelectedDate(selectedDateRef.current === date ? null : date),
     toggleTime,

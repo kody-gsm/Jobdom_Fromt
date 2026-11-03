@@ -90,7 +90,7 @@ export const useResetPasswordForm = () => {
   };
 
   const submit = async () => {
-    const codeExpired = isCodeSent && verificationCountdown.isExpired;
+    const codeExpired = isCodeSent && verificationCountdown.checkExpired();
     const nextErrors = validateResetPasswordForm({ ...form, isCodeExpired: codeExpired });
     setErrors(nextErrors);
     setErrorField(getFirstResetPasswordErrorField(nextErrors));

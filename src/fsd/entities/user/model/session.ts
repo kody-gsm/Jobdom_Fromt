@@ -5,6 +5,27 @@ const SESSION_KEY = "jobdam_session";
 const REMEMBER_KEY = "jobdam_remember_login";
 const REMEMBER_EMAIL_KEY = "jobdam_remembered_email";
 
+// Account/session identity, independent of ordinary token rotation.
+let sessionVersion = 0;
+let storedSessionSnapshot: string | undefined;
+const readSessionSnapshot = () => JSON.stringify([
+  sessionStorage.getItem(SESSION_KEY),
+  sessionStorage.getItem(TOKEN_KEY),
+  localStorage.getItem(SESSION_KEY),
+  localStorage.getItem(TOKEN_KEY),
+]);
+
+export const getSessionVersion = () => {
+  if (typeof window === "undefined") return sessionVersion;
+  const snapshot = readSessionSnapshot();
+  // Other tabs bypass this module's save/clear functions. Detect replacement
+  // before a delayed 401 can retry work using their credentials.
+  if (storedSessionSnapshot !== undefined && storedSessionSnapshot !== snapshot) sessionVersion += 1;
+  storedSessionSnapshot = snapshot;
+  return sessionVersion;
+};
+export type SessionPersistenceOptions = { isRefresh?: boolean };
+
 const readJson = (storage: Storage): AuthSession | null => {
   try {
     return JSON.parse(storage.getItem(SESSION_KEY) || "null") as AuthSession | null;
@@ -39,7 +60,12 @@ export const backfillRememberLoginEmail = (email: string) => {
   if (typeof window === "undefined" || !hasRememberFlag() || !email) return;
   localStorage.setItem(REMEMBER_EMAIL_KEY, email);
 };
-export const persistSession = (session: AuthSession, rememberLogin: boolean) => {
+export const persistSession = (
+  session: AuthSession,
+  rememberLogin: boolean,
+  { isRefresh = false }: SessionPersistenceOptions = {},
+) => {
+  if (!isRefresh) sessionVersion += 1;
   // 인증 세션은 브라우저를 다시 열어도 access token 만료 전까지 복원한다.
   // 로그인 유지 옵션은 이메일 기억 여부만 제어한다.
   const target = localStorage;
@@ -53,6 +79,7 @@ export const persistSession = (session: AuthSession, rememberLogin: boolean) => 
   } else {
     clearRememberLoginPreference();
   }
+  storedSessionSnapshot = readSessionSnapshot();
 };
 
 export const readSession = (): AuthSession | null => {
@@ -91,10 +118,14 @@ export const isRememberedSession = () => {
 
 export const clearStoredSession = () => {
   if (typeof window === "undefined") return;
+  sessionVersion += 1;
   clearStorage(sessionStorage);
   clearStorage(localStorage);
+  storedSessionSnapshot = readSessionSnapshot();
 };
 export const clearRememberedSession = () => {
   if (typeof window === "undefined") return;
+  sessionVersion += 1;
   clearStorage(localStorage);
+  storedSessionSnapshot = readSessionSnapshot();
 };

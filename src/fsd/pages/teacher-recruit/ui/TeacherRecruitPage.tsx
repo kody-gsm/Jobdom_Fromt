@@ -176,13 +176,13 @@ export function TeacherRecruitPage() {
               <p className="mt-2 text-sm text-gray-500">공고와 신청자를 데이터 시트처럼 한 화면에서 확인하세요.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={startCreating} className="inline-flex h-11 items-center rounded-xl bg-[#02C551] px-4 text-sm font-bold text-white disabled:opacity-60" disabled={working}>+ 공고 작성</button>
+              <button type="button" data-tutorial-target="recruit-create" onClick={startCreating} className="inline-flex h-11 items-center rounded-xl bg-[#02C551] px-4 text-sm font-bold text-white disabled:opacity-60" disabled={working}>+ 공고 작성</button>
             </div>
           </header>
 
           {message && <p role="status" className={`mt-5 rounded-xl border px-4 py-3 text-sm ${message.error ? "border-red-100 bg-red-50 text-red-700" : "border-green-100 bg-green-50 text-green-800"}`}>{message.text}</p>}
 
-          <section className="mt-7 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_8px_30px_rgba(31,41,35,0.04)]">
+          <section data-tutorial-target="recruit-table" className="mt-7 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_8px_30px_rgba(31,41,35,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#02C551]" />

@@ -35,20 +35,20 @@ export const useHomeOverview = () => {
   const consultationRefresh = useRef(createConsultationRefreshCoordinator());
   const consultationHasLoaded = useRef(false);
   const recruitRequests = useRef(createRequestVersionGuard());
-  const refreshConsultationsRef = useRef<(() => Promise<void>) | null>(null);
-  const refreshRecruitsRef = useRef<(() => Promise<void>) | null>(null);
+  const refreshConsultationsRef = useRef<((fresh?: boolean) => Promise<void>) | null>(null);
+  const refreshRecruitsRef = useRef<((fresh?: boolean) => Promise<void>) | null>(null);
 
   useEffect(() => {
     let active = true;
 
-    const refreshConsultations = async () => {
+    const refreshConsultations = async (fresh = false) => {
       const requestVersion = consultationRefresh.current.beginRefresh();
       if (requestVersion === null) return;
       if (!consultationHasLoaded.current) setConsultationLoading(true);
       setConsultationError("");
       const [courseResult, commonResult] = await Promise.allSettled([
-        consultationApi.getUpcoming("course"),
-        consultationApi.getUpcoming("common"),
+        consultationApi.getUpcoming("course", fresh ? { cache: "no-store" } : undefined),
+        consultationApi.getUpcoming("common", fresh ? { cache: "no-store" } : undefined),
       ]);
       if (!active || !consultationRefresh.current.isLatest(requestVersion)) return;
       if (courseResult.status === "fulfilled") courseReservations.current = courseResult.value;
@@ -68,12 +68,12 @@ export const useHomeOverview = () => {
     };
     refreshConsultationsRef.current = refreshConsultations;
 
-    const refreshRecruits = async () => {
+    const refreshRecruits = async (fresh = false) => {
       const requestVersion = recruitRequests.current.next();
       setRecruitLoading(true);
       setRecruitError("");
       try {
-        const result = await recruitApi.getAll();
+        const result = await recruitApi.getAll(fresh ? { cache: "no-store" } : undefined);
         if (!active || !recruitRequests.current.isLatest(requestVersion)) return;
         setOverview((current) => ({
           ...current,
@@ -99,7 +99,7 @@ export const useHomeOverview = () => {
     };
 
     void load();
-    const handleReservationChange = () => void refreshConsultations();
+    const handleReservationChange = () => void refreshConsultations(true);
     window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
     return () => {
@@ -131,7 +131,7 @@ export const useHomeOverview = () => {
     } finally {
       const shouldRefresh = consultationRefresh.current.finishCancellation(id);
       if (canceled || shouldRefresh) {
-        await refreshConsultationsRef.current?.();
+        await refreshConsultationsRef.current?.(true);
       }
     }
   };
@@ -143,8 +143,8 @@ export const useHomeOverview = () => {
     recruitLoading,
     consultationError,
     recruitError,
-    retryConsultations: () => refreshConsultationsRef.current?.(),
-    retryRecruits: () => refreshRecruitsRef.current?.(),
+    retryConsultations: () => refreshConsultationsRef.current?.(true),
+    retryRecruits: () => refreshRecruitsRef.current?.(true),
     error: consultationError || recruitError,
     handleCancel,
   };

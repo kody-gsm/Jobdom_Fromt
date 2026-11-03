@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { TutorialReplayButton } from "@fsd/features/role-tutorial";
 import { ContentCard } from "@fsd/shared/ui";
 import { ProfileConsultations } from "@fsd/widgets/profile-consultations";
 import { StudentHeader } from "@fsd/widgets/student-header";
@@ -27,7 +28,7 @@ export const ProfilePage = () => {
       className="min-h-dvh bg-surface text-ink"
 
     >
-      {userRole === "TEACHER" ? (
+      {userRole === "TEACHER" || userRole === "WEE_TEACHER" ? (
         <TeacherHeader />
       ) : userRole === "STUDENT" ? (
         <StudentHeader />
@@ -81,6 +82,9 @@ export const ProfilePage = () => {
                 <p className="mt-1 text-sm font-semibold text-muted">
                   {profile.studentId || "정보 없음"}
                 </p>
+                <div className="mt-5">
+                  <TutorialReplayButton />
+                </div>
               </div>
             </ContentCard>
 

@@ -5,6 +5,7 @@ export {
   clearRememberLoginPreference,
   clearStoredSession,
   isRememberedSession,
+  getSessionVersion,
   persistSession,
   readAccessToken,
   isAccessTokenExpired,
@@ -13,6 +14,7 @@ export {
   readSession,
 } from "./model/session.ts";
 export {
+  GSM_EMAIL_GUIDE,
   getGsmEmailErrorMessage,
   getRequiredMessage,
   isGsmEmail,
@@ -33,7 +35,7 @@ export {
   restoreRememberedSession,
   saveSession,
 } from "./model/lifecycle.ts";
-export { requestWithSession } from "./api/sessionRequest.ts";
+export { reissueSession, requestWithSession } from "./api/sessionRequest.ts";
 export {
   getUserProfile,
   resolveProfileImageUrl,

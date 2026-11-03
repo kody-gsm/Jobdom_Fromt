@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { formatRecruitFields, isRecruitClosed } from "@fsd/entities/recruit";
 import { CopyRecruitLinkButton } from "@fsd/features/copy-recruit-link";
-import { formatDeadlineDate } from "@fsd/shared/lib";
+import { formatDeadlineDate, useDeadlineClock } from "@fsd/shared/lib";
 import { ContentCard, SummaryMarkdown } from "@fsd/shared/ui";
 import { StudentHeader } from "@fsd/widgets/student-header";
 import { useRecruitDetail } from "../model/useRecruitDetail.ts";
@@ -19,7 +19,8 @@ export const RecruitDetailPage = ({ recruitId }: { recruitId: number }) => {
     retryForm,
     showMissingForm,
   } = useRecruitDetail(recruitId);
-  const isExpired = item ? isRecruitClosed(item) : false;
+  const now = useDeadlineClock([item?.deadline]);
+  const isExpired = item ? isRecruitClosed(item, now) : false;
   const deadlineLabel = item?.deadline ? formatDeadlineDate(item.deadline) : "마감 별도 확인";
 
   return (

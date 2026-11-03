@@ -64,17 +64,23 @@ export const isNotificationNavigable = (item: NotificationItem): boolean => {
   return !blockedStatuses.includes(item.targetStatus);
 };
 
-export const getNotifications = (page = 0, size = 20) =>
-  request<PageResponse<NotificationItem>>(`/api/notifications?page=${page}&size=${size}`);
+export const getNotifications = (page = 0, size = 20, init?: ApiRequestInit) =>
+  request<PageResponse<NotificationItem>>(`/api/notifications?page=${page}&size=${size}`, init);
 
 export const getUnreadCount = (init?: ApiRequestInit) =>
   request<UnreadCountResponse>("/api/notifications/unread-count", init);
 
 export const markNotificationRead = (id: number) =>
-  request<NotificationItem>(`/api/notifications/${id}/read`, { method: "PATCH" });
+  request<NotificationItem>(`/api/notifications/${id}/read`, {
+    method: "PATCH", invalidateCache: ["/api/notifications"],
+  });
 
 export const markAllNotificationsRead = () =>
-  request<void>("/api/notifications/read-all", { method: "PATCH" });
+  request<void>("/api/notifications/read-all", {
+    method: "PATCH", invalidateCache: ["/api/notifications"],
+  });
 
 export const issueNotificationSubscribeTicket = () =>
-  request<SseTicketResponse>("/api/notifications/subscribe-ticket", { method: "POST" });
+  request<SseTicketResponse>("/api/notifications/subscribe-ticket", {
+    method: "POST", invalidateCache: [],
+  });

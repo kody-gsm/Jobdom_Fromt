@@ -3,6 +3,7 @@ import type {
   ReservationInput,
 } from "@fsd/entities/consultation";
 import { requestWithSession } from "@fsd/entities/user";
+import type { ApiRequestInit } from "@fsd/shared/api";
 import { createTimetablePath } from "../model/timetablePath.ts";
 
 export type StudentTimetableItem = {
@@ -56,6 +57,7 @@ export const getConsultationSlotStatus = (
   kind: ConsultationKind,
   teacherId: number,
   date: string,
+  options: Pick<ApiRequestInit, "cache"> = {},
 ) => {
   const query = new URLSearchParams({
     teacherId: String(teacherId),
@@ -63,6 +65,7 @@ export const getConsultationSlotStatus = (
   });
   return requestWithSession<ConsultationSlotStatus[]>(
     `/student/${kind}/status?${query.toString()}`,
+    options,
   );
 };
 
@@ -72,4 +75,5 @@ export const submitConsultation = (
 ) => requestWithSession<string>(`/student/${kind}`, {
   method: "POST",
   body: JSON.stringify(input),
+  invalidateCache: [`/student/${kind}`, `/teacher/${kind}`],
 });

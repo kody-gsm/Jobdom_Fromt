@@ -17,6 +17,7 @@ const FORM_FILTER_OPTIONS = [
 export const FormsPage = () => {
   const {
     forms,
+    now,
     loading,
     error,
     retry,
@@ -56,7 +57,7 @@ export const FormsPage = () => {
           </div>
         </div>
 
-        <section className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
+        <section data-tutorial-target="form-list" className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
           {loading ? (
             <Empty text="불러오는 중…" />
           ) : error ? (
@@ -65,7 +66,7 @@ export const FormsPage = () => {
             <Empty text={forms.length === 0 ? "공개된 폼이 없습니다." : "조건에 맞는 폼이 없습니다."} />
           ) : (
             visibleForms.map((form) => {
-              const isExpired = isFormClosed(form);
+              const isExpired = isFormClosed(form, now);
 
               return (
                 <ContentCard key={form.id} className="flex min-h-[330px] min-w-0 flex-col p-7">

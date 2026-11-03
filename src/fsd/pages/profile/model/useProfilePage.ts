@@ -28,7 +28,7 @@ export const useProfilePage = () => {
   const profileRequests = useRef(createRequestVersionGuard());
   const reservationRefresh = useRef(createConsultationRefreshCoordinator());
   const reservationHasLoaded = useRef(false);
-  const refreshReservationsRef = useRef<(() => Promise<void>) | null>(null);
+  const refreshReservationsRef = useRef<((fresh?: boolean) => Promise<void>) | null>(null);
   const { avatarError, handleAvatarChange } = useChangeProfileAvatar(setProfileAvatar);
 
   useEffect(() => {
@@ -37,13 +37,13 @@ export const useProfilePage = () => {
       if (active) setUserRole(getSession()?.role ?? null);
     });
 
-    const refreshReservations = async () => {
+    const refreshReservations = async (fresh = false) => {
       const requestVersion = reservationRefresh.current.beginRefresh();
       if (requestVersion === null) return;
       if (!reservationHasLoaded.current) setReservationLoading(true);
       setReservationError("");
       try {
-        const result = await fetchProfileReservations();
+        const result = await fetchProfileReservations(fresh);
         if (!active || !reservationRefresh.current.isLatest(requestVersion)) return;
         setReservations(result.reservations);
         const reservationErrors = Object.values(result.errors).filter(Boolean);
@@ -84,7 +84,7 @@ export const useProfilePage = () => {
 
     void loadProfile();
     void refreshReservations();
-    const handleReservationChange = () => void refreshReservations();
+    const handleReservationChange = () => void refreshReservations(true);
     window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
     return () => {
@@ -105,7 +105,7 @@ export const useProfilePage = () => {
     } finally {
       const shouldRefresh = reservationRefresh.current.finishCancellation(id);
       if (canceled || shouldRefresh) {
-        await refreshReservationsRef.current?.();
+        await refreshReservationsRef.current?.(true);
       }
     }
   };
@@ -123,7 +123,7 @@ export const useProfilePage = () => {
     error,
     reservationLoading,
     reservationError,
-    retryReservations: () => refreshReservationsRef.current?.(),
+    retryReservations: () => refreshReservationsRef.current?.(true),
     userRole,
     handleCancel,
     handleAvatarChange,

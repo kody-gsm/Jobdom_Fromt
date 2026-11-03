@@ -34,7 +34,10 @@ assert.match(availabilityHook, /getNextWeekdays\(new Date\(`\$\{koreaToday\}T00:
 assert.match(availabilityHook, /setSelectedTime\(null\)/);
 assert.match(consultationHook, /setTeachers\(\[\]\)/);
 assert.match(consultationHook, /setTeacherStatus\("loading"\)/);
-assert.match(consultationHook, /items\.some/);
+// A missing saved teacher must resolve to null; runtime coverage lives in
+// tests/unit/consultationLifecycle.test.mjs alongside the hydration races.
+assert.match(consultationHook, /items\.find\(\(item\) => item\.id === draft\.teacherId\) \?\? null/);
+assert.match(consultationHook, /setSelectedTeacher\(restoredTeacher\)/);
 
 const rules = read("src/fsd/entities/consultation/model/rules.ts");
 assert.match(rules, /KOREA_TIME_ZONE = "Asia\/Seoul"/);

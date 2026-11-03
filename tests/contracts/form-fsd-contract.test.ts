@@ -123,7 +123,14 @@ const editApi = createFormApi(async <T>(path: string, init?: ApiRequestInit) => 
   return {} as T;
 });
 await editApi.updateTeacher(7, metadataUpdate);
-assert.deepEqual(editCalls[0], { path: "/teacher/form/7", init: { method: "PATCH", body: JSON.stringify(metadataUpdate) } });
+assert.deepEqual(editCalls[0], {
+  path: "/teacher/form/7",
+  init: {
+    method: "PATCH",
+    body: JSON.stringify(metadataUpdate),
+    invalidateCache: ["/form", "/student/form", "/teacher/form", "/recruit", "/teacher/recruit"],
+  },
+});
 assert.equal(Object.hasOwn(JSON.parse(String(editCalls[0]?.init?.body)), "questions"), false, "metadata edits must preserve existing questions and submissions");
 await editApi.updateTeacher(7, validInput);
 assert.deepEqual(JSON.parse(String(editCalls[1]?.init?.body)).questions, validInput.questions, "question edits must include the complete replacement list");
