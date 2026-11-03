@@ -5,11 +5,11 @@ const user = await import("../../src/fsd/entities/user/index.ts");
 assert.equal(user.getGsmEmailErrorMessage(""), "이메일을 입력해주세요.");
 assert.equal(
   user.getGsmEmailErrorMessage("user@gmail.com"),
-  "s로 시작하는 @gsm.hs.kr 이메일을 입력해주세요.",
+  "@gsm.hs.kr로 끝나는 학교 계정을 사용해주세요.",
 );
 assert.equal(user.getGsmEmailErrorMessage("s123@gsm.hs.kr"), "");
 assert.equal(user.isGsmEmail("s123@gsm.hs.kr"), true);
-assert.equal(user.isGsmEmail("teacher@gsm.hs.kr"), false);
+assert.equal(user.isGsmEmail("teacher@gsm.hs.kr"), true);
 assert.equal(user.isValidPassword("abc123!@#xyz"), true);
 
 const error = (message: string, status = 400) => ({ message, status });

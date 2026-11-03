@@ -104,6 +104,49 @@ for (const kind of ["signup", "reset"] as const) {
   });
 }
 
+for (const outcome of ["success", "failure"] as const) {
+  test(`signup shows whether the verification code send ${outcome === "success" ? "succeeded" : "failed"}`, async () => {
+    const browser = installAuthBrowser();
+    try {
+      const runtime = createAuthHookRuntime();
+      const { useSignupForm } = loadAuthModule<typeof import("../../src/fsd/features/signup/model/useSignupForm.ts")>("src/fsd/features/signup/model/useSignupForm.ts", {
+        react: runtime.react,
+        "next/navigation": { useRouter: () => ({ push() {} }) },
+        "@fsd/entities/user": user,
+        "@fsd/shared/lib": loadCountdown(runtime),
+        "./validation.ts": signupValidation,
+        "../api/signup.ts": {
+          sendSignupVerificationCode: async () => {
+            if (outcome === "failure") throw new ApiError("Service Unavailable", 503);
+          },
+          signup: async () => {},
+        },
+      });
+      const view = runtime.mount(() => useSignupForm());
+      assert.equal(view.current.codeNotice, null);
+      view.current.updateField("email", "teacher@gsm.hs.kr");
+      view.flush();
+      await view.current.sendCode();
+      view.flush();
+      if (outcome === "success") {
+        assert.deepEqual(view.current.codeNotice, {
+          tone: "success",
+          message: "teacher@gsm.hs.kr로 인증코드를 발송했습니다. 메일함을 확인해주세요.",
+        });
+        assert.equal(view.current.isCodeSent, true);
+      } else {
+        assert.deepEqual(view.current.codeNotice, { tone: "error", message: "인증코드 발송에 실패했습니다." });
+        assert.equal(view.current.isCodeSent, false);
+        assert.ok(view.current.errors.email);
+      }
+      view.current.updateField("email", "other@gsm.hs.kr");
+      view.flush();
+      assert.equal(view.current.codeNotice, null, "changing the email clears the previous send result");
+      view.unmount();
+    } finally { browser.restore(); }
+  });
+}
+
 for (const outcome of ["success", "401", "403"] as const) {
   for (const supersede of ["manual login", "logout", "unmount", "same-token replacement", "silent same-token persistence"] as const) {
     test(`obsolete restore ${outcome} cannot mutate storage or navigate after ${supersede}`, async () => {

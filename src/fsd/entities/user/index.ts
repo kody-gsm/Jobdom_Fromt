@@ -14,6 +14,7 @@ export {
   readSession,
 } from "./model/session.ts";
 export {
+  GSM_EMAIL_GUIDE,
   getGsmEmailErrorMessage,
   getRequiredMessage,
   isGsmEmail,

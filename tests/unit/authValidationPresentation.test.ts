@@ -84,4 +84,22 @@ assert.ok(validateSignupForm({
   privacyAccepted: true,
 }).email);
 
+const validSignupValues = {
+  verificationCode: "123456",
+  password: "Aa12345678!",
+  confirmPassword: "Aa12345678!",
+  termsAccepted: true,
+  privacyAccepted: true,
+};
+// 학교 계정은 s로 시작하지 않아도 @gsm.hs.kr로 끝나면 받는다.
+for (const email of ["s25001@gsm.hs.kr", "teacher@gsm.hs.kr", " kim.teacher@gsm.hs.kr "]) {
+  assert.deepEqual(validateSignupForm({ ...validSignupValues, email }), {});
+}
+for (const email of ["user@gmail.com", "@gsm.hs.kr", "user name@gsm.hs.kr", "s25001@gsm.hs.kr.com"]) {
+  assert.equal(
+    validateSignupForm({ ...validSignupValues, email }).email,
+    "@gsm.hs.kr로 끝나는 학교 계정을 사용해주세요.",
+  );
+}
+
 console.log("auth validation presentation tests passed");
