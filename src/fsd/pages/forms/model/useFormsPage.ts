@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "@fsd/shared/api";
 import { createRequestVersionGuard, useDeadlineClock } from "@fsd/shared/lib";
 import { formsApi } from "../api/forms.ts";
@@ -100,9 +100,11 @@ export const useFormsPage = () => {
     };
   }, [loadForms]);
 
+  // 입력창은 바로 반영하고, 목록 필터링은 입력이 잠잠할 때 따라오게 한다.
+  const deferredQuery = useDeferredValue(searchQuery);
   const visibleForms = useMemo(
-    () => filterForms(forms, filter, searchQuery, now),
-    [filter, forms, now, searchQuery],
+    () => filterForms(forms, filter, deferredQuery, now),
+    [filter, forms, now, deferredQuery],
   );
 
   return {

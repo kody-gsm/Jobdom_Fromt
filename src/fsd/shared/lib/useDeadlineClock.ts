@@ -38,7 +38,10 @@ export const useDeadlineClock = (deadlines: readonly (string | null | undefined)
     const refresh = () => {
       if (!active) return;
       const current = Date.now();
-      setTimestamp(current);
+      // 탭 복귀·포커스마다 페이지를 다시 그리지 않는다. 그사이 지난 마감이 있을 때만 시계를 옮긴다.
+      setTimestamp((previous) => (
+        times.some((time) => previous <= time && time < current) ? current : previous
+      ));
       schedule(current);
     };
     const onVisibilityChange = () => {

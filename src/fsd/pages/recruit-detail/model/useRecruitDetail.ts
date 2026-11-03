@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Recruit } from "@fsd/entities/recruit";
 import { createStudentFormApi, getFormErrorMessage, type FormSummary } from "@fsd/entities/form";
-import { getRecruitErrorMessage } from "@fsd/entities/recruit";
+import { getRecruitErrorMessage, hasRecruitFormLinkHint } from "@fsd/entities/recruit";
 import { requestWithSession } from "@fsd/entities/user";
 import { getRecruit } from "../api/recruit.ts";
 import { findRecruitForm } from "./formMatching.ts";
@@ -59,6 +59,10 @@ export const useRecruitDetail = (recruitId: number) => {
       setFormLoading(true);
       setFormError("");
       setFormMessage("");
+
+      // 목록에서 폼이 연결된 공고로 확인됐다면 폼 목록을 공고 상세와 동시에 요청한다.
+      // 조회 캐시가 진행 중인 요청을 합쳐 주므로 아래 loadForms는 같은 응답을 기다린다.
+      if (hasRecruitFormLinkHint(recruitId)) void studentFormApi.getAll().catch(() => undefined);
 
       void getRecruit(recruitId)
         .then((data) => {

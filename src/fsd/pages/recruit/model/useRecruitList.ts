@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { Recruit, RecruitField } from "@fsd/entities/recruit";
 import { ApiError } from "@fsd/shared/api";
 import { useDeadlineClock } from "@fsd/shared/lib";
@@ -50,13 +50,16 @@ export const useRecruitList = () => {
     };
   }, [load]);
 
+  // 입력창은 바로 반영하고, 목록 필터링은 입력이 잠잠할 때 따라오게 한다.
+  const deferredQuery = useDeferredValue(searchQuery);
   const visibleItems = useMemo(
-    () => filterRecruits(items, filter, searchQuery, now, fieldFilters),
-    [filter, fieldFilters, items, now, searchQuery],
+    () => filterRecruits(items, filter, deferredQuery, now, fieldFilters),
+    [filter, fieldFilters, items, now, deferredQuery],
   );
 
   return {
     items,
+    now,
     loading,
     error,
     retry: load,
