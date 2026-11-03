@@ -33,8 +33,8 @@ const failedApi = createTutorialApi(async () => { throw new Error("네트워크 
 await assert.rejects(failedApi.complete(), /네트워크 오류/);
 
 const ROLE_ROUTES = {
-  STUDENT: ["/", "/counsel", "/recruit", "/forms", "/profile"],
-  TEACHER: ["/teacher", "/teacher/recruit", "/teacher/forms", "/profile"],
+  STUDENT: ["/", "/counsel", "/recruit", "/recruit/7001", "/forms/9001", "/profile"],
+  TEACHER: ["/teacher", "/teacher/recruit", "/teacher/forms", "/teacher/forms/9001/submissions", "/profile"],
   WEE_TEACHER: ["/teacher", "/profile"],
 } as const;
 

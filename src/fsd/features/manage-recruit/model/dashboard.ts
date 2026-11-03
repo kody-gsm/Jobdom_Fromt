@@ -17,18 +17,22 @@ export const findRecruitForm = (recruit: Recruit, forms: FormSummary[]) => {
   return forms.find((form) => normalizeName(form.title).includes(company)) || null;
 };
 
+type LoadInit = { cache?: RequestCache };
+
 type RecruitDashboardDependencies = {
-  getTeacherRecruits: () => Promise<Recruit[]>;
-  getTeacherForms: () => Promise<FormSummary[]>;
-  getFormSubmissions: (formId: number) => Promise<FormSubmissionSummary[]>;
+  getTeacherRecruits: (init?: LoadInit) => Promise<Recruit[]>;
+  getTeacherForms: (init?: LoadInit) => Promise<FormSummary[]>;
+  getFormSubmissions: (formId: number, init?: LoadInit) => Promise<FormSubmissionSummary[]>;
 };
 
+// fresh: '새로고침'처럼 사용자가 최신 내용을 원할 때는 30초 조회 캐시를 거치지 않는다.
 export const createRecruitDashboardLoader = (
   dependencies: RecruitDashboardDependencies,
-) => async (): Promise<RecruitDashboardRow[]> => {
+) => async ({ fresh = false }: { fresh?: boolean } = {}): Promise<RecruitDashboardRow[]> => {
+  const init: LoadInit | undefined = fresh ? { cache: "no-store" } : undefined;
   const [recruits, forms] = await Promise.all([
-    dependencies.getTeacherRecruits(),
-    dependencies.getTeacherForms(),
+    dependencies.getTeacherRecruits(init),
+    dependencies.getTeacherForms(init),
   ]);
   const matches = recruits.map((recruit) => ({
     recruit,
@@ -38,7 +42,7 @@ export const createRecruitDashboardLoader = (
   const submissions = new Map(await Promise.all(
     formIds.map(async (formId) => [
       formId,
-      await dependencies.getFormSubmissions(formId),
+      await dependencies.getFormSubmissions(formId, init),
     ] as const),
   ));
   return matches.map(({ recruit, form }) => ({

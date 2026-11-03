@@ -36,7 +36,9 @@ assert.match(page, /handleSlotToggle/);
 assert.match(page, /rejectConsultation\(kind, item\.reservation_id\)/);
 assert.match(page, /const upcomingPending/);
 assert.match(page, /const upcomingApproved = useMemo\(\(\) => approved, \[approved\]\)/);
-assert.match(page, /const confirmed = upcomingApproved\.filter/);
+// 확정 상담은 승인 목록에서 칸별로 한 번만 묶어 두고 셀마다 찾아 쓴다.
+assert.match(page, /const approvedBySlot = useMemo\(\(\) => groupBySlot\(upcomingApproved\), \[upcomingApproved\]\)/);
+assert.match(page, /const confirmed = approvedBySlot\.get\(slot\)/);
 assert.match(page, /const isPast/);
 assert.match(page, /bg-gray-300/);
 assert.match(page, /getFullYear\(\)}년 \{currentDate\.getMonth\(\) \+ 1\}월/);

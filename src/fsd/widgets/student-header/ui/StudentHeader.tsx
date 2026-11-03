@@ -48,6 +48,7 @@ export const StudentHeader = () => {
               <Link
                 key={item.href}
                 href={item.href}
+                data-tutorial-target={item.href === "/counsel" ? "nav-counsel" : item.href === "/recruit" ? "nav-recruit" : undefined}
                 aria-current={isActive ? "page" : undefined}
                 className={`flex h-full min-w-0 flex-1 items-center justify-center break-keep px-1 text-center leading-tight transition-colors hover:text-brand-accent sm:h-11 sm:flex-none sm:whitespace-nowrap sm:px-0 sm:leading-normal ${isActive ? "font-bold text-brand" : "font-semibold"}`}
               >

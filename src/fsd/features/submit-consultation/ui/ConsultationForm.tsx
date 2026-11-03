@@ -171,6 +171,7 @@ export const ConsultationForm = ({
                     <button
                       key={teacher.id}
                       type="button"
+                      aria-pressed={selectedTeacher?.id === teacher.id}
                       onClick={() => toggleTeacher(teacher)}
                       className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
                         selectedTeacher?.id === teacher.id
@@ -266,6 +267,7 @@ export const ConsultationForm = ({
                       key={value}
                       type="button"
                       disabled={!available}
+                      aria-pressed={selectedDate === value}
                       onClick={() => toggleDate(value)}
                       className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
                         !available
@@ -310,6 +312,7 @@ export const ConsultationForm = ({
                     key={row.period}
                     type="button"
                     disabled={unavailable}
+                    aria-pressed={selectedTime === row.period}
                     onClick={() => toggleTime(row.period)}
                     className={`flex h-12 w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${
                       unavailable

@@ -19,8 +19,8 @@ const REQUERY_EVERY_FRAMES = 15;
 const HEADER_OFFSET = 96;
 const COMPACT_HEADER_OFFSET = 128;
 
-const findTargetElements = (target: TutorialTarget) =>
-  Array.from(document.querySelectorAll<HTMLElement>(`[data-tutorial-target~="${target}"]`))
+const findTargetElements = (targets: readonly TutorialTarget[]) =>
+  Array.from(document.querySelectorAll<HTMLElement>(targets.map((target) => `[data-tutorial-target~="${target}"]`).join(",")))
     .filter((element) => element.getClientRects().length > 0);
 
 const toRect = (rect: DOMRect): Rect => ({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
@@ -39,14 +39,18 @@ const scrollTargetIntoView = (elements: HTMLElement[], isCompact: boolean) => {
 
 // 강조 위치와 카드 위치는 React 상태를 거치지 않고 애니메이션 프레임에서 DOM에 바로 쓴다.
 // 스크롤할 때마다 다시 렌더링하지 않으므로 끊기지 않고, 값이 바뀔 때만 다시 그린다.
-export const useSpotlight = (target: TutorialTarget, enabled: boolean, isCompact: boolean, refs: SpotlightRefs) => {
-  const [state, setState] = useState<{ target: TutorialTarget | null; status: SpotlightStatus }>({ target: null, status: "searching" });
+export const useSpotlight = (targets: readonly TutorialTarget[], enabled: boolean, isCompact: boolean, refs: SpotlightRefs) => {
+  // 같은 단계인지 문자열로 비교해서 배열이 새로 만들어져도 다시 시작하지 않는다.
+  const target = targets.join(" ");
+  const [state, setState] = useState<{ target: string | null; status: SpotlightStatus }>({ target: null, status: "searching" });
   const { dim, outline, card } = refs;
 
   useEffect(() => {
     let frame = 0;
     let count = 0;
     let elements: HTMLElement[] = [];
+    let primary: HTMLElement[] = [];
+    const primaryTarget = target.split(" ")[0];
     let hasScrolled = false;
     let lastKey = "";
     let status: SpotlightStatus | null = null;
@@ -61,14 +65,16 @@ export const useSpotlight = (target: TutorialTarget, enabled: boolean, isCompact
     const tick = () => {
       frame = window.requestAnimationFrame(tick);
       if (enabled && (count % REQUERY_EVERY_FRAMES === 0 || elements.some((element) => !element.isConnected))) {
-        elements = findTargetElements(target);
+        elements = findTargetElements(target.split(" ") as TutorialTarget[]);
+        primary = elements.filter((element) => element.dataset.tutorialTarget?.split(" ").includes(primaryTarget));
       }
       count += 1;
-      if (enabled && elements.length > 0 && !hasScrolled) {
+      // 함께 열어 둔 영역이 있어도 스크롤과 설명 카드 위치는 이 단계의 주 대상 기준으로 잡는다.
+      if (enabled && primary.length > 0 && !hasScrolled) {
         hasScrolled = true;
-        scrollTargetIntoView(elements, isCompact);
+        scrollTargetIntoView(primary, isCompact);
       }
-      if (enabled) report(elements.length > 0 ? "found" : Date.now() - startedAt >= TARGET_TIMEOUT_MS ? "missing" : "searching");
+      if (enabled) report(primary.length > 0 ? "found" : Date.now() - startedAt >= TARGET_TIMEOUT_MS ? "missing" : "searching");
 
       // 읽기를 모두 끝낸 뒤에 쓰기를 해서 레이아웃을 한 번만 계산하게 한다.
       const viewport = { width: window.innerWidth, height: window.innerHeight };
@@ -77,7 +83,9 @@ export const useSpotlight = (target: TutorialTarget, enabled: boolean, isCompact
         : [];
       const cardElement = card.current;
       const cardSize = cardElement ? { width: cardElement.offsetWidth, height: cardElement.offsetHeight } : { width: 0, height: 0 };
-      const key = `${viewport.width}x${viewport.height}|${cardSize.width}x${cardSize.height}|${isCompact}|${rects.map((rect) => `${Math.round(rect.top)},${Math.round(rect.left)},${Math.round(rect.width)},${Math.round(rect.height)}`).join(";")}`;
+      // 페이지의 모달 창(<dialog>)은 항상 가장 위에 뜬다. 창이 열려 있는 동안은 설명 카드를 숨긴다.
+      const dialogOpen = document.querySelector("dialog[open]") !== null;
+      const key = `${dialogOpen}|${viewport.width}x${viewport.height}|${cardSize.width}x${cardSize.height}|${isCompact}|${rects.map((rect) => `${Math.round(rect.top)},${Math.round(rect.left)},${Math.round(rect.width)},${Math.round(rect.height)}`).join(";")}`;
       if (key === lastKey) return;
       lastKey = key;
 
@@ -87,10 +95,11 @@ export const useSpotlight = (target: TutorialTarget, enabled: boolean, isCompact
         if (isCompact) {
           cardElement.style.transform = "";
         } else {
-          const position = getCardPosition(unionRects(rects), cardSize, viewport);
+          const primaryRect = unionRects(primary.map((element) => clipRect(padRect(toRect(element.getBoundingClientRect())), viewport)).filter((rect): rect is Rect => rect !== null));
+          const position = getCardPosition(primaryRect, cardSize, viewport);
           cardElement.style.transform = `translate3d(${Math.round(position.left)}px, ${Math.round(position.top)}px, 0)`;
         }
-        cardElement.style.visibility = "visible";
+        cardElement.style.visibility = dialogOpen ? "hidden" : "visible";
       }
     };
 

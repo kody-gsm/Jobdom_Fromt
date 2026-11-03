@@ -100,6 +100,28 @@ try {
   await rejection;
   await nextTurn();
   assert.deepEqual(abortedIds, summaries.slice(0, 6).map(({ id }) => id));
+
+  // 묶음이 끝날 때마다 먼저 받은 응답을 순서대로 넘겨 화면이 마지막 요청까지 기다리지 않게 한다.
+  mockFetch(summaries, (id) => detailResponse(id));
+  const progress: Array<[number, number]> = [];
+  const finished = await getFormSubmissionSheet(1, new AbortController().signal, ({ submissions, total }) => {
+    progress.push([submissions.length, total]);
+  });
+  assert.deepEqual(progress, [[0, 13], [6, 13], [12, 13]]);
+  assert.equal(finished.submissions.length, 13);
+
+  // 상세 요청에도 취소 신호를 넘겨서 페이지를 떠나면 진행 중인 요청이 함께 취소된다.
+  const signals: Array<AbortSignal | null | undefined> = [];
+  globalThis.fetch = async (input, init) => {
+    const path = new URL(String(input), "https://test.local").pathname;
+    if (path.endsWith("/teacher/form/1")) return Response.json(form);
+    if (path.endsWith("/teacher/form/1/submission")) return Response.json(summaries.slice(0, 2));
+    signals.push(init?.signal);
+    return detailResponse(Number(path.split("/").at(-1)));
+  };
+  await getFormSubmissionSheet(1, new AbortController().signal);
+  assert.equal(signals.length, 2);
+  assert.ok(signals.every((signal) => signal instanceof AbortSignal));
 } finally {
   globalThis.fetch = originalFetch;
 }

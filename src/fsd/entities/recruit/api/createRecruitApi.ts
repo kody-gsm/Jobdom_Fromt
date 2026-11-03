@@ -25,7 +25,7 @@ const createRecruitNotice = (recruit: Recruit) => ({
 export const createRecruitApi = (request: RequestFn) => ({
   getAll: (init?: Pick<ApiRequestInit, "cache">) => request<Recruit[]>("/recruit", init),
   getById: (id: number) => request<Recruit>(`/recruit/${id}`),
-  getTeacherAll: () => request<Recruit[]>("/teacher/recruit"),
+  getTeacherAll: (init?: Pick<ApiRequestInit, "cache">) => request<Recruit[]>("/teacher/recruit", init),
   createTeacher: (input: RecruitUpdate) =>
     request<Recruit>("/teacher/recruit", {
       method: "POST",

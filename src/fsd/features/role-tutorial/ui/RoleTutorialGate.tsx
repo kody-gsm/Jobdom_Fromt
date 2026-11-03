@@ -8,6 +8,7 @@ import { tutorialApi } from "../api/tutorialApi.ts";
 import { getStatusRetryKey, getTutorialMode, type TutorialStatusState } from "../model/presentation.ts";
 import { getTutorialRole } from "../model/progress.ts";
 import { subscribeTutorialReplay } from "../model/replay.ts";
+import { getPracticeKey, startPractice, stopPractice, subscribePractice } from "../model/practiceSession.ts";
 
 const Tutorial = dynamic(() => import("./Tutorial.tsx").then((module) => module.Tutorial));
 const PUBLIC_PATHS = new Set(["/login", "/signup", "/forgot-password"]);
@@ -72,6 +73,17 @@ export const RoleTutorialGate = ({ children }: { children: ReactNode }) => {
     ? null
     : getTutorialMode(statusState, replayUserId === userId);
 
+  const practiceKey = useSyncExternalStore(subscribePractice, getPracticeKey, () => null);
+  const desiredPracticeKey = mode !== null && userId !== null && role ? `${snapshot}:${mode}` : null;
+  const practiceName = session?.name ?? "";
+
+  // 안내가 열려 있는 동안만 연습용 서버를 켠다. 켜고 꺼질 때 화면을 새로 그려서 실제 데이터와 섞이지 않게 한다.
+  useEffect(() => {
+    if (desiredPracticeKey === null || userId === null || !role) return;
+    startPractice(desiredPracticeKey, { userId, name: practiceName, role });
+    return () => stopPractice();
+  }, [desiredPracticeKey, practiceName, role, userId]);
+
   const handleComplete = async () => {
     if (mode === "first-run" && userId !== null) {
       await tutorialApi.complete();
@@ -81,11 +93,12 @@ export const RoleTutorialGate = ({ children }: { children: ReactNode }) => {
     setReplayUserId(null);
   };
 
-  // 실제 화면은 항상 같은 위치에 렌더링해서 안내가 열리고 닫혀도 다시 마운트되지 않게 한다.
+  // 연습 모드가 바뀌면 key가 바뀌어 화면이 새 데이터(연습용 ↔ 실제)로 다시 그려진다.
+  const isPracticing = practiceKey !== null && practiceKey === desiredPracticeKey;
   return (
     <>
-      <div className="contents" inert={mode !== null}>{children}</div>
-      {mode !== null && role ? <Tutorial key={`${snapshot}:${mode}`} role={role} mode={mode} onComplete={handleComplete} /> : null}
+      <div key={practiceKey ?? "live"} className="contents">{children}</div>
+      {isPracticing && mode !== null && role ? <Tutorial key={practiceKey} role={role} mode={mode} onComplete={handleComplete} /> : null}
     </>
   );
 };
