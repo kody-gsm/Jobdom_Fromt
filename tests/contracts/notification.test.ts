@@ -8,7 +8,7 @@ assert.match(bell, /hover:text-brand/);
 assert.match(bell, /open \? "text-brand"/);
 const api = await import("../../src/fsd/features/notifications/api/notifications.ts");
 const { clearSession } = await import("../../src/fsd/entities/user/index.ts");
-const { subscribeNotifications } = await import("../../src/fsd/features/notifications/api/notificationStream.ts");
+const { getReconnectDelay, subscribeNotifications } = await import("../../src/fsd/features/notifications/api/notificationStream.ts");
 const { getSafeInternalPath, getSafeLinkUrl } = await import("../../src/fsd/shared/lib/safeUrl.ts");
 const homeServices = readFileSync("src/fsd/widgets/home-services/ui/HomeServices.tsx", "utf8");
 clearSession();
@@ -54,6 +54,8 @@ assert.deepEqual(calls.map(({ url, method }) => [url, method]), [
 ]);
 assert.ok(calls.every(({ authorization }) => authorization === "Bearer notification-test-token"));
 clearSession();
+// 로그인 정보가 없으면 요청을 보내지 않으므로, 재연결 검사는 토큰이 있는 상태에서 한다.
+sessionStorage.setItem("jobdam_access_token", "notification-test-token");
 let tickets = 0;
 globalThis.fetch = (async () => new Response(JSON.stringify({ ticket: `ticket-${++tickets}` }), {
   headers: { "Content-Type": "application/json" },
@@ -115,6 +117,31 @@ try {
   mock.timers.tick(3000);
   await flush();
   assert.equal(tickets, 2);
+  // 연속 실패는 3초, 6초, 12초 … 최대 60초로 간격을 늘리고, 연결되면 다시 3초부터 시작한다.
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 9].map(getReconnectDelay), [3000, 6000, 12000, 24000, 48000, 60000, 60000]);
+  const backoff = new AbortController();
+  let disconnects = 0;
+  const ticketsBefore = tickets;
+  subscribeNotifications(() => {}, () => {}, backoff.signal, undefined, () => disconnects++);
+  await flush();
+  const failing = FakeStream.instances.at(-1)!;
+  failing.dispatchEvent(new Event("error"));
+  assert.equal(disconnects, 1);
+  mock.timers.tick(3000);
+  await flush();
+  FakeStream.instances.at(-1)!.dispatchEvent(new Event("error"));
+  mock.timers.tick(3000);
+  await flush();
+  assert.equal(tickets, ticketsBefore + 2, "second failure waits 6 seconds");
+  mock.timers.tick(3000);
+  await flush();
+  assert.equal(tickets, ticketsBefore + 3);
+  FakeStream.instances.at(-1)!.dispatchEvent(new Event("connect"));
+  FakeStream.instances.at(-1)!.dispatchEvent(new Event("error"));
+  mock.timers.tick(3000);
+  await flush();
+  assert.equal(tickets, ticketsBefore + 4, "a successful connect resets the delay");
+  backoff.abort();
   console.log("알림 수신·재연결·티켓 재발급·로그아웃 정리 검사 통과");
 } finally {
   mock.timers.reset();

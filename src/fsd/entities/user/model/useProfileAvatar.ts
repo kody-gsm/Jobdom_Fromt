@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   getProfileAvatarUserKey,
   PROFILE_AVATAR_CHANGED_EVENT,
@@ -21,48 +21,77 @@ const getCurrentUserKey = () => {
   };
 };
 
-export const useProfileAvatar = () => {
-  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
-  const requestVersion = useRef(0);
+// 헤더는 페이지마다 새로 그려진다. 사진 상태를 탭 하나에서 공유해서
+// 페이지를 옮길 때 기본 아이콘이 깜빡이거나 /auth/profile을 다시 받지 않게 한다.
+type AvatarState = { userKey: string | null; avatar: string | null };
+let state: AvatarState | null = null;
+let fetchedUserKey: string | null = null;
+let requestVersion = 0;
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    let active = true;
+const setState = (next: AvatarState) => {
+  if (state?.userKey === next.userKey && state.avatar === next.avatar) return;
+  state = next;
+  listeners.forEach((listener) => listener());
+};
 
-    const syncAvatar = (event?: Event) => {
-      const { session, userKey } = getCurrentUserKey();
-      const detail = event instanceof CustomEvent ? event.detail as { userKey?: string } | undefined : undefined;
-      if (detail?.userKey && detail.userKey !== userKey) return;
-      const version = ++requestVersion.current;
-      const cachedAvatar = session ? readProfileAvatar(userKey) : null;
-      setProfileAvatar(cachedAvatar);
-      if (detail?.userKey) return;
-      if (!session) return;
+const readLocalState = (): AvatarState => {
+  const { session, userKey } = getCurrentUserKey();
+  if (!session) return { userKey: null, avatar: null };
+  return { userKey, avatar: readProfileAvatar(userKey) };
+};
 
-      void getUserProfile()
-        .then((profile) => {
-          const latest = getCurrentUserKey();
-          if (!active || version !== requestVersion.current || latest.userKey !== userKey) return;
-          setProfileAvatar(
-            profile.profileImageUrl
-              ? resolveProfileImageUrl(profile.profileImageUrl)
-              : cachedAvatar,
-          );
-        })
-        .catch(() => {
-          // The cached avatar, if present, remains usable when the profile request fails.
-        });
-    };
+const syncAvatar = (event?: Event) => {
+  const { session, userKey } = getCurrentUserKey();
+  const detail = event instanceof CustomEvent ? event.detail as { userKey?: string } | undefined : undefined;
+  if (detail?.userKey && detail.userKey !== userKey) return;
+  const currentKey = session ? userKey : null;
+  const cachedAvatar = currentKey ? readProfileAvatar(currentKey) : null;
+  // 프로필 화면에서 사진을 바꾸면 저장된 사진만 다시 읽는다.
+  if (detail?.userKey) {
+    setState({ userKey: currentKey, avatar: cachedAvatar });
+    return;
+  }
+  // 토큰만 바뀐 세션 이벤트(재발급)는 같은 사용자이므로 다시 받지 않는다.
+  if (currentKey !== null && currentKey === state?.userKey && fetchedUserKey === currentKey) return;
+  const version = ++requestVersion;
+  setState({ userKey: currentKey, avatar: cachedAvatar });
+  fetchedUserKey = currentKey;
+  if (currentKey === null) return;
 
-    syncAvatar();
+  void getUserProfile()
+    .then((profile) => {
+      if (version !== requestVersion || getCurrentUserKey().userKey !== currentKey) return;
+      setState({
+        userKey: currentKey,
+        avatar: profile.profileImageUrl ? resolveProfileImageUrl(profile.profileImageUrl) : cachedAvatar,
+      });
+    })
+    .catch(() => {
+      // The cached avatar, if present, remains usable when the profile request fails.
+      if (version === requestVersion) fetchedUserKey = null;
+    });
+};
+
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  if (listeners.size === 1) {
     window.addEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
     window.addEventListener("jobdam-session", syncAvatar);
-    return () => {
-      active = false;
-      requestVersion.current += 1;
-      window.removeEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
-      window.removeEventListener("jobdam-session", syncAvatar);
-    };
-  }, []);
-
-  return profileAvatar;
+    syncAvatar();
+  }
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size > 0) return;
+    window.removeEventListener(PROFILE_AVATAR_CHANGED_EVENT, syncAvatar);
+    window.removeEventListener("jobdam-session", syncAvatar);
+  };
 };
+
+const getSnapshot = () => {
+  // 첫 렌더부터 저장된 사진을 보여 준다.
+  if (state === null) state = readLocalState();
+  return state.avatar;
+};
+
+export const useProfileAvatar = () => useSyncExternalStore(subscribe, getSnapshot, () => null);

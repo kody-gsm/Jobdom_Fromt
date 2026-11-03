@@ -37,11 +37,12 @@ export const RoleTutorialGate = ({ children }: { children: ReactNode }) => {
   const [replayUserId, setReplayUserId] = useState<number | null>(null);
   const session = snapshot === "loading" || snapshot === "none" ? null : getSession();
   const role = getTutorialRole(session?.role);
-  const userId = session && role ? session.userId : null;
+  const userId = session && role && typeof session.userId === "number" ? session.userId : null;
   const currentUserId = useRef(userId);
   const statusState = userId !== null && completedUsers.has(userId)
     ? "completed"
-    : status?.userId === userId ? status.state : null;
+    // 세션이 깨져 userId가 없으면 undefined끼리 같아져 status가 없는데도 읽게 된다. 둘 다 있을 때만 비교한다.
+    : status !== null && userId !== null && status.userId === userId ? status.state : null;
   const retryKey = getStatusRetryKey(statusState, pathname);
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export const RoleTutorialGate = ({ children }: { children: ReactNode }) => {
   // 안내가 열려 있는 동안만 연습용 서버를 켠다. 켜고 꺼질 때 화면을 새로 그려서 실제 데이터와 섞이지 않게 한다.
   useEffect(() => {
     if (desiredPracticeKey === null || userId === null || !role) return;
-    startPractice(desiredPracticeKey, { userId, name: practiceName, role });
+    void startPractice(desiredPracticeKey, { userId, name: practiceName, role });
     return () => stopPractice();
   }, [desiredPracticeKey, practiceName, role, userId]);
 

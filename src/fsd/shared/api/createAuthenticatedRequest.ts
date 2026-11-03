@@ -19,6 +19,10 @@ interface AuthenticatedRequestDependencies {
   getSessionVersion?: () => number;
   reissueSession: (refreshToken: string) => Promise<void>;
   clearSession: () => void;
+  /** true면 보내기 전에 먼저 재발급한다. 만료가 확실한 토큰만 true를 돌려야 한다. */
+  isAccessTokenStale?: (accessToken: string) => boolean;
+  /** true면 토큰이 하나도 없을 때 보내지 않고 401로 끝낸다. 저장소가 있는 브라우저에서만 켠다. */
+  rejectWithoutCredentials?: () => boolean;
 }
 
 export const createAuthenticatedRequest = ({
@@ -28,8 +32,12 @@ export const createAuthenticatedRequest = ({
   getSessionVersion,
   reissueSession,
   clearSession,
+  isAccessTokenStale,
+  rejectWithoutCredentials,
 }: AuthenticatedRequestDependencies) => {
   let reissuePending: { token: string; promise: Promise<void> } | null = null;
+  // 기기 시계가 서버보다 빠르면 새 토큰도 만료로 보인다. 방금 받은 토큰은 다시 미리 재발급하지 않는다.
+  let proactivelyIssuedToken: string | null = null;
 
   const reissueCurrentSession = async (refreshToken: string) => {
     if (reissuePending?.token === refreshToken) return reissuePending.promise;
@@ -47,6 +55,38 @@ export const createAuthenticatedRequest = ({
     init: ApiRequestInit = {},
     retryAuth = true,
   ): Promise<T> => {
+    const tokenAtCall = readAccessToken();
+    const refreshTokenAtCall = getRefreshToken();
+    // 로그인 정보가 전혀 없으면 서버에 보내 봐야 401뿐이다. 지울 세션도 없으므로 바로 실패한다.
+    if (!tokenAtCall && !refreshTokenAtCall && rejectWithoutCredentials?.()) {
+      throw new ApiError("로그인이 필요합니다.", 401);
+    }
+    // 만료된 토큰으로 보내 401을 받은 뒤 재발급하는 왕복을 줄인다. 재발급은 요청끼리 공유한다.
+    if (
+      retryAuth && tokenAtCall && refreshTokenAtCall
+      && tokenAtCall !== proactivelyIssuedToken && isAccessTokenStale?.(tokenAtCall)
+    ) {
+      const versionAtCall = getSessionVersion?.();
+      try {
+        await reissueCurrentSession(refreshTokenAtCall);
+        proactivelyIssuedToken = readAccessToken();
+      } catch (reissueError) {
+        const isTransient = reissueError instanceof ApiError
+          && (reissueError.status === 0 || reissueError.status >= 500);
+        const unchanged = readAccessToken() === tokenAtCall
+          && getRefreshToken() === refreshTokenAtCall
+          && getSessionVersion?.() === versionAtCall;
+        if (!isTransient && unchanged) {
+          authenticatedGetCache.clear();
+          clearSession();
+          throw reissueError;
+        }
+        // 일시적인 실패나 다른 탭의 세션 교체는 원래 흐름(401 뒤 재발급)에 맡긴다.
+      }
+      if (getSessionVersion && getSessionVersion() !== versionAtCall) {
+        throw new ApiError("인증 세션이 변경되었습니다.", 401);
+      }
+    }
     const accessToken = readAccessToken();
     const refreshTokenAtStart = getRefreshToken();
     const sessionVersion = getSessionVersion?.();
