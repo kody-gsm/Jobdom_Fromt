@@ -324,7 +324,7 @@ export function TeacherFormsPage() {
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[300px_1fr]">
-            <aside className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+            <aside data-tutorial-target="teacher-form-list" className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
               <button type="button" disabled={working} onClick={reset} className="h-12 w-full rounded-xl bg-[#02C551] font-bold text-white disabled:opacity-50">새 폼</button>
               <div className="mt-4 max-h-[700px] space-y-2 overflow-y-auto">
                 {forms.length === 0 ? <p className="rounded-xl bg-gray-50 p-5 text-center text-sm text-gray-400">등록된 폼이 없습니다.</p> : forms.map((form) => (
@@ -368,7 +368,7 @@ export function TeacherFormsPage() {
                     </div>
                   </div>
                 )}
-                <fieldset disabled={!questionsEditable} className="space-y-4 disabled:opacity-70">
+                <fieldset disabled={!questionsEditable} data-tutorial-target="form-editor" className="space-y-4 disabled:opacity-70">
                   <legend className="mb-3 font-semibold text-gray-700">질문</legend>
                   {questions.map((question, index) => (
                     <QuestionEditor key={question.key} question={question} index={index} count={questions.length} update={(changes) => updateQuestion(index, changes)} move={(offset) => moveQuestion(index, offset)} remove={() => setQuestions((current) => current.filter((_, questionIndex) => questionIndex !== index))} />
@@ -379,7 +379,7 @@ export function TeacherFormsPage() {
 
               {message && <p role="status" className={`mt-6 wrap-anywhere rounded-xl px-4 py-3 text-sm ${message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{message.text}</p>}
               {isPublishingWithRecruit && <NoticeChannelPicker companyName={linkedRecruit?.companyName ?? null} value={channelId} onChange={setChannelId} disabled={working} />}
-              <div className="mt-7 flex flex-wrap justify-end gap-3">
+              <div data-tutorial-target="form-publish" className="mt-7 flex flex-wrap justify-end gap-3">
                 {status === "PUBLISHED" && <button type="button" onClick={copyLink} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">링크 복사</button>}
                 {status === "PUBLISHED" && <button type="button" disabled={working} onClick={close} className="h-12 rounded-xl bg-gray-800 px-6 font-semibold text-white">마감</button>}
                 <button type="button" disabled={working} onClick={() => void save()} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">{selectedId ? "수정 저장" : "저장"}</button>

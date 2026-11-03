@@ -57,7 +57,7 @@ export const FormsPage = () => {
           </div>
         </div>
 
-        <section className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
+        <section data-tutorial-target="form-list" className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
           {loading ? (
             <Empty text="불러오는 중…" />
           ) : error ? (

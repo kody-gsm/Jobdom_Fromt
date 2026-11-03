@@ -136,7 +136,7 @@ export const ConsultationForm = ({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-stretch">
         <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
           <div className="space-y-5">
-            <div>
+            <div data-tutorial-target="consultation-type">
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 유형</p>
               <SegmentedTabs
                 ariaLabel="상담 유형"
@@ -150,7 +150,7 @@ export const ConsultationForm = ({
               />
             </div>
 
-            <div>
+            <div data-tutorial-target="consultation-type">
               <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 선생님</p>
               <div
                 data-consultation-field="teacher"
@@ -185,16 +185,18 @@ export const ConsultationForm = ({
               </div>
             </div>
 
-            <TextField
-              data-consultation-field="title"
-              error={errorTarget === "title" ? "제목을 입력해주세요" : undefined}
-              label="상담 제목"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="상담 제목을 작성해주세요"
-            />
+            <div data-tutorial-target="consultation-content">
+              <TextField
+                data-consultation-field="title"
+                error={errorTarget === "title" ? "제목을 입력해주세요" : undefined}
+                label="상담 제목"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="상담 제목을 작성해주세요"
+              />
+            </div>
 
-            <div className="space-y-2">
+            <div data-tutorial-target="consultation-content" className="space-y-2">
               <p className="text-sm font-semibold text-[#27364A]">상담 카테고리</p>
               <div
                 data-consultation-field="category"
@@ -220,7 +222,7 @@ export const ConsultationForm = ({
               </div>
             </div>
 
-            <div>
+            <div data-tutorial-target="consultation-content">
               <TextAreaField
                 data-consultation-field="content"
                 error={errorTarget === "content" ? "내용을 입력해주세요" : undefined}
@@ -239,7 +241,7 @@ export const ConsultationForm = ({
         </ContentCard>
 
         <ContentCard className="h-full min-h-[720px] p-6 sm:p-8">
-          <section>
+          <section data-tutorial-target="consultation-date">
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 희망일</p>
             <div
               data-consultation-field="date"
@@ -281,7 +283,7 @@ export const ConsultationForm = ({
             </div>
           </section>
 
-          <section className="mt-6">
+          <section data-tutorial-target="consultation-period" className="mt-6">
             <p className="mb-2 text-sm font-semibold text-[#27364A]">상담 교시</p>
             <div
               data-consultation-field="period"
@@ -347,7 +349,7 @@ export const ConsultationForm = ({
             >
               취소
             </ActionButton>
-            <ActionButton type="submit" disabled={submitting} className="w-full">
+            <ActionButton data-tutorial-target="consultation-submit" type="submit" disabled={submitting} className="w-full">
               {submitting ? "신청 중…" : "상담 신청"}
             </ActionButton>
           </div>
