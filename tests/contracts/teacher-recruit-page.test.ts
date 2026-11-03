@@ -35,3 +35,9 @@ assert.doesNotMatch(page, />학생 화면</);
 assert.doesNotMatch(page, /@\/app\/utils\/api|@\/app\/components/);
 
 console.log("teacher recruit page contract passed");
+
+// 저장·삭제·AI 초안 뒤에는 바뀐 행만 고친다. 폼마다 지원자 목록을 다시 받는 전체 재조회는 '새로고침'만 한다.
+assert.doesNotMatch(page, /await load\(/);
+assert.match(page, /upsertRow\(await getRecruitDashboardRow\(recruit\)\)/);
+assert.match(page, /const RecruitRow = memo\(/, "편집기 입력마다 표 전체를 다시 그리지 않는다");
+assert.doesNotMatch(page, /\.sort\(\(a, b\) => Date\.parse/);

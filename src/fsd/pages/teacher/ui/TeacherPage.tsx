@@ -73,7 +73,8 @@ export function TeacherPage() {
     const requestVersion = useRef(0);
     const slotRequestVersion = useRef(0);
 
-    const loadReservations = useCallback(async () => {
+    // quiet: 변경 직후 서버와 맞추는 백그라운드 동기화. 로딩 문구를 띄우지 않고 버튼도 잠그지 않는다.
+    const loadReservations = useCallback(async ({ quiet = false }: { quiet?: boolean } = {}) => {
         const allowedKinds = getTeacherConsultationKinds(teacherRole);
         if (!allowedKinds.includes(kind)) {
             if (allowedKinds[0]) setKind(allowedKinds[0]);
@@ -83,7 +84,7 @@ export function TeacherPage() {
             return;
         }
         const version = ++requestVersion.current;
-        setIsLoading(true);
+        if (!quiet) setIsLoading(true);
         setLoadError(null);
         try {
             const [confirmed, waiting] = await Promise.all([
@@ -237,9 +238,11 @@ export function TeacherPage() {
         try {
             await approveConsultation(kind, selection.reservation.reservation_id);
             setSelection({ ...selection, approved: true });
-            setPending((items) => items.filter((item) => item.reservation_id !== selection.reservation.reservation_id));
+            // 서버는 수락한 시간의 다른 대기 신청을 자동 취소하므로 같은 시간의 대기 신청을 함께 지운다.
+            const slot = reservationSlot(selection.reservation);
+            setPending((items) => items.filter((item) => reservationSlot(item) !== slot));
             setApproved((items) => [...items, selection.reservation]);
-            await loadReservations();
+            void loadReservations({ quiet: true });
         } catch (error) {
             setActionError(error instanceof Error ? error.message : "상담을 수락하지 못했습니다.");
         } finally {
@@ -255,7 +258,7 @@ export function TeacherPage() {
             await rejectConsultation(kind, selection.reservation.reservation_id);
             setPending((items) => items.filter((item) => item.reservation_id !== selection.reservation.reservation_id));
             dialog.current?.close();
-            await loadReservations();
+            void loadReservations({ quiet: true });
         } catch (error) {
             setActionError(error instanceof Error ? error.message : "상담 신청을 취소하지 못했습니다.");
         } finally {
@@ -288,10 +291,12 @@ export function TeacherPage() {
             if (!isLocked) {
                 setApproved((items) => items.filter((item) => reservationSlot(item) !== slot));
                 setPending((items) => items.filter((item) => reservationSlot(item) !== slot));
+                // 잠금 해제는 신청 목록을 바꾸지 않는다. 잠글 때 거절한 신청만 조용히 다시 맞춘다.
+                void loadReservations({ quiet: true });
             }
-            await Promise.all([loadReservations(), loadSlotStatuses()]);
         } catch (error) {
             setSlotError(error instanceof Error ? error.message : "시간 금지 상태를 변경하지 못했습니다.");
+            void loadSlotStatuses();
         } finally {
             setProcessingSlot(null);
         }
@@ -360,7 +365,8 @@ export function TeacherPage() {
         setForceSlotTarget({ date, period });
         setStudentSearchQuery("");
         setForceSubmitError(null);
-        void loadStudents();
+        // 학생 목록은 페이지에서 한 번만 받는다. 실패했을 때만 다시 시도한다.
+        if (students.length === 0 || studentsLoadError) void loadStudents();
         forceDialog.current?.showModal();
         return true;
     };
@@ -394,7 +400,7 @@ export function TeacherPage() {
             });
             forceDialog.current?.close();
             setForceSlotTarget(null);
-            await loadReservations();
+            void loadReservations({ quiet: true });
         } catch (error) {
             setForceSubmitError(error instanceof Error ? error.message : "상담 신청을 등록하지 못했습니다.");
         } finally {

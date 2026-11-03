@@ -1,7 +1,8 @@
+import type { ApiRequestInit } from "@fsd/shared/api";
 import type { HomeBanner, HomeBannerInput } from "../model/homeBanner.ts";
 
 interface RequestFn {
-  <T>(path: string, init?: RequestInit): Promise<T>;
+  <T>(path: string, init?: ApiRequestInit): Promise<T>;
 }
 
 const readBanner = async (request: RequestFn, path: string) =>
@@ -19,6 +20,8 @@ export const createBannerApi = (request: RequestFn) => ({
     return request<HomeBanner>("/teacher/banner", {
       method: "POST",
       body,
+      // 배너 조회는 항상 no-store라 캐시에 없다. 다른 화면의 조회 캐시는 지우지 않는다.
+      invalidateCache: ["/student/banner", "/teacher/banner"],
     });
   },
 });
