@@ -15,6 +15,13 @@ import type { SignupConsentField, SignupTextField } from "./validation.ts";
 import { getFirstSignupErrorField, validateSignupForm } from "./validation.ts";
 import type { SignupFormErrors, SignupFormValues } from "./validation.ts";
 
+export type VerificationCodeNotice = {
+  tone: "success" | "error";
+  message: string;
+};
+
+const CODE_SEND_FAILED = "인증코드 발송에 실패했습니다.";
+
 const INITIAL_VALUES: SignupFormValues = {
   email: "",
   verificationCode: "",
@@ -33,6 +40,7 @@ export const useSignupForm = () => {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
+  const [codeNotice, setCodeNotice] = useState<VerificationCodeNotice | null>(null);
   const [activeConsent, setActiveConsent] = useState<SignupConsentDocument | null>(null);
   const [readConsentDocuments, setReadConsentDocuments] = useState<Record<SignupConsentDocument, boolean>>({
     terms: false,
@@ -51,6 +59,7 @@ export const useSignupForm = () => {
       verificationRequestVersion.current += 1;
       setIsSendingCode(false);
       setIsCodeSent(false);
+      setCodeNotice(null);
       verificationCountdown.reset();
       resendCountdown.reset();
       setErrors((current) => ({ ...current, verificationCode: undefined }));
@@ -85,6 +94,7 @@ export const useSignupForm = () => {
   const sendCode = async () => {
     const emailError = getGsmEmailErrorMessage(form.email);
     if (emailError) {
+      setCodeNotice(null);
       setErrors((current) => ({ ...current, email: emailError }));
       setErrorField("email");
       return;
@@ -94,10 +104,15 @@ export const useSignupForm = () => {
     const requestVersion = ++verificationRequestVersion.current;
     try {
       setIsSendingCode(true);
+      setCodeNotice(null);
       setSubmitError("");
       await sendSignupVerificationCode(requestedEmail);
       if (requestVersion !== verificationRequestVersion.current || form.email.trim() !== requestedEmail) return;
       setIsCodeSent(true);
+      setCodeNotice({
+        tone: "success",
+        message: `${requestedEmail}로 인증코드를 발송했습니다. 메일함을 확인해주세요.`,
+      });
       verificationCountdown.start(180);
       resendCountdown.start(2);
       setErrors((current) => ({ ...current, email: undefined, verificationCode: undefined }));
@@ -105,6 +120,7 @@ export const useSignupForm = () => {
     } catch (caught) {
       if (requestVersion !== verificationRequestVersion.current) return;
       setIsCodeSent(false);
+      setCodeNotice({ tone: "error", message: CODE_SEND_FAILED });
       verificationCountdown.reset();
       resendCountdown.reset();
       setErrors((current) => ({
@@ -161,6 +177,7 @@ export const useSignupForm = () => {
     isSendingCode,
     isSubmitting,
     isCodeSent,
+    codeNotice,
     codeExpired,
     canSendCode: !isSendingCode && resendCountdown.isExpired,
     canSubmit,

@@ -41,7 +41,7 @@ export const SignupForm = () => {
         <p className="-mt-3 text-xs leading-5 text-[#7A828B]">{GSM_EMAIL_GUIDE}</p>
       )}
 
-      <div className="-mt-2 flex justify-end">
+      <div className="-mt-2 flex flex-col items-end gap-1">
         <button
           type="button"
           disabled={!signupForm.canSendCode}
@@ -50,6 +50,15 @@ export const SignupForm = () => {
         >
           {codeActionLabel}
         </button>
+        <p
+          role="status"
+          aria-live="polite"
+          className={`w-full text-sm empty:hidden ${
+            signupForm.codeNotice?.tone === "error" ? "text-[#D93025]" : "text-brand-hover"
+          }`}
+        >
+          {signupForm.codeNotice?.message ?? ""}
+        </p>
       </div>
 
       <TextField
