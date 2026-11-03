@@ -27,7 +27,7 @@ export const ProfilePage = () => {
       className="min-h-dvh bg-surface text-ink"
 
     >
-      {userRole === "TEACHER" ? (
+      {userRole === "TEACHER" || userRole === "WEE_TEACHER" ? (
         <TeacherHeader />
       ) : userRole === "STUDENT" ? (
         <StudentHeader />
