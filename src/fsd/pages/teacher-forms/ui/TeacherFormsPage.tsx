@@ -379,11 +379,11 @@ export function TeacherFormsPage() {
 
               {message && <p role="status" className={`mt-6 wrap-anywhere rounded-xl px-4 py-3 text-sm ${message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{message.text}</p>}
               {isPublishingWithRecruit && <NoticeChannelPicker companyName={linkedRecruit?.companyName ?? null} value={channelId} onChange={setChannelId} disabled={working} />}
-              <div data-tutorial-target="form-publish" className="mt-7 flex flex-wrap justify-end gap-3">
-                {status === "PUBLISHED" && <button type="button" onClick={copyLink} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">링크 복사</button>}
-                {status === "PUBLISHED" && <button type="button" disabled={working} onClick={close} className="h-12 rounded-xl bg-gray-800 px-6 font-semibold text-white">마감</button>}
-                <button type="button" disabled={working} onClick={() => void save()} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">{selectedId ? "수정 저장" : "저장"}</button>
-                {status === "DRAFT" && selectedId && <button type="button" disabled={working} onClick={() => void publish()} className="h-12 rounded-xl bg-[#02C551] px-7 font-bold text-white disabled:opacity-50">{isPublishingWithRecruit ? "공고와 함께 공개" : "공개"}</button>}
+              <div className="mt-7 flex flex-wrap justify-end gap-3">
+                {status === "PUBLISHED" && <button type="button" data-tutorial-target="form-publish" onClick={copyLink} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">링크 복사</button>}
+                {status === "PUBLISHED" && <button type="button" data-tutorial-target="form-publish" disabled={working} onClick={close} className="h-12 rounded-xl bg-gray-800 px-6 font-semibold text-white">마감</button>}
+                <button type="button" data-tutorial-target="form-publish" disabled={working} onClick={() => void save()} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">{selectedId ? "수정 저장" : "저장"}</button>
+                {status === "DRAFT" && selectedId && <button type="button" data-tutorial-target="form-publish" disabled={working} onClick={() => void publish()} className="h-12 rounded-xl bg-[#02C551] px-7 font-bold text-white disabled:opacity-50">{isPublishingWithRecruit ? "공고와 함께 공개" : "공개"}</button>}
               </div>
             </section>
           </div>

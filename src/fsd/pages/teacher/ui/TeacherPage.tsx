@@ -502,7 +502,7 @@ export function TeacherPage() {
                         <p className="mt-1 text-sm text-secondary-text">{teacherName.replace(/ 선생님$/, "")} 선생님</p>
                     </div>
                 </div>
-                <div data-tutorial-target="slot-modes" className="flex gap-2 px-6 pt-5" aria-label="상담 종류">
+                <div className="flex gap-2 px-6 pt-5" aria-label="상담 종류">
                     {teacherKinds.map((value) => (
                         <button key={value} aria-pressed={kind === value} onClick={() => {
                              if (kind === value) return;
@@ -512,10 +512,10 @@ export function TeacherPage() {
                              {value === "course" ? "진로 상담" : "wee클래스 상담"}
                          </button>
                      ))}
-                    <button type="button" aria-pressed={isLockMode} onClick={() => { setIsLockMode((current) => !current); setIsForceMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
+                    <button type="button" data-tutorial-target="slot-modes" aria-pressed={isLockMode} onClick={() => { setIsLockMode((current) => !current); setIsForceMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isLockMode ? "border-red-500 bg-red-50 text-red-600" : "border-border bg-white text-secondary-text"}`}>
                         {isLockMode ? "시간 금지 모드 끄기" : "시간 금지 모드"}
                     </button>
-                    <button type="button" aria-pressed={isForceMode} onClick={() => { setIsForceMode((current) => !current); setIsLockMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isForceMode ? "border-blue-500 bg-blue-50 text-blue-600" : "border-border bg-white text-secondary-text"}`}>
+                    <button type="button" data-tutorial-target="slot-modes" aria-pressed={isForceMode} onClick={() => { setIsForceMode((current) => !current); setIsLockMode(false); }} className={`rounded-lg border px-4 py-2 font-semibold ${isForceMode ? "border-blue-500 bg-blue-50 text-blue-600" : "border-border bg-white text-secondary-text"}`}>
                         {isForceMode ? "추가 신청 끄기" : "추가 신청"}
                     </button>
                  </div>
