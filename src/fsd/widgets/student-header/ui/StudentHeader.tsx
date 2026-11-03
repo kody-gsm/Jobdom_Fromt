@@ -37,7 +37,9 @@ export const StudentHeader = () => {
           <Image src="/JobdamIcon.svg" alt="Jobdam" width={64} height={32} priority />
         </Link>
 
-        <nav          aria-label="학생 주요 메뉴"
+        <nav
+          data-tutorial-target="navigation"
+          aria-label="학생 주요 메뉴"
           className="col-span-2 row-start-2 flex h-12 items-center gap-1 border-t border-[#EDF0F2] text-sm font-semibold text-[#607089] sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:h-auto sm:justify-center sm:gap-8 sm:border-t-0 sm:text-base lg:gap-12"
         >
           {STUDENT_NAV_ITEMS.map((item) => {
@@ -55,7 +57,7 @@ export const StudentHeader = () => {
           })}
         </nav>
 
-        <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-2 text-[#6A7077] sm:col-start-3 sm:gap-5">
+        <div data-tutorial-target="account" className="col-start-2 row-start-1 flex items-center justify-self-end gap-2 text-[#6A7077] sm:col-start-3 sm:gap-5">
           <NotificationBell />
           <Link
             href="/profile"

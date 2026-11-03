@@ -136,7 +136,7 @@ export const HomeServices = () => {
           </Link>
         </ContentCard>
 
-        <ContentCard className="p-7">
+        <ContentCard data-tutorial-target="upcoming" className="p-7">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-2xl font-bold text-ink">예정 상담</h2>
             <button

@@ -388,7 +388,7 @@ export function TeacherPage() {
         <TeacherHeader />
         <div className="min-h-[calc(100vh-5rem)] bg-white text-ink lg:flex">
             <aside className="shrink-0 p-7 lg:w-[380px]">
-                <div>
+                <div data-tutorial-target="calendar">
                     <div className="mb-5 flex items-center justify-between">
                         <h2 className="text-xl font-bold">{currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월</h2>
                         <div className="flex gap-2">
@@ -416,7 +416,7 @@ export function TeacherPage() {
                     <p className="mt-5 text-xs text-secondary-text">초록색: 오늘 · 사각 테두리: 선택한 날짜</p>
                 </div>
                 {canManageBanner ? (
-                    <section aria-labelledby="banner-title" className="mt-6 border-t border-border pt-5">
+                    <section data-tutorial-target="banner-editor" aria-labelledby="banner-title" className="mt-6 border-t border-border pt-5">
                         <h2 id="banner-title" className="font-bold">학생 홈 배너</h2>
                         <p className="mt-1 text-xs leading-5 text-secondary-text">일반 교사와 Wee 교사는 학생 대시보드의 배너를 등록할 수 있습니다. 이미지는 필수입니다.</p>
                         <input
@@ -481,7 +481,7 @@ export function TeacherPage() {
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full border border-brand bg-brand-soft" />상담 대기</p>
                     <p className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-gray-400" />예약 금지</p>
                 </div>
-                <section aria-labelledby="pending-title" className="border-t border-border pt-5">
+                <section data-tutorial-target="requests" aria-labelledby="pending-title" className="border-t border-border pt-5">
                     <h2 id="pending-title" className="mb-3 font-bold">상담 예약 요청 목록 <span className="text-brand-accent">{upcomingPending.length}</span></h2>
                     {!isLoading && !loadError && upcomingPending.length === 0 && <p className="text-sm text-secondary-text">대기 중인 예약이 없습니다.</p>}
                     <div className="max-h-80 space-y-2 overflow-y-auto">
@@ -502,7 +502,7 @@ export function TeacherPage() {
                         <p className="mt-1 text-sm text-secondary-text">{teacherName.replace(/ 선생님$/, "")} 선생님</p>
                     </div>
                 </div>
-                <div className="flex gap-2 px-6 pt-5" aria-label="상담 종류">
+                <div data-tutorial-target="slot-modes" className="flex gap-2 px-6 pt-5" aria-label="상담 종류">
                     {teacherKinds.map((value) => (
                         <button key={value} aria-pressed={kind === value} onClick={() => {
                              if (kind === value) return;
@@ -525,7 +525,7 @@ export function TeacherPage() {
                 {loadError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{loadError}<button onClick={() => void loadReservations()} className="ml-3 underline">다시 불러오기</button></div>}
                 {slotError && <div role="alert" className="px-6 pt-3 text-sm text-red-600">{slotError}<button onClick={() => void loadSlotStatuses()} className="ml-3 underline">다시 불러오기</button></div>}
                 {isSlotLoading && <p role="status" className="px-6 pt-3 text-sm text-secondary-text">시간 금지 상태를 불러오는 중...</p>}
-                <div className="overflow-x-auto p-6">
+                <div data-tutorial-target="timetable" className="overflow-x-auto p-6">
                     <table className="w-full min-w-[720px] table-fixed border-collapse bg-white text-center">
                         <thead><tr>
                             <th className="w-24 border border-border p-3">교시</th>
