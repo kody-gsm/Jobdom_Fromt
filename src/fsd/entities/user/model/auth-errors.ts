@@ -1,3 +1,5 @@
+import { GSM_EMAIL_GUIDE } from "./credentials.ts";
+
 type ErrorLike = { message?: string; status?: number };
 export type AuthErrorField = "email" | "verificationCode" | "form";
 export type AuthFieldError = { field: AuthErrorField; message: string };
@@ -10,7 +12,7 @@ const messages: Record<string, string> = {
   "Already signed up.": "이미 가입된 이메일입니다.",
   "Student information was not found.": "학생 정보를 찾을 수 없습니다.",
   "Invalid signup request.": "회원가입 정보를 다시 확인해주세요.",
-  "이메일은 학교계정을 사용해야합니다.": "s로 시작하는 @gsm.hs.kr 이메일을 입력해주세요.",
+  "이메일은 학교계정을 사용해야합니다.": GSM_EMAIL_GUIDE,
 };
 
 const asError = (error: unknown): ErrorLike =>

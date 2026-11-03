@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef } from "react";
 import type { FormEvent } from "react";
 import { formatCountdown } from "@fsd/shared/lib";
+import { GSM_EMAIL_GUIDE } from "@fsd/entities/user";
 import { ActionButton, PasswordField, TextField } from "@fsd/shared/ui";
 import { SignupConsentDialog } from "./SignupConsentDialog.tsx";
 import { useSignupForm } from "../model/useSignupForm.ts";
@@ -34,8 +35,11 @@ export const SignupForm = () => {
         value={signupForm.form.email}
         error={signupForm.errorField === "email" ? signupForm.errors.email : undefined}
         onChange={(event) => signupForm.updateField("email", event.target.value)}
-        placeholder="s123@gsm.hs.kr"
+        placeholder="학교 계정 이메일"
       />
+      {signupForm.errorField === "email" ? null : (
+        <p className="-mt-3 text-xs leading-5 text-[#7A828B]">{GSM_EMAIL_GUIDE}</p>
+      )}
 
       <div className="-mt-2 flex justify-end">
         <button
