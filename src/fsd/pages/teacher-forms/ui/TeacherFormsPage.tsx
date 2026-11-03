@@ -340,7 +340,7 @@ export function TeacherFormsPage() {
             <section className="min-w-0 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="min-w-0 wrap-anywhere text-2xl font-bold">{selectedId ? title || "폼" : "새 폼"}</h2>
-                <div className="flex items-center gap-3"><Status status={status} />{selectedId && <Link href={`/teacher/forms/${selectedId}/submissions`} className="text-sm font-semibold text-[#02C551]">응답 보기</Link>}</div>
+                <div className="flex items-center gap-3"><Status status={status} />{selectedId && <Link href={`/teacher/forms/${selectedId}/submissions`} data-tutorial-target="form-responses-link" className="text-sm font-semibold text-[#02C551]">응답 보기</Link>}</div>
               </div>
 
               <fieldset disabled={working} className="mt-7 space-y-5 disabled:opacity-70">

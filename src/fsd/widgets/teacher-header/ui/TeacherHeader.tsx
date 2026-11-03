@@ -50,7 +50,7 @@ export function TeacherHeader() {
               ? pathname === item.href
               : pathname.startsWith(item.href);
             return (
-              <Link key={item.href} href={item.href} aria-current={isActive ? "page" : undefined} className={`flex min-w-0 flex-1 items-center justify-center break-keep text-center leading-tight sm:flex-none sm:whitespace-nowrap sm:leading-normal ${isActive ? "text-brand-accent" : "transition-colors hover:text-ink"}`}>
+              <Link key={item.href} href={item.href} data-tutorial-target={item.href === "/teacher/recruit" ? "nav-teacher-recruit" : item.href === "/teacher/forms" ? "nav-teacher-forms" : undefined} aria-current={isActive ? "page" : undefined} className={`flex min-w-0 flex-1 items-center justify-center break-keep text-center leading-tight sm:flex-none sm:whitespace-nowrap sm:leading-normal ${isActive ? "text-brand-accent" : "transition-colors hover:text-ink"}`}>
                 {item.href === "/teacher" && role === "WEE_TEACHER" ? "wee클래스 상담" : item.label}
               </Link>
             );

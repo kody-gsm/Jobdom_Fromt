@@ -1,4 +1,5 @@
 import { ApiError } from "./ApiError.ts";
+import { getRequestInterceptor } from "./interceptor.ts";
 
 const getApiBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_BASE_URL || "/backend").replace(/\/$/, "");
@@ -44,6 +45,17 @@ export const request = async <T>(
 ): Promise<T> => {
   const { responseType, timeoutMs, signal, ...fetchInit } = init;
   delete fetchInit.invalidateCache;
+  const interceptor = getRequestInterceptor();
+  if (interceptor) {
+    const intercepted = interceptor({ method: (init.method ?? "GET").toUpperCase(), path, body: init.body, responseType });
+    if (intercepted.handled) {
+      // 실제 네트워크와 같은 비동기 흐름을 유지해 화면의 로딩 처리도 그대로 동작하게 한다.
+      await Promise.resolve();
+      if (signal?.aborted) throw new ApiError("요청이 취소되었습니다.", 0, "REQUEST_ABORTED");
+      if (intercepted.status >= 400) throw new ApiError(intercepted.message ?? "요청에 실패했습니다.", intercepted.status);
+      return intercepted.data as T;
+    }
+  }
   const headers = new Headers(init.headers);
   const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
 

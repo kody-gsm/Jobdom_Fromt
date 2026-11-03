@@ -87,7 +87,7 @@ function SubmissionSheet({ formId }: { formId: number }) {
           </div>
           {exportError && <p role="alert" className="mt-5 wrap-anywhere rounded-xl bg-red-50 p-4 text-sm text-red-700">{exportError}</p>}
 
-          <section aria-label="폼 응답 목록" aria-busy={state.status === "loading"} className="mt-7 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <section data-tutorial-target="form-sheet" aria-label="폼 응답 목록" aria-busy={state.status === "loading"} className="mt-7 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#cce4d5] bg-[#edf7f0] px-4 py-3">
               <div className="flex items-center gap-2.5 text-[#17633b]">
                 <FiGrid aria-hidden size={18} />
