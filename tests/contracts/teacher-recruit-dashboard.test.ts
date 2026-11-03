@@ -39,4 +39,17 @@ assert.equal(rows[0].form?.id, 10);
 assert.equal(rows[0].applicants[0].id, 99);
 assert.deepEqual(submissionCalls, [10]);
 
+// '새로고침'은 30초 조회 캐시를 거치지 않고 공고·폼·지원자를 모두 새로 받는다.
+const inits: unknown[] = [];
+const freshLoad = createRecruitDashboardLoader({
+  getTeacherRecruits: async (init) => { inits.push(init); return [recruit]; },
+  getTeacherForms: async (init) => { inits.push(init); return forms; },
+  getFormSubmissions: async (_formId, init) => { inits.push(init); return []; },
+});
+await freshLoad({ fresh: true });
+assert.deepEqual(inits, [{ cache: "no-store" }, { cache: "no-store" }, { cache: "no-store" }]);
+inits.length = 0;
+await freshLoad();
+assert.deepEqual(inits, [undefined, undefined, undefined]);
+
 console.log("teacher recruit dashboard contract passed");

@@ -14,7 +14,8 @@ import { formatSubmissionDate, getAnswerText, getSpreadsheetColumnLabel } from "
 type SheetState =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "ready"; form: DynamicForm; submissions: FormSubmission[] };
+  // complete가 false면 응답을 아직 불러오는 중이다. 먼저 온 응답부터 표에 보여 준다.
+  | { status: "ready"; form: DynamicForm; submissions: FormSubmission[]; total: number; complete: boolean };
 
 export function FormSubmissionsPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,9 +31,11 @@ function SubmissionSheet({ formId }: { formId: number }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    getFormSubmissionSheet(formId, controller.signal)
+    getFormSubmissionSheet(formId, controller.signal, ({ form, submissions, total }) => {
+      if (!controller.signal.aborted) setState({ status: "ready", form, submissions, total, complete: false });
+    })
       .then(({ form, submissions }) => {
-        if (!controller.signal.aborted) setState({ status: "ready", form, submissions });
+        if (!controller.signal.aborted) setState({ status: "ready", form, submissions, total: submissions.length, complete: true });
       })
       .catch((caught: unknown) => {
         if (!controller.signal.aborted) {
@@ -43,7 +46,7 @@ function SubmissionSheet({ formId }: { formId: number }) {
   }, [formId, retryCount]);
 
   const download = async () => {
-    if (state.status !== "ready" || exportInFlight.current) return;
+    if (state.status !== "ready" || !state.complete || exportInFlight.current) return;
     exportInFlight.current = true;
     setIsExporting(true);
     setExportError("");
@@ -77,7 +80,7 @@ function SubmissionSheet({ formId }: { formId: number }) {
             <button
               type="button"
               onClick={() => void download()}
-              disabled={state.status !== "ready" || isExporting}
+              disabled={state.status !== "ready" || !state.complete || isExporting}
               aria-busy={isExporting}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#02a946] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#028a3c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#02a946] disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -156,7 +159,8 @@ function SubmissionSheet({ formId }: { formId: number }) {
                   <button type="button" onClick={() => { setState({ status: "loading" }); setRetryCount((count) => count + 1); }} className="mt-4 min-h-11 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">다시 불러오기</button>
                 </div>
               )}
-              {state.status === "ready" && submissions.length === 0 && <p className="sticky left-0 px-6 py-24 text-center text-sm text-gray-400">제출된 응답이 없습니다.</p>}
+              {state.status === "ready" && !state.complete && <p role="status" className="sticky left-0 px-6 py-3 text-center text-xs text-gray-400">응답을 불러오는 중… ({submissions.length}/{state.total})</p>}
+              {state.status === "ready" && state.complete && submissions.length === 0 && <p className="sticky left-0 px-6 py-24 text-center text-sm text-gray-400">제출된 응답이 없습니다.</p>}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 bg-[#f6f8f7] px-4 py-2">
               <span className="inline-flex items-center gap-2 border-b-2 border-[#02a946] px-3 py-2 text-xs font-bold text-[#17633b]"><FiGrid aria-hidden size={14} />전체 응답</span>

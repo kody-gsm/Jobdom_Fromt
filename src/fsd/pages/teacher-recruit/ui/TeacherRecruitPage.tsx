@@ -34,9 +34,9 @@ export function TeacherRecruitPage() {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
 
-  const load = async (preferredId?: number) => {
+  const load = async (preferredId?: number, fresh = false) => {
     try {
-      const data = await getRecruitDashboard();
+      const data = await getRecruitDashboard({ fresh });
       setRows(data);
       setSelectedId((current) => preferredId ?? (data.some(({ recruit }) => recruit.id === current) ? current : data[0]?.recruit.id ?? null));
       setMessage(null);
@@ -131,7 +131,6 @@ export function TeacherRecruitPage() {
       if (isNew) {
         setSelectedId(recruit.id);
         setCreating(false);
-        await load(recruit.id);
       }
       if (openForm && recruit.formId) {
         router.push(`/teacher/forms?formId=${recruit.formId}`);
@@ -194,7 +193,7 @@ export function TeacherRecruitPage() {
                 <select aria-label="공고 상태" value={status} onChange={(event) => setStatus(event.target.value as typeof status)} className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none focus:border-[#02C551]">
                   <option value="ALL">전체 상태</option><option value="PUBLISHED">공개</option><option value="DRAFT">초안</option><option value="CLOSED">마감</option>
                 </select>
-                <button type="button" onClick={() => { setLoading(true); void load(selectedId ?? undefined); }} className="h-10 rounded-lg border border-gray-200 px-3 text-sm font-semibold text-gray-600">새로고침</button>
+                <button type="button" onClick={() => { setLoading(true); void load(selectedId ?? undefined, true); }} className="h-10 rounded-lg border border-gray-200 px-3 text-sm font-semibold text-gray-600">새로고침</button>
               </div>
             </div>
 
@@ -327,7 +326,10 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
 function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <th scope="col" className={`whitespace-nowrap border-r border-gray-200 px-3 py-3 ${className}`}>{children}</th>; }
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <td className={`border-r border-gray-100 px-3 py-4 align-middle leading-6 ${className}`}>{children}</td>; }
 function EmptyRow({ text }: { text: string }) { return <tr><td colSpan={9} className="px-6 py-28 text-center text-sm text-gray-400">{text}</td></tr>; }
-function formatDate(value: string, time = false) { return new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit", ...(time ? { hour: "2-digit", minute: "2-digit" } : {}) }).format(new Date(value)); }
+// 표의 모든 칸에서 쓰므로 포맷터를 한 번만 만든다.
+const DATE_FORMAT = new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit" });
+const DATE_TIME_FORMAT = new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+function formatDate(value: string, time = false) { return (time ? DATE_TIME_FORMAT : DATE_FORMAT).format(new Date(value)); }
 
 function SummaryEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return <div>
