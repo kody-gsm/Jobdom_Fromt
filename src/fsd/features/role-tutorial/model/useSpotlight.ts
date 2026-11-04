@@ -24,7 +24,7 @@ const findTargetElements = (targets: readonly TutorialTarget[]) =>
     .filter((element) => element.getClientRects().length > 0);
 
 // 강조 영역 안에서 열린 드롭다운 메뉴는 영역 밖으로 튀어나와도 함께 열어 눌러 볼 수 있게 한다.
-const POPOVER_SELECTOR = '[role="menu"], [role="listbox"]';
+const POPOVER_SELECTOR = '[role="menu"], [role="listbox"], [data-tutorial-popover]';
 const findPopovers = (elements: readonly HTMLElement[]) =>
   elements.flatMap((element) => Array.from(element.querySelectorAll<HTMLElement>(POPOVER_SELECTOR)))
     .filter((element) => element.getClientRects().length > 0);

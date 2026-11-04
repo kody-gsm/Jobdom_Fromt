@@ -157,6 +157,7 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
       className="fixed inset-x-4 top-28 z-[60] flex max-h-[calc(100dvh-8rem)] w-auto max-w-none flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/10 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:max-h-none sm:w-96 sm:max-w-sm"
       role="dialog"
       aria-label="알림 목록"
+      data-tutorial-popover
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">

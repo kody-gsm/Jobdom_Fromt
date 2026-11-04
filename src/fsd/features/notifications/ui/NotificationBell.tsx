@@ -9,7 +9,7 @@ export const NotificationBell = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div data-tutorial-target="notifications" className="relative">
       <button
         type="button"
         aria-label={`알림${unreadCount > 0 ? ` (${unreadCount}개 읽지 않음)` : ""}`}
