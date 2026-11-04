@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FiArrowLeft, FiArrowRight, FiCheckCircle, FiShield } from "react-icons/fi";
 import { ActionButton } from "@fsd/shared/ui";
 import type { TutorialMode } from "../model/presentation.ts";
 import type { TutorialRole } from "../model/progress.ts";
-import { getStepTargets, getTutorialSteps, matchesRoute } from "../model/steps.ts";
+import { findNavigationResume, getStepTargets, getTutorialSteps, matchesRoute } from "../model/steps.ts";
 import { useSpotlight } from "../model/useSpotlight.ts";
 
 const COMPACT_QUERY = "(max-width: 767px)";
@@ -45,7 +45,7 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [completionError, setCompletionError] = useState("");
   const [cardHeight, setCardHeight] = useState(280);
-  const steps = getTutorialSteps(role);
+  const steps = useMemo(() => getTutorialSteps(role), [role]);
   const step = steps[stepIndex];
   const isLastStep = stepIndex === steps.length - 1;
   const isOnStepRoute = matchesRoute(step.route, pathname);
@@ -64,9 +64,10 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
     const previous = previousPath.current;
     previousPath.current = pathname;
     if (isCompleting || isOnStepRoute) return;
-    if (actionPath !== null && matchesRoute(actionPath, pathname) && matchesRoute(step.route, previous)) setStepIndex((index) => index + 1);
+    const resume = findNavigationResume(steps, stepIndex, previous, pathname);
+    if (resume !== null) setStepIndex(resume);
     else router.push(step.route);
-  }, [actionPath, isCompleting, isOnStepRoute, pathname, router, step.route]);
+  }, [isCompleting, isOnStepRoute, pathname, router, step.route, stepIndex, steps]);
 
   // 선택을 바꾸거나 열린 창을 처리하고 닫으면 자동으로 다음 단계로 넘어간다.
   useEffect(() => {
@@ -160,11 +161,10 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
 
   return (
     <>
-      {/* 어두운 부분만 클릭을 막고, 강조된 구멍은 직접 누를 수 있다. 직접 해보는 단계가 아니면 구멍도 막는다. */}
+      {/* 어두운 부분만 클릭을 막고, 강조된 구멍 안은 어느 단계에서든 직접 누를 수 있다. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[100]">
         <svg data-tutorial-spotlight className="pointer-events-none absolute inset-0 h-full w-full">
           <path ref={dim} d="M0 0H10000V10000H0Z" fillRule="evenodd" fill="rgb(30 38 48 / 62%)" style={{ pointerEvents: "auto" }} />
-          {step.interactive ? null : <rect width="100%" height="100%" fill="transparent" style={{ pointerEvents: "auto" }} />}
           <path ref={outline} d="" fill="none" strokeWidth={3} className="stroke-brand" />
         </svg>
       </div>
