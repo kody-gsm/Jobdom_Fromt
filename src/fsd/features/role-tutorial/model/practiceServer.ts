@@ -18,7 +18,8 @@ type Recruit = { id: number; companyName: string | null; interviewDate: string |
 
 export type PracticeIdentity = { userId: number; name: string; role: TutorialRole };
 
-const PASSTHROUGH: RegExp[] = [/^\/auth\/(reissue|logout|tutorial)/, /^\/api\/notifications/];
+// 알림 목록·개수는 연습용으로 답하고, 실시간 연결(구독)만 실제 서버로 보낸다.
+const PASSTHROUGH: RegExp[] = [/^\/auth\/(reissue|logout|tutorial)/, /^\/api\/notifications\/subscribe/];
 const ok = (data?: unknown, status = 200): InterceptedResponse => ({ handled: true, status, data });
 const fail = (status: number, message: string): InterceptedResponse => ({ handled: true, status, message });
 
@@ -114,6 +115,15 @@ export const createPracticeServer = (identity: PracticeIdentity, now = new Date(
     practiceRecruit(7008, "연습 마감 회사", ["FRONTEND", "BACKEND", "FULLSTACK", "MOBILE", "IOT", "AI", "SECURITY", "ETC"], "지원 기간이 끝난 연습용 공고예요. ‘마감된 공고’ 필터에서 볼 수 있어요.", toDateKey(pastDate)),
   ];
   let banner: Record<string, unknown> | null = null;
+  // 직접 열어 읽어 볼 연습 알림. 누르면 지금 단계 화면(학생: 신청 폼, 교사: 상담 일정)으로 이어진다.
+  const notifications = [isStudent ? {
+    id: 6001, type: "FORM_PUBLISHED", title: "새 신청 폼이 공개됐어요", content: `${PRACTICE_FORM_TITLE}가 공개됐어요. 마감 전에 응답해 주세요.`,
+    targetId: 9001, targetUrl: "/form/9001", isRead: false, targetStatus: null, expired: false, createdAt: stamp, expiresAt: null,
+  } : {
+    id: 6001, type: homeKind === "course" ? "COURSE_COUNSELING_REQUESTED" : "COMMON_COUNSELING_REQUESTED", title: "새 상담 신청이 왔어요",
+    content: `${PRACTICE_STUDENT} 학생이 상담을 신청했어요. 상담 요청에서 확인해 주세요.`,
+    targetId: reservations[0].id, targetUrl: `/teacher/${homeKind}/${reservations[0].id}`, isRead: false, targetStatus: null, expired: false, createdAt: stamp, expiresAt: null,
+  }];
 
   const formSummary = (form: Form) => ({
     id: form.id, title: form.title, description: form.description, deadline: form.deadline, status: form.status,
@@ -149,6 +159,22 @@ export const createPracticeServer = (identity: PracticeIdentity, now = new Date(
     const query = new URLSearchParams(search);
     const json = parseJson(body);
     let match: RegExpMatchArray | null;
+
+    // ── 알림 ──
+    if (pathname === "/api/notifications/unread-count") return ok({ unreadCount: notifications.filter((item) => !item.isRead).length });
+    if (pathname === "/api/notifications" && method === "GET") {
+      return ok({ content: notifications, totalElements: notifications.length, totalPages: 1, number: 0, size: notifications.length, last: true });
+    }
+    if (pathname === "/api/notifications/read-all") {
+      notifications.forEach((item) => { item.isRead = true; });
+      return ok(undefined, 204);
+    }
+    if ((match = pathname.match(/^\/api\/notifications\/(\d+)\/read$/))) {
+      const item = notifications.find((candidate) => candidate.id === Number(match?.[1]));
+      if (!item) return fail(404, "알림을 찾을 수 없습니다.");
+      item.isRead = true;
+      return ok(item);
+    }
 
     // ── 공통 ──
     if (pathname === "/activity/events") return ok(undefined, 204);

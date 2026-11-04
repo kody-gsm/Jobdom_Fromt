@@ -18,6 +18,7 @@ import {
 } from "../api/notifications.ts";
 import type { NotificationItem } from "../api/notifications.ts";
 import { RESERVATION_CHANGED_EVENT } from "@fsd/entities/consultation";
+import { subscribeRequestInterceptor } from "@fsd/shared/api";
 import { subscribeNotifications } from "../api/notificationStream.ts";
 import { getSession, getSessionVersion } from "@fsd/entities/user";
 
@@ -344,6 +345,24 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     }, { once: true });
   }, [disconnect, loadNotifications, pushToast]);
+
+  // 튜토리얼 연습이 켜지거나 꺼지면 알림 개수와 목록을 그 데이터(연습용 ↔ 실제)로 다시 받는다.
+  // 실시간 연결은 계정 기준이라 그대로 둔다.
+  useEffect(() => subscribeRequestInterceptor(() => {
+    if (!abortRef.current) return;
+    notificationRequestVersion.current += 1;
+    notificationIds.current.clear();
+    notificationLoadedRef.current = false;
+    pagination.current = { page: 0, hasMore: false, loading: false };
+    notificationReads.current = { ids: new Set<number>(), all: false };
+    pendingListReadChanges.current = null;
+    setNotifications([]);
+    setNotificationLoaded(false);
+    setNotificationHasMore(false);
+    setNotificationLoading(false);
+    setNotificationError(null);
+    refreshCountRef.current?.();
+  }), []);
 
   useEffect(() => {
     providerLifetime.current = Symbol("notification-provider");

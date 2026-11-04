@@ -367,7 +367,7 @@ export function TeacherFormsPage() {
                 <div className="flex items-center gap-3"><Status status={status} />{selectedId && <Link href={`/teacher/forms/${selectedId}/submissions`} data-tutorial-target="form-responses-link" className="text-sm font-semibold text-[#02C551]">응답 보기</Link>}</div>
               </div>
 
-              <fieldset disabled={working} className="mt-7 space-y-5 disabled:opacity-70">
+              <fieldset disabled={working} data-tutorial-target="form-editor" className="mt-7 space-y-5 disabled:opacity-70">
                 <label className="block text-sm font-semibold text-gray-700">
                   제목
                   <input required maxLength={FORM_EDITOR_LIMITS.TITLE} value={title} onChange={(event) => setTitle(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-gray-200 px-4 font-normal outline-none focus:border-[#02C551]" />
@@ -392,7 +392,7 @@ export function TeacherFormsPage() {
                     </div>
                   </div>
                 )}
-                <fieldset disabled={!questionsEditable} data-tutorial-target="form-editor" className="space-y-4 disabled:opacity-70">
+                <fieldset disabled={!questionsEditable} className="space-y-4 disabled:opacity-70">
                   <legend className="mb-3 font-semibold text-gray-700">질문</legend>
                   {questions.map((question, index) => (
                     <QuestionEditor key={question.key} question={question} index={index} count={questions.length} onUpdate={updateQuestion} onMove={moveQuestion} onRemove={removeQuestion} />
@@ -403,7 +403,7 @@ export function TeacherFormsPage() {
 
               {message && <p role="status" className={`mt-6 wrap-anywhere rounded-xl px-4 py-3 text-sm ${message.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{message.text}</p>}
               {isPublishingWithRecruit && <NoticeChannelPicker companyName={linkedRecruit?.companyName ?? null} value={channelId} onChange={setChannelId} disabled={working} />}
-              <div className="mt-7 flex flex-wrap justify-end gap-3">
+              <div data-form-status={status} className="mt-7 flex flex-wrap justify-end gap-3">
                 {status === "PUBLISHED" && <button type="button" data-tutorial-target="form-publish" onClick={copyLink} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">링크 복사</button>}
                 {status === "PUBLISHED" && <button type="button" data-tutorial-target="form-publish" disabled={working} onClick={close} className="h-12 rounded-xl bg-gray-800 px-6 font-semibold text-white">마감</button>}
                 <button type="button" data-tutorial-target="form-publish" disabled={working} onClick={() => void save()} className="h-12 rounded-xl bg-gray-100 px-6 font-semibold text-gray-700">{selectedId ? "수정 저장" : "저장"}</button>

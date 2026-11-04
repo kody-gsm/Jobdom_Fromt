@@ -60,7 +60,7 @@ export function TeacherHeader() {
 
         <div data-tutorial-target="account" className="flex items-center justify-end gap-2 text-secondary-text sm:gap-3">
           <NotificationBell />
-          <Link href="/profile" className="rounded-xl px-2 py-2 text-sm font-semibold transition-colors hover:bg-surface hover:text-brand-accent sm:px-3">프로필</Link>
+          <Link href="/profile" data-tutorial-target="nav-profile" className="rounded-xl px-2 py-2 text-sm font-semibold transition-colors hover:bg-surface hover:text-brand-accent sm:px-3">프로필</Link>
           <button type="button" aria-label="로그아웃" onClick={() => void handleLogout()} className="rounded-xl p-2 transition-colors hover:bg-surface hover:text-brand-accent">
             <FiLogOut aria-hidden size={21} />
           </button>

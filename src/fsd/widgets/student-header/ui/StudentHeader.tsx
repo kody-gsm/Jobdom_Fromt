@@ -64,6 +64,7 @@ export const StudentHeader = () => {
           <Link
             href="/profile"
             aria-label="프로필"
+            data-tutorial-target="nav-profile"
             className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl transition-colors hover:bg-surface"
           >
             {profileAvatar ? (

@@ -78,6 +78,7 @@ const setup = async (t, { authenticated = true, strict = false } = {}) => {
   const lists = [];
   const streams = [];
   const writes = [];
+  const interceptorListeners = new Set();
   const api = {
     getNotificationTargetUrl: (url) => url,
     isNotificationNavigable: () => true,
@@ -103,6 +104,9 @@ const setup = async (t, { authenticated = true, strict = false } = {}) => {
       getSessionVersion: () => sessionVersion,
     },
     "@fsd/entities/consultation": { RESERVATION_CHANGED_EVENT: "reservation-changed" },
+    "@fsd/shared/api": {
+      subscribeRequestInterceptor: (listener) => { interceptorListeners.add(listener); return () => interceptorListeners.delete(listener); },
+    },
     "../api/notificationStream.ts": {
       subscribeNotifications: (receive, connect, signal, reservation, disconnect) => {
         streams.push({ receive, connect, signal, reservation, disconnect });
@@ -140,6 +144,7 @@ const setup = async (t, { authenticated = true, strict = false } = {}) => {
   });
   return {
     counts, lists, streams, writes, intervals, values, renders, window,
+    switchDataSource: async () => { await act(async () => interceptorListeners.forEach((listener) => listener())); },
     changeSession: async (next, { isRefresh = false, emit = true } = {}) => {
       await act(async () => {
         session = next;
@@ -579,3 +584,17 @@ for (const kind of ["single", "all"]) {
     assert.equal(h.lists[2].init.signal, h.streams[1].signal);
   });
 }
+
+test("switching between practice and real data refetches the count and drops the loaded list", async (t) => {
+  const h = await setup(t);
+  await h.settle(h.counts[0], { unreadCount: 4 });
+  await act(async () => { void h.values.actions.loadNotifications?.(0); });
+  const listsBefore = h.lists.length;
+  if (listsBefore > 0) await h.settle(h.lists.at(-1), page([item(1)]));
+  await h.switchDataSource();
+  assert.equal(h.counts.length, 2, "practice start must ask the new source for the unread count");
+  assert.equal(h.streams.length, 1, "the live stream stays connected");
+  assert.deepEqual(h.values.list.notifications, []);
+  await h.settle(h.counts[1], { unreadCount: 1 });
+  assert.equal(h.values.unread, 1);
+});
