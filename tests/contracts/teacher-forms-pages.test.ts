@@ -91,4 +91,11 @@ assert.match(submissions, /제출된 응답이 없습니다/);
 assert.match(submissions, /\/teacher\/forms/);
 assert.doesNotMatch(submissions, /@\/app\/utils\/api|@\/app\/components/);
 
+// 저장·마감 응답에 폼 전체가 있으므로 목록은 그 한 건만 고친다. 공개 뒤 목록 동기화는 안내를 막지 않는다.
+assert.doesNotMatch(forms, /await load\(\)/);
+assert.match(forms, /upsertForm\(saved\)/);
+assert.match(forms, /upsertForm\(closed\)/);
+assert.match(forms, /const QuestionEditor = memo\(/);
+assert.match(formsApi, /Promise\.all\(\[formApi\.getTeacherById\(formId\), notice\(\)\]\)/);
+
 console.log("teacher forms pages contract passed");

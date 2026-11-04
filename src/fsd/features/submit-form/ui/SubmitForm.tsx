@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type { DragEvent, FormEvent } from "react";
 import { FiFileText, FiUploadCloud } from "react-icons/fi";
 import {
@@ -140,11 +140,18 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
   const retrySubmission = () => loadSubmission(formRequestVersion.current, formId);
   const retryForm = () => loadForm(formRequestVersion.current, formId);
 
-  const setValue = (questionId: number, value: FormValue) => {
-    if (!form || formLoading || submissionLoading || submissionError || submitting || isFormClosed(form)) return;
+  const isInputLocked = !form || formLoading || submissionLoading || Boolean(submissionError) || submitting;
+  const inputLockRef = useRef({ isInputLocked, form });
+  useEffect(() => {
+    inputLockRef.current = { isInputLocked, form };
+  });
+  // 질문 칸이 다시 그려지지 않도록 같은 함수를 유지하고, 잠금 상태는 ref로 최신 값을 읽는다.
+  const setValue = useCallback((questionId: number, value: FormValue) => {
+    const { isInputLocked: locked, form: currentForm } = inputLockRef.current;
+    if (locked || !currentForm || isFormClosed(currentForm)) return;
     setValues((current) => ({ ...current, [questionId]: value }));
     setMessage(null);
-  };
+  }, []);
 
   const submitForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -267,7 +274,7 @@ export const SubmitForm = ({ formId }: { formId: number }) => {
               question={question}
               index={index}
               value={values[question.id]}
-              onChange={(value) => setValue(question.id, value)}
+              onChange={setValue}
               disabled={isExpired || submitting || submissionLoading || Boolean(submissionError)}
             />
           ))
@@ -333,11 +340,13 @@ type QuestionFieldProps = {
   question: FormQuestion;
   index: number;
   value?: FormValue;
-  onChange: (value: FormValue) => void;
+  onChange: (questionId: number, value: FormValue) => void;
   disabled?: boolean;
 };
 
-const QuestionField = ({ question, index, value, onChange, disabled = false }: QuestionFieldProps) => {
+// 한 질문에 입력할 때 다른 질문 칸은 다시 그리지 않는다.
+const QuestionField = memo(function QuestionField({ question, index, value, onChange: onQuestionChange, disabled = false }: QuestionFieldProps) {
+  const onChange = (nextValue: FormValue) => onQuestionChange(question.id, nextValue);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileError, setFileError] = useState("");
@@ -545,7 +554,7 @@ const QuestionField = ({ question, index, value, onChange, disabled = false }: Q
       {error}
     </fieldset>
   );
-};
+});
 
 const SubmittedAnswers = ({ submission }: { submission: FormSubmission }) => (
   <section data-tutorial-target="form-submitted" className="min-w-0">

@@ -104,8 +104,8 @@ const setup = async (t, { authenticated = true, strict = false } = {}) => {
     },
     "@fsd/entities/consultation": { RESERVATION_CHANGED_EVENT: "reservation-changed" },
     "../api/notificationStream.ts": {
-      subscribeNotifications: (receive, connect, signal, reservation) => {
-        streams.push({ receive, connect, signal, reservation });
+      subscribeNotifications: (receive, connect, signal, reservation, disconnect) => {
+        streams.push({ receive, connect, signal, reservation, disconnect });
       },
     },
     "next/navigation": { useRouter: () => ({ push: () => {} }) },
@@ -203,6 +203,27 @@ test("hidden tabs skip the minute poll and refresh once when they become visible
   assert.equal(h.counts.length, 2);
   await h.settle(h.counts[1], { unreadCount: 3 });
   assert.equal(h.values.unread, 3);
+});
+
+test("an open stream polls the unread count every five minutes instead of every minute", async (t) => {
+  const h = await setup(t);
+  const realNow = Date.now;
+  let now = realNow();
+  Date.now = () => now;
+  t.after(() => { Date.now = realNow; });
+  await h.settle(h.counts[0], { unreadCount: 1 });
+  await act(async () => { h.streams[0].connect(false); });
+  now += 60_000;
+  await act(async () => { for (const poll of h.intervals.values()) poll(); });
+  assert.equal(h.counts.length, 1, "a live stream already pushes count changes");
+  now += 4 * 60_000;
+  await act(async () => { for (const poll of h.intervals.values()) poll(); });
+  assert.equal(h.counts.length, 2, "a five-minute safety poll still runs");
+  await h.settle(h.counts[1], { unreadCount: 2 });
+  await act(async () => { h.streams[0].disconnect(); });
+  now += 60_000;
+  await act(async () => { for (const poll of h.intervals.values()) poll(); });
+  assert.equal(h.counts.length, 3, "a dropped stream falls back to the minute poll");
 });
 
 test("events during the trailing request schedule another serialized refresh", async (t) => {

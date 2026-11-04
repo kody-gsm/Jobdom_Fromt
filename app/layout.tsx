@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { preconnect } from "react-dom";
 import { NotificationProvider, NotificationToastContainer } from "@fsd/features/notifications";
 import { AuthGate } from "@fsd/app/auth-gate";
 
@@ -17,6 +18,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 글꼴 CSS와 파일이 있는 CDN 연결을 미리 열어 첫 화면 글꼴 대기 시간을 줄인다.
+  preconnect("https://cdn.jsdelivr.net", { crossOrigin: "anonymous" });
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col">

@@ -64,3 +64,13 @@ assert.match(page, /selection.reservation.content/);
 assert.match(page, /selection.reservation.student_number/);
 assert.match(page, /disabled={isProcessing}/);
 assert.match(read("src/fsd/features/submit-consultation/api/consultation.ts"), /`\/student\/\$\{kind\}\/teachers`/);
+
+// 수락·거절·시간 금지·직접 등록 뒤에는 화면을 먼저 고치고 서버 동기화는 뒤에서 조용히 한다.
+assert.doesNotMatch(page, /await loadReservations\(\)/, "변경 뒤 전체 목록 재조회를 기다리며 버튼을 잠그지 않는다");
+assert.doesNotMatch(page, /await Promise\.all\(\[loadReservations\(\), loadSlotStatuses\(\)\]\)/, "시간 금지 변경마다 주간 상태 5건을 다시 받지 않는다");
+assert.match(page, /void loadReservations\(\{ quiet: true \}\)/);
+assert.match(page, /if \(!quiet\) setIsLoading\(true\)/);
+assert.match(page, /reservationSlot\(item\) !== slot\)\);\s*setApproved\(\(items\) => \[\.\.\.items, selection\.reservation\]\)/, "수락하면 같은 시간의 다른 대기 신청도 함께 지운다");
+assert.match(page, /if \(students\.length === 0 \|\| studentsLoadError\) void loadStudents\(\)/, "학생 목록은 한 번만 받는다");
+assert.match(read("src/fsd/pages/teacher/api/teacher.ts"), /invalidateCache: \[`\/student\/\$\{kind\}`, `\/teacher\/\$\{kind\}`\]/);
+assert.match(read("src/fsd/entities/banner/api/createBannerApi.ts"), /invalidateCache: \["\/student\/banner", "\/teacher\/banner"\]/);

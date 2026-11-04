@@ -111,6 +111,19 @@ export const isAccessTokenExpired = (token: string) => {
   }
 };
 
+const STALE_TOKEN_MARGIN_MS = 30_000;
+/** JWT로 읽히고 exp가 곧 지나는 토큰만 true. 형식을 알 수 없는 토큰은 서버 판단에 맡긴다. */
+export const isAccessTokenStale = (token: string, now = Date.now()) => {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return false;
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof decoded.exp === "number" && decoded.exp * 1000 - STALE_TOKEN_MARGIN_MS <= now;
+  } catch {
+    return false;
+  }
+};
+
 export const isRememberedSession = () => {
   if (typeof window === "undefined") return false;
   return readJson(sessionStorage) === null && hasRememberFlag() && readJson(localStorage) !== null;

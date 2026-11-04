@@ -22,16 +22,21 @@ export const publishForm = async (formId: number, channelId: string | null): Pro
   if (recruit?.status !== "DRAFT") return { form: await formApi.publishTeacher(formId), channelNotice: "none" };
 
   const published = await recruitApi.publishTeacher(recruit.id);
-  let channelNotice: PublishFormResult["channelNotice"] = "none";
-  if (channelId) {
-    try {
-      await recruitApi.sendNoticeToChannel(published, channelId);
-      channelNotice = "sent";
-    } catch {
-      // 공고와 폼은 이미 공개되었으므로 선택 채널 발송 실패는 결과로만 알린다.
-      channelNotice = "failed";
+  // 채널 알림과 공개된 폼 조회는 서로 기다릴 필요가 없어 함께 보낸다.
+  const notice = async () => {
+    let channelNotice: PublishFormResult["channelNotice"] = "none";
+    if (channelId) {
+      try {
+        await recruitApi.sendNoticeToChannel(published, channelId);
+        channelNotice = "sent";
+      } catch {
+        // 공고와 폼은 이미 공개되었으므로 선택 채널 발송 실패는 결과로만 알린다.
+        channelNotice = "failed";
+      }
     }
-  }
-  return { form: await formApi.getTeacherById(formId), channelNotice };
+    return channelNotice;
+  };
+  const [form, channelNotice] = await Promise.all([formApi.getTeacherById(formId), notice()]);
+  return { form, channelNotice };
 };
 export const closeForm = formApi.closeTeacher;

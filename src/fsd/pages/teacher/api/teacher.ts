@@ -39,6 +39,7 @@ export const forceCreateConsultation = (kind: ConsultationKind, input: ForceRese
     requestWithSession<string>(`/teacher/${kind}/force`, {
         method: "POST",
         body: JSON.stringify(input),
+        invalidateCache: [`/student/${kind}`, `/teacher/${kind}`],
     });
 
 export { getSession };

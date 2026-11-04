@@ -49,7 +49,6 @@ const resetPasswordActions = createResetPasswordActions({ request });
 
 sessionStorage.setItem("jobdam_access_token", "test-access-token");
 await recruitApi.getAll();
-sessionStorage.removeItem("jobdam_access_token");
 await formApi.getAll();
 await consultationApi.getAll("course");
 await consultationApi.getTeacher("common");

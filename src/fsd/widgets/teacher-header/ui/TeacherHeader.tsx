@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { getSession, type UserRole } from "@fsd/entities/user";
 import { FiLogOut } from "react-icons/fi";
 import { NotificationBell } from "@fsd/features/notifications";
@@ -15,17 +15,17 @@ const navigation = [
   { href: "/teacher/forms", label: "신청 폼 관리" },
 ];
 
+const subscribeRole = (listener: () => void) => {
+  window.addEventListener("jobdam-session", listener);
+  return () => window.removeEventListener("jobdam-session", listener);
+};
+const readRole = (): UserRole | null => getSession()?.role ?? null;
+
 export function TeacherHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const [role, setRole] = useState<UserRole | null>(null);
-
-  useEffect(() => {
-    const syncRole = () => setRole(getSession()?.role ?? null);
-    syncRole();
-    window.addEventListener("jobdam-session", syncRole);
-    return () => window.removeEventListener("jobdam-session", syncRole);
-  }, []);
+  // 페이지를 옮길 때마다 메뉴가 하나만 보였다가 늘어나지 않도록 첫 렌더부터 세션의 역할을 읽는다.
+  const role = useSyncExternalStore(subscribeRole, readRole, () => null);
 
   const visibleNavigation = navigation.filter((item) => item.href === "/teacher" || role === "TEACHER");
 
@@ -33,7 +33,8 @@ export function TeacherHeader() {
     try {
       await logout();
     } finally {
-      router.push("/login");
+      // 세션을 지우면 AuthGate도 로그인으로 보낸다. 기록이 두 번 쌓이지 않게 replace를 쓴다.
+      router.replace("/login");
     }
   };
 

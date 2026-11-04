@@ -43,14 +43,24 @@ export const getAvailablePeriods = (
   return CONSULTATION_SCHEDULE.map(({ period }) => period);
 };
 
+// Intl 포맷터 생성은 비싸므로 모듈에서 한 번만 만든다.
+const KOREA_CLOCK_FORMAT = new Intl.DateTimeFormat("en-GB", {
+  timeZone: KOREA_TIME_ZONE,
+  weekday: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+const KOREA_DATE_FORMAT = new Intl.DateTimeFormat("en-CA", { timeZone: KOREA_TIME_ZONE });
+const KOREA_TIME_FORMAT = new Intl.DateTimeFormat("en-GB", {
+  timeZone: KOREA_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 const getKoreaClock = (now: Date) => {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: KOREA_TIME_ZONE,
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(now);
+  const parts = KOREA_CLOCK_FORMAT.formatToParts(now);
   const getPart = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
 
   return {
@@ -76,8 +86,7 @@ export const getSelectablePeriods = (
   });
 };
 
-const getKoreaDateValue = (date: Date) =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: KOREA_TIME_ZONE }).format(date);
+const getKoreaDateValue = (date: Date) => KOREA_DATE_FORMAT.format(date);
 
 const addDateValue = (dateValue: string, days: number) => {
   const date = new Date(`${dateValue}T00:00:00Z`);
@@ -94,12 +103,7 @@ const getNextAvailableDateWithBlockedDates = (
   blockedDates: ReadonlySet<string> = new Set(),
 ) => {
   const today = getKoreaDateValue(now);
-  const time = new Intl.DateTimeFormat("en-GB", {
-    timeZone: KOREA_TIME_ZONE,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(now);
+  const time = KOREA_TIME_FORMAT.format(now);
   const baseDate = date > today ? date : today;
   const isWeekday = getDateWeekday(baseDate) !== 0 && getDateWeekday(baseDate) !== 6;
   if (
