@@ -1,6 +1,7 @@
 import type { TutorialRole } from "./progress.ts";
 
-// 연습용 서버의 고정 ID(공고 7001, 폼 9001)로 실제 상세 화면까지 따라가 본다.
+// 연습용 서버의 고정 ID(공고 7001~7008, 폼 9001)로 실제 상세 화면까지 따라가 본다.
+// "/recruit/7001"은 연습용 공고 상세 화면 전체를 뜻한다. 필터로 다른 연습 공고를 골라도 그대로 진행한다.
 export type TutorialRoute =
   | "/" | "/counsel" | "/recruit" | "/recruit/7001" | "/forms/9001" | "/profile"
   | "/teacher" | "/teacher/recruit" | "/teacher/forms" | "/teacher/forms/9001/submissions";
@@ -38,6 +39,10 @@ export type TutorialStep = {
   task?: string;
 };
 
+const PRACTICE_RECRUIT_DETAIL = /^\/recruit\/700[1-8]$/;
+export const matchesRoute = (route: TutorialRoute, pathname: string) =>
+  route === pathname || (route === "/recruit/7001" && PRACTICE_RECRUIT_DETAIL.test(pathname));
+
 const NEXT = { type: "next" } as const;
 const pressed = (target: TutorialTarget) => `[data-tutorial-target~="${target}"] [aria-pressed="true"]`;
 
@@ -58,8 +63,8 @@ const STUDENT_STEPS: readonly TutorialStep[] = [
   { id: "consultation-submit", section: "상담 신청 · 6/6", route: "/counsel", target: "consultation-submit", extraTargets: ["consultation-type", "consultation-content", "consultation-date", "consultation-period"], interactive: true, action: { type: "route", path: "/" }, title: "‘상담 신청’을 눌러요", description: "빠진 항목이 있으면 빨간색으로 알려 줘요. 연습이라 실제 선생님께는 신청되지 않아요.", task: "‘상담 신청’ 버튼을 눌러 보세요." },
   { id: "upcoming-after", section: "상담 대시보드", route: "/", target: "upcoming", interactive: false, action: NEXT, title: "방금 신청한 상담이 보여요", description: "신청한 상담은 선생님이 수락하기 전까지 ‘상담 대기’로 보여요. 수락되면 ‘상담 확정’으로 바뀌고 알림이 와요." },
   { id: "go-recruit", section: "취업 공고 · 1/3", route: "/", target: "nav-recruit", interactive: true, action: { type: "route", path: "/recruit" }, title: "취업 공고를 살펴봐요", description: "상단 메뉴에서 취업 공고로 이동해요.", task: "‘취업 공고’ 메뉴를 눌러 보세요." },
-  { id: "recruit-search", section: "취업 공고 · 2/3", route: "/recruit", target: "recruit-search", interactive: true, action: NEXT, title: "관심 있는 공고를 찾아요", description: "회사명·직무·내용으로 검색하고, 모집 상태와 직무 필터로 좁혀요. 자유롭게 눌러 본 뒤 ‘다음’을 눌러 주세요." },
-  { id: "recruit-list", section: "취업 공고 · 3/3", route: "/recruit", target: "recruit-list", interactive: true, action: { type: "route", path: "/recruit/7001" }, title: "공고를 열어 봐요", description: "공고를 누르면 채용 내용, 지원 마감일과 면접 일정을 볼 수 있어요.", task: "‘잡담 체험 회사’ 공고를 눌러 보세요." },
+  { id: "recruit-search", section: "취업 공고 · 2/3", route: "/recruit", target: "recruit-search", interactive: true, action: NEXT, title: "관심 있는 공고를 찾아요", description: "회사명·직무·내용으로 검색하고, 모집 상태와 직무 필터로 좁혀요. 연습용 공고가 직무마다 하나씩, 마감된 공고도 하나 있어요. 자유롭게 눌러 본 뒤 ‘다음’을 눌러 주세요." },
+  { id: "recruit-list", section: "취업 공고 · 3/3", route: "/recruit", target: "recruit-list", interactive: true, action: { type: "route", path: "/recruit/7001" }, title: "공고를 열어 봐요", description: "공고를 누르면 채용 내용, 지원 마감일과 면접 일정을 볼 수 있어요.", task: "모집 중인 공고 하나를 눌러 보세요." },
   { id: "recruit-apply", section: "신청 폼 · 1/3", route: "/recruit/7001", target: "recruit-apply", interactive: true, action: { type: "route", path: "/forms/9001" }, title: "연결된 신청 폼으로 지원해요", description: "공고에 신청 폼이 연결되어 있으면 여기서 바로 지원할 수 있어요.", task: "‘신청폼 보기’를 눌러 보세요." },
   { id: "form-fields", section: "신청 폼 · 2/3", route: "/forms/9001", target: "form-fields", interactive: true, action: NEXT, title: "질문에 답해요", description: "별표(*)가 있는 질문은 꼭 답해야 해요. 질문에 따라 글쓰기, 선택, 날짜, 파일 첨부 등이 있어요. 답을 적은 뒤 ‘다음’을 눌러 주세요." },
   { id: "form-submit", section: "신청 폼 · 3/3", route: "/forms/9001", target: "form-submit", extraTargets: ["form-fields"], interactive: true, action: { type: "selector", selectors: ['[data-tutorial-target~="form-submitted"]'] }, title: "‘제출’을 눌러요", description: "제출하면 내가 낸 응답이 아래에 보이고, 마감 전에는 다시 응답할 수 있어요. 연습이라 실제로 제출되지 않아요.", task: "‘제출’ 버튼을 눌러 보세요." },

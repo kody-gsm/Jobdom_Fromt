@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { createPracticeServer, nextWeekday } from "../../src/fsd/features/role-tutorial/model/practiceServer.ts";
+import { RECRUIT_FIELD_OPTIONS } from "../../src/fsd/entities/recruit/model/fields.ts";
+import { filterRecruits } from "../../src/fsd/pages/recruit/model/recruitFilters.ts";
+import { matchesRoute } from "../../src/fsd/features/role-tutorial/model/steps.ts";
 
 const now = new Date(2026, 10, 6, 9, 0); // 금요일
 assert.equal(nextWeekday(now, 1), "2026-11-09"); // 주말을 건너뛴 다음 평일
@@ -66,5 +69,17 @@ assert.equal((call(teacher, "POST", `/teacher/form/${created.id}/publish`).data 
 // 연습 서버마다 데이터가 따로라서, 다시 시작하면 처음 상태로 돌아간다.
 const fresh = createPracticeServer({ userId: 1, name: "김학생", role: "STUDENT" }, now);
 assert.equal((call(fresh, "GET", "/student/course").data as unknown[]).length, 1);
+
+// 튜토리얼에서 어떤 필터를 골라도 연습용 공고가 하나 이상 보인다.
+{
+  const list = call(createPracticeServer({ userId: 1, name: "김학생", role: "STUDENT" }, now), "GET", "/recruit").data as Parameters<typeof filterRecruits>[0];
+  for (const filter of ["ALL", "OPEN", "CLOSED"] as const) {
+    assert.ok(filterRecruits(list, filter, "", now).length > 0, filter);
+    for (const option of RECRUIT_FIELD_OPTIONS) assert.ok(filterRecruits(list, filter, "", now, [option.value]).length > 0, `${filter} ${option.value}`);
+  }
+  // 필터로 고른 다른 연습 공고 상세 화면에서도 안내가 이어진다.
+  for (const item of list) assert.ok(matchesRoute("/recruit/7001", `/recruit/${item.id}`), String(item.id));
+  assert.equal(matchesRoute("/recruit/7001", "/recruit/123"), false);
+}
 
 console.log("practice server tests passed");
