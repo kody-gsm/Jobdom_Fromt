@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { createPracticeServer, nextWeekday } from "../../src/fsd/features/role-tutorial/model/practiceServer.ts";
+import { RECRUIT_FIELD_OPTIONS } from "../../src/fsd/entities/recruit/model/fields.ts";
+import { filterRecruits } from "../../src/fsd/pages/recruit/model/recruitFilters.ts";
+import { matchesRoute } from "../../src/fsd/features/role-tutorial/model/steps.ts";
 
 const now = new Date(2026, 10, 6, 9, 0); // 금요일
 assert.equal(nextWeekday(now, 1), "2026-11-09"); // 주말을 건너뛴 다음 평일
@@ -13,9 +16,19 @@ const call = (server: ReturnType<typeof createPracticeServer>, method: string, p
 
 // 계정 자체에 필요한 요청만 실제 서버로 통과시킨다.
 const student = createPracticeServer({ userId: 1, name: "김학생", role: "STUDENT" }, now);
-for (const path of ["/auth/reissue", "/auth/logout", "/auth/tutorial", "/auth/tutorial/complete", "/api/notifications/unread-count"]) {
+for (const path of ["/auth/reissue", "/auth/logout", "/auth/tutorial", "/auth/tutorial/complete", "/api/notifications/subscribe-ticket"]) {
   assert.equal(student.handle({ method: "POST", path, body: undefined }).handled, false, path);
 }
+// 알림은 연습용 1건을 직접 열어 읽어 본다. 읽으면 개수가 0이 된다.
+assert.deepEqual(call(student, "GET", "/api/notifications/unread-count").data, { unreadCount: 1 });
+const practiceNotifications = call(student, "GET", "/api/notifications?page=0&size=20").data as { content: { id: number; targetUrl: string; isRead: boolean }[] };
+assert.equal(practiceNotifications.content.length, 1);
+assert.equal(practiceNotifications.content[0].targetUrl, "/form/9001"); // 학생 알림 단계 화면(/forms/9001)으로 이어진다.
+call(student, "PATCH", `/api/notifications/${practiceNotifications.content[0].id}/read`);
+assert.deepEqual(call(student, "GET", "/api/notifications/unread-count").data, { unreadCount: 0 });
+const teacherNotifications = call(createPracticeServer({ userId: 77, name: "박선생", role: "TEACHER" }, now), "GET", "/api/notifications").data as { content: { targetUrl: string }[] };
+assert.match(teacherNotifications.content[0].targetUrl, /^\/teacher\/course\/\d+$/); // 교사 알림은 상담 일정(/teacher)으로 이어진다.
+
 // 모르는 변경 요청도 실제 서버로 보내지 않는다.
 assert.equal(call(student, "DELETE", "/teacher/anything/123").status, 200);
 
@@ -66,5 +79,17 @@ assert.equal((call(teacher, "POST", `/teacher/form/${created.id}/publish`).data 
 // 연습 서버마다 데이터가 따로라서, 다시 시작하면 처음 상태로 돌아간다.
 const fresh = createPracticeServer({ userId: 1, name: "김학생", role: "STUDENT" }, now);
 assert.equal((call(fresh, "GET", "/student/course").data as unknown[]).length, 1);
+
+// 튜토리얼에서 어떤 필터를 골라도 연습용 공고가 하나 이상 보인다.
+{
+  const list = call(createPracticeServer({ userId: 1, name: "김학생", role: "STUDENT" }, now), "GET", "/recruit").data as Parameters<typeof filterRecruits>[0];
+  for (const filter of ["ALL", "OPEN", "CLOSED"] as const) {
+    assert.ok(filterRecruits(list, filter, "", now).length > 0, filter);
+    for (const option of RECRUIT_FIELD_OPTIONS) assert.ok(filterRecruits(list, filter, "", now, [option.value]).length > 0, `${filter} ${option.value}`);
+  }
+  // 필터로 고른 다른 연습 공고 상세 화면에서도 안내가 이어진다.
+  for (const item of list) assert.ok(matchesRoute("/recruit/7001", `/recruit/${item.id}`), String(item.id));
+  assert.equal(matchesRoute("/recruit/7001", "/recruit/123"), false);
+}
 
 console.log("practice server tests passed");

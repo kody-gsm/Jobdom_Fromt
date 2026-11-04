@@ -18,7 +18,8 @@ type Recruit = { id: number; companyName: string | null; interviewDate: string |
 
 export type PracticeIdentity = { userId: number; name: string; role: TutorialRole };
 
-const PASSTHROUGH: RegExp[] = [/^\/auth\/(reissue|logout|tutorial)/, /^\/api\/notifications/];
+// 알림 목록·개수는 연습용으로 답하고, 실시간 연결(구독)만 실제 서버로 보낸다.
+const PASSTHROUGH: RegExp[] = [/^\/auth\/(reissue|logout|tutorial)/, /^\/api\/notifications\/subscribe/];
 const ok = (data?: unknown, status = 200): InterceptedResponse => ({ handled: true, status, data });
 const fail = (status: number, message: string): InterceptedResponse => ({ handled: true, status, message });
 
@@ -96,12 +97,33 @@ export const createPracticeServer = (identity: PracticeIdentity, now = new Date(
       { questionId: forms[0].questions[2].id, textValue: "사용하기 편한 서비스를 만들고 싶어요." },
     ],
   }];
-  const recruits: Recruit[] = [{
-    id: 7001, companyName: PRACTICE_COMPANY, interviewDate: nextWeekday(now, 12), deadline: nextWeekday(now, 10),
-    summary: "학교에서 쌓은 경험으로 새로운 서비스를 함께 만들 학생을 찾습니다. 튜토리얼 연습용 공고예요.",
-    fields: ["FRONTEND", "BACKEND"], imageUrl: null, formId: 9001, status: "PUBLISHED", createdAt: stamp, updatedAt: stamp,
-  }];
+  // 학생이 필터를 바꿔 봐도 항상 결과가 보이도록, 직무 필터마다 하나씩 + 마감된 공고 하나를 둔다.
+  const practiceRecruit = (recruitId: number, companyName: string, fields: string[], summary: string, deadline = nextWeekday(now, 10)): Recruit => ({
+    id: recruitId, companyName, interviewDate: nextWeekday(now, 12), deadline, summary,
+    fields, imageUrl: null, formId: 9001, status: "PUBLISHED", createdAt: stamp, updatedAt: stamp,
+  });
+  const pastDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3);
+  const recruits: Recruit[] = [
+    practiceRecruit(7001, PRACTICE_COMPANY, ["FRONTEND", "BACKEND"], "학교에서 쌓은 경험으로 새로운 서비스를 함께 만들 학생을 찾습니다. 튜토리얼 연습용 공고예요."),
+    practiceRecruit(7002, "연습 풀스택 스튜디오", ["FULLSTACK"], "화면부터 서버까지 함께 만들어 볼 학생을 찾습니다. 튜토리얼 연습용 공고예요."),
+    practiceRecruit(7003, "연습 모바일 랩", ["MOBILE"], "학생들이 매일 쓰는 앱을 함께 만들 학생을 찾습니다. 튜토리얼 연습용 공고예요."),
+    practiceRecruit(7004, "연습 임베디드 공방", ["IOT"], "센서와 기기를 다루는 프로젝트를 함께할 학생을 찾습니다. 튜토리얼 연습용 공고예요."),
+    practiceRecruit(7005, "연습 데이터 연구소", ["AI"], "데이터를 모으고 모델을 만들어 볼 학생을 찾습니다. 튜토리얼 연습용 공고예요."),
+    practiceRecruit(7006, "연습 보안 센터", ["SECURITY"], "서비스를 안전하게 지키는 일을 함께할 학생을 찾습니다. 튜토리얼 연습용 공고예요."),
+    practiceRecruit(7007, "연습 디자인 컴퍼니", ["ETC"], "기획·디자인 등 다양한 직무를 함께할 학생을 찾습니다. 튜토리얼 연습용 공고예요."),
+    // 마감 공고는 모든 직무로 둬서 '마감된 공고' + 어떤 직무 필터를 함께 골라도 보인다.
+    practiceRecruit(7008, "연습 마감 회사", ["FRONTEND", "BACKEND", "FULLSTACK", "MOBILE", "IOT", "AI", "SECURITY", "ETC"], "지원 기간이 끝난 연습용 공고예요. ‘마감된 공고’ 필터에서 볼 수 있어요.", toDateKey(pastDate)),
+  ];
   let banner: Record<string, unknown> | null = null;
+  // 직접 열어 읽어 볼 연습 알림. 누르면 지금 단계 화면(학생: 신청 폼, 교사: 상담 일정)으로 이어진다.
+  const notifications = [isStudent ? {
+    id: 6001, type: "FORM_PUBLISHED", title: "새 신청 폼이 공개됐어요", content: `${PRACTICE_FORM_TITLE}가 공개됐어요. 마감 전에 응답해 주세요.`,
+    targetId: 9001, targetUrl: "/form/9001", isRead: false, targetStatus: null, expired: false, createdAt: stamp, expiresAt: null,
+  } : {
+    id: 6001, type: homeKind === "course" ? "COURSE_COUNSELING_REQUESTED" : "COMMON_COUNSELING_REQUESTED", title: "새 상담 신청이 왔어요",
+    content: `${PRACTICE_STUDENT} 학생이 상담을 신청했어요. 상담 요청에서 확인해 주세요.`,
+    targetId: reservations[0].id, targetUrl: `/teacher/${homeKind}/${reservations[0].id}`, isRead: false, targetStatus: null, expired: false, createdAt: stamp, expiresAt: null,
+  }];
 
   const formSummary = (form: Form) => ({
     id: form.id, title: form.title, description: form.description, deadline: form.deadline, status: form.status,
@@ -137,6 +159,22 @@ export const createPracticeServer = (identity: PracticeIdentity, now = new Date(
     const query = new URLSearchParams(search);
     const json = parseJson(body);
     let match: RegExpMatchArray | null;
+
+    // ── 알림 ──
+    if (pathname === "/api/notifications/unread-count") return ok({ unreadCount: notifications.filter((item) => !item.isRead).length });
+    if (pathname === "/api/notifications" && method === "GET") {
+      return ok({ content: notifications, totalElements: notifications.length, totalPages: 1, number: 0, size: notifications.length, last: true });
+    }
+    if (pathname === "/api/notifications/read-all") {
+      notifications.forEach((item) => { item.isRead = true; });
+      return ok(undefined, 204);
+    }
+    if ((match = pathname.match(/^\/api\/notifications\/(\d+)\/read$/))) {
+      const item = notifications.find((candidate) => candidate.id === Number(match?.[1]));
+      if (!item) return fail(404, "알림을 찾을 수 없습니다.");
+      item.isRead = true;
+      return ok(item);
+    }
 
     // ── 공통 ──
     if (pathname === "/activity/events") return ok(undefined, 204);

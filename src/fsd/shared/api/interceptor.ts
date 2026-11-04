@@ -14,9 +14,20 @@ export type InterceptedResponse =
 export type RequestInterceptor = (request: InterceptedRequest) => InterceptedResponse;
 
 let activeInterceptor: RequestInterceptor | null = null;
+const interceptorListeners = new Set<() => void>();
 
 export const setRequestInterceptor = (interceptor: RequestInterceptor | null) => {
+  if (activeInterceptor === interceptor) return;
   activeInterceptor = interceptor;
+  interceptorListeners.forEach((listener) => listener());
+};
+
+// 응답하는 쪽이 바뀌면(실제 서버 ↔ 연습용) 화면 밖에서 들고 있는 값(예: 알림 개수)을 다시 받게 알린다.
+export const subscribeRequestInterceptor = (listener: () => void) => {
+  interceptorListeners.add(listener);
+  return () => {
+    interceptorListeners.delete(listener);
+  };
 };
 
 export const getRequestInterceptor = () => activeInterceptor;
