@@ -7,6 +7,7 @@ import type { AuthSession } from "../model/types.ts";
 import {
   isRememberedSession,
   getSessionVersion,
+  isAccessTokenStale,
   readAccessToken,
 } from "../model/session.ts";
 import {
@@ -75,6 +76,8 @@ const authenticatedRequest = createAuthenticatedRequest({
   getSessionVersion,
   reissueSession,
   clearSession,
+  isAccessTokenStale: (token) => isAccessTokenStale(token),
+  rejectWithoutCredentials: () => typeof window !== "undefined",
 });
 
 export const requestWithSession = createActivityTrackingRequest(

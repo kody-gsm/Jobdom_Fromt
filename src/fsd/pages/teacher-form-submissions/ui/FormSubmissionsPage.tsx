@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { FiDownload, FiGrid } from "react-icons/fi";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
-import type { DynamicForm, FormSubmission } from "@fsd/entities/form";
+import type { DynamicForm, FormQuestion, FormSubmission } from "@fsd/entities/form";
 import { FileDownload } from "@fsd/shared/ui";
 import { downloadFormFile, getFormSubmissionSheet } from "../api/submissions";
 import { exportSubmissions } from "../lib/exportSubmissions";
@@ -62,7 +62,10 @@ function SubmissionSheet({ formId }: { formId: number }) {
 
   const form = state.status === "ready" ? state.form : null;
   const submissions = state.status === "ready" ? state.submissions : [];
-  const questions = [...(form?.questions ?? [])].sort((first, second) => first.orderIndex - second.orderIndex);
+  const questions = useMemo(
+    () => [...(form?.questions ?? [])].sort((first, second) => first.orderIndex - second.orderIndex),
+    [form],
+  );
   const headers = ["이름", "학번", "제출일시", ...questions.map((question) => question.title)];
 
   return (
@@ -128,28 +131,7 @@ function SubmissionSheet({ formId }: { formId: number }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {submissions.map((submission, rowIndex) => {
-                    const answers = new Map(submission.answers.map((answer) => [answer.questionId, answer]));
-                    return (
-                      <tr key={submission.id} className="group text-gray-700">
-                        <td className="sticky left-0 z-10 border-b border-r border-gray-200 bg-[#f5f7f6] px-2 py-4 text-center font-mono text-xs tabular-nums text-gray-400 group-hover:bg-[#eaf6ee]">{rowIndex + 1}</td>
-                        <th scope="row" className="sticky left-12 z-10 border-b border-r border-gray-200 bg-white px-4 py-4 align-top font-semibold text-gray-900 wrap-anywhere group-hover:bg-[#f2faf5]">{submission.userName}</th>
-                        <td className="border-b border-r border-gray-200 px-4 py-4 align-top tabular-nums wrap-anywhere group-hover:bg-[#f7fbf8]">{submission.studentNumber || "—"}</td>
-                        <td className="border-b border-r border-gray-200 px-4 py-4 align-top text-xs leading-6 tabular-nums text-gray-500 group-hover:bg-[#f7fbf8]"><time dateTime={submission.submittedAt}>{formatSubmissionDate(submission.submittedAt)}</time></td>
-                        {questions.map((question) => {
-                          const answer = answers.get(question.id);
-                          const fileId = answer?.fileId;
-                          return (
-                            <td key={question.id} className="border-b border-r border-gray-200 px-4 py-4 align-top leading-6 wrap-anywhere group-hover:bg-[#f7fbf8]">
-                              {answer && (answer.fileId !== null || answer.fileName) ? (
-                                <FileDownload key={`${submission.id}:${question.id}:${fileId}`} fileName={answer.fileName || "첨부 파일"} downloadFile={fileId ? () => downloadFormFile(fileId) : undefined} />
-                              ) : <span className="whitespace-pre-wrap">{getAnswerText(answer) || "—"}</span>}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
+                  {submissions.map((submission, rowIndex) => <SubmissionRow key={submission.id} submission={submission} rowIndex={rowIndex} questions={questions} />)}
                 </tbody>
               </table>
               {state.status === "loading" && <p role="status" className="sticky left-0 px-6 py-24 text-center text-sm text-gray-400">응답을 불러오는 중…</p>}
@@ -172,3 +154,27 @@ function SubmissionSheet({ formId }: { formId: number }) {
     </>
   );
 }
+
+// 응답을 묶음으로 받아 올 때마다 이미 그린 행은 다시 그리지 않는다. 받은 응답 객체는 그대로 재사용된다.
+const SubmissionRow = memo(function SubmissionRow({ submission, rowIndex, questions }: { submission: FormSubmission; rowIndex: number; questions: FormQuestion[] }) {
+  const answers = new Map(submission.answers.map((answer) => [answer.questionId, answer]));
+  return (
+    <tr className="group text-gray-700">
+      <td className="sticky left-0 z-10 border-b border-r border-gray-200 bg-[#f5f7f6] px-2 py-4 text-center font-mono text-xs tabular-nums text-gray-400 group-hover:bg-[#eaf6ee]">{rowIndex + 1}</td>
+      <th scope="row" className="sticky left-12 z-10 border-b border-r border-gray-200 bg-white px-4 py-4 align-top font-semibold text-gray-900 wrap-anywhere group-hover:bg-[#f2faf5]">{submission.userName}</th>
+      <td className="border-b border-r border-gray-200 px-4 py-4 align-top tabular-nums wrap-anywhere group-hover:bg-[#f7fbf8]">{submission.studentNumber || "—"}</td>
+      <td className="border-b border-r border-gray-200 px-4 py-4 align-top text-xs leading-6 tabular-nums text-gray-500 group-hover:bg-[#f7fbf8]"><time dateTime={submission.submittedAt}>{formatSubmissionDate(submission.submittedAt)}</time></td>
+      {questions.map((question) => {
+        const answer = answers.get(question.id);
+        const fileId = answer?.fileId;
+        return (
+          <td key={question.id} className="border-b border-r border-gray-200 px-4 py-4 align-top leading-6 wrap-anywhere group-hover:bg-[#f7fbf8]">
+            {answer && (answer.fileId !== null || answer.fileName) ? (
+              <FileDownload key={`${submission.id}:${question.id}:${fileId}`} fileName={answer.fileName || "첨부 파일"} downloadFile={fileId ? () => downloadFormFile(fileId) : undefined} />
+            ) : <span className="whitespace-pre-wrap">{getAnswerText(answer) || "—"}</span>}
+          </td>
+        );
+      })}
+    </tr>
+  );
+});

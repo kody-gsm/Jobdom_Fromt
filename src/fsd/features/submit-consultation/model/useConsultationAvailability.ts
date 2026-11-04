@@ -24,9 +24,8 @@ type UseConsultationAvailabilityInput = {
 
 export type ConsultationAvailabilityStatus = "idle" | "loading" | "success" | "error";
 
-const getKoreaDate = () => new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Seoul",
-}).format(new Date());
+const KOREA_DATE_FORMAT = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" });
+const getKoreaDate = () => KOREA_DATE_FORMAT.format(new Date());
 
 const getSlotKey = (teacherId: number, date: string, period: string) =>
   `${teacherId}:${date}:${period}`;
@@ -187,14 +186,19 @@ export const useConsultationAvailability = ({
     return () => window.clearInterval(timer);
   }, [candidateDates, holidayDates]);
 
+  // 교시 행마다 오늘 날짜·선택 가능 교시를 다시 계산하지 않도록 렌더당 한 번만 구한다.
+  let todaySelectablePeriods: string[] | null = null;
+  const isSelectableToday = (time: string) => {
+    todaySelectablePeriods ??= getSelectablePeriods(
+      counselType,
+      selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null,
+    );
+    return todaySelectablePeriods.includes(time);
+  };
   const isTimeUnavailable = (time: string) =>
     availabilityStatus !== "success" ||
     (counselType === "general" && time === "4교시") ||
-    (selectedDate === getKoreaDate() &&
-      !getSelectablePeriods(
-        counselType,
-        selectedTeacher ? getConsultationTeacherLabel(selectedTeacher.name) : null,
-      ).includes(time)) ||
+    (selectedDate === koreaToday && !isSelectableToday(time)) ||
     serverUnavailablePeriods.has(time) ||
     (selectedTeacher !== null &&
       selectedDate !== null &&

@@ -51,6 +51,9 @@ type NotificationList = {
   notificationHasMore: boolean;
 };
 
+const DISCONNECTED_POLL_MS = 60_000;
+const CONNECTED_POLL_MS = 5 * 60_000;
+
 const UnreadCountContext = createContext<number | null>(null);
 const NotificationListContext = createContext<NotificationList | null>(null);
 const NotificationToastsContext = createContext<ToastNotification[] | null>(null);
@@ -279,8 +282,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     let countInFlight = false;
     let countRefreshQueued = false;
+    let streamOpen = false;
+    let lastCountRequestAt = 0;
     const refreshCount = () => {
       if (ctrl.signal.aborted) return;
+      lastCountRequestAt = Date.now();
       if (countInFlight) {
         countRefreshQueued = true;
         return;
@@ -308,15 +314,19 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     };
     const handleConnect = (isReconnect: boolean) => {
       if (ctrl.signal.aborted) return;
+      streamOpen = true;
       if (isReconnect) refreshCount();
       reservationRefresh();
       // 목록을 한 번 연 뒤 SSE가 재연결되면 놓친 알림을 다시 가져옵니다.
       if (isReconnect && notificationLoadedRef.current) void loadNotifications(0);
     };
     // 보이지 않는 탭에서는 1분마다 개수를 묻지 않고, 탭이 다시 보일 때 한 번 확인한다.
+    // 실시간 연결이 살아 있으면 새 알림마다 개수를 다시 받으므로 5분에 한 번만 확인한다.
     const polling = window.setInterval(() => {
-      if (document.visibilityState !== "hidden") refreshCount();
-    }, 60_000);
+      if (document.visibilityState === "hidden") return;
+      if (streamOpen && Date.now() - lastCountRequestAt < CONNECTED_POLL_MS) return;
+      refreshCount();
+    }, DISCONNECTED_POLL_MS);
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") refreshCount();
     };
@@ -326,7 +336,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         pushToast(item);
         refreshCount();
       }
-    }, handleConnect, ctrl.signal, reservationRefresh);
+    }, handleConnect, ctrl.signal, reservationRefresh, () => {
+      streamOpen = false;
+    });
     ctrl.signal.addEventListener("abort", () => {
       window.clearInterval(polling);
       document.removeEventListener("visibilitychange", refreshWhenVisible);

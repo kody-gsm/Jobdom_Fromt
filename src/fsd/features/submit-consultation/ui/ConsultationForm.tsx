@@ -24,13 +24,15 @@ import { getTimetableSubject } from "../model/timetablePresentation.ts";
 
 const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
 const CATEGORY_OPTIONS = ["학업", "취업", "진학", "생활", "기타"] as const;
+const KOREA_CALENDAR_FORMAT = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+});
+const KOREA_MONTH_FORMAT = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", year: "numeric" });
 const getKoreaCalendarParts = (date: Date) => {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-  }).formatToParts(date);
+  const parts = KOREA_CALENDAR_FORMAT.formatToParts(date);
   const getPart = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
   return { year: Number(getPart("year")), month: Number(getPart("month")) };
 };
@@ -252,7 +254,7 @@ export const ConsultationForm = ({
             >
               <div className="mb-3 flex items-center justify-between">
                 <button type="button" onClick={() => setCalendarDate((date) => createCalendarDate(date.getUTCFullYear(), date.getUTCMonth() - 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">이전 달</button>
-                <strong className="text-base text-[#111827]">{calendarDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "long", year: "numeric" })}</strong>
+                <strong className="text-base text-[#111827]">{KOREA_MONTH_FORMAT.format(calendarDate)}</strong>
                 <button type="button" onClick={() => setCalendarDate((date) => createCalendarDate(date.getUTCFullYear(), date.getUTCMonth() + 1))} className="rounded-lg px-2 py-1 text-sm text-muted hover:bg-[#F5F6F7]">다음 달</button>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-muted">

@@ -29,6 +29,7 @@ export const HomeServices = () => {
     consultationError,
     recruitError,
     retryConsultations,
+    refreshConsultationsSoon,
     retryRecruits,
     handleCancel,
   } = useHomeOverview();
@@ -359,7 +360,7 @@ export const HomeServices = () => {
         onClose={() => setDetailTarget(null)}
         onSaved={(updated) => {
           setDetailTarget((current) => current ? { ...current, ...updated } : current);
-          void retryConsultations();
+          refreshConsultationsSoon();
         }}
       />
     </section>

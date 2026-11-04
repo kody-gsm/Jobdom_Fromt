@@ -86,6 +86,23 @@ for (const target of [
   assert.ok(position.top >= 16 && position.top + card.height <= viewport.height - 16);
 }
 assert.equal(getCardPosition({ top: 0, left: 0, width: 1280, height: 800 }, card, viewport).placement, "corner");
+// 주 대상 아래에 함께 연 큰 영역(예: 시간표)이 있으면 그 영역도 가리지 않는 곳에 둔다.
+{
+  const button = { top: 190, left: 650, width: 120, height: 56 };
+  const table = { top: 262, left: 400, width: 880, height: 538 };
+  const position = getCardPosition(button, card, viewport, [button, table]);
+  assert.equal(overlaps({ ...position, ...card }, table), false);
+  assert.equal(overlaps({ ...position, ...card }, button), false);
+  // 빈 곳이 전혀 없으면 가장 덜 가리는 모서리에 둔다.
+  const left = { top: 0, left: 0, width: 640, height: 800 };
+  const almostAll = { top: 0, left: 640, width: 640, height: 500 };
+  const corner = getCardPosition(left, card, viewport, [left, almostAll]);
+  assert.equal(corner.placement, "corner");
+  assert.ok(corner.left > 640 && corner.top > 500 - 1 - card.height);
+}
+// 고정된 상단 메뉴 아래로 지나가는 부분은 강조하지 않는다.
+assert.deepEqual(clipRect({ top: -40, left: 10, width: 100, height: 200 }, viewport, 80), { top: 80, left: 10, width: 100, height: 80 });
+assert.equal(clipRect({ top: 0, left: 10, width: 100, height: 60 }, viewport, 80), null);
 
 // 떨어져 있는 요소는 하나의 큰 상자로 묶지 않고 요소마다 따로 강조한다.
 const separated = [{ top: 100, left: 20, width: 120, height: 40 }, { top: 100, left: 600, width: 120, height: 40 }];

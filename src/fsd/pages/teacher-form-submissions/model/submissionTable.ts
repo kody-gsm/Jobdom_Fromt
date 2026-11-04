@@ -1,8 +1,19 @@
 import type { FormAnswer } from "@fsd/entities/form";
 
+// toLocaleString(..., { timeZone })과 같은 결과를 내는 포맷터를 한 번만 만든다. 행마다 새로 만들면 느리다.
+const SUBMISSION_DATE_FORMAT = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+});
+
 export const formatSubmissionDate = (value: string): string => {
   const timestamp = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value) ? value : `${value}+09:00`;
-  return new Date(timestamp).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+  return SUBMISSION_DATE_FORMAT.format(new Date(timestamp));
 };
 
 export const getAnswerText = (answer: FormAnswer | undefined): string => {

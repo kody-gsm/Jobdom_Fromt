@@ -5,7 +5,7 @@ import {
   RESERVATION_CHANGED_EVENT,
 } from "@fsd/entities/consultation";
 import type { StudentReservation } from "@fsd/entities/consultation";
-import { createRecruitApi } from "@fsd/entities/recruit";
+import { createRecruitApi, rememberRecruitFormLinks } from "@fsd/entities/recruit";
 import { requestWithSession } from "@fsd/entities/user";
 import { cancelProfileConsultation } from "@fsd/features/cancel-consultation";
 import { createRequestVersionGuard } from "@fsd/shared/lib";
@@ -18,6 +18,8 @@ import {
 
 const consultationApi = createConsultationApi(requestWithSession);
 const recruitApi = createRecruitApi(requestWithSession);
+
+const RESERVATION_REFRESH_COALESCE_MS = 150;
 
 const EMPTY_OVERVIEW: HomeOverview = {
   upcomingConsultations: [],
@@ -37,6 +39,7 @@ export const useHomeOverview = () => {
   const recruitRequests = useRef(createRequestVersionGuard());
   const refreshConsultationsRef = useRef<((fresh?: boolean) => Promise<void>) | null>(null);
   const refreshRecruitsRef = useRef<((fresh?: boolean) => Promise<void>) | null>(null);
+  const scheduleConsultationRefreshRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -73,7 +76,7 @@ export const useHomeOverview = () => {
       setRecruitLoading(true);
       setRecruitError("");
       try {
-        const result = await recruitApi.getAll(fresh ? { cache: "no-store" } : undefined);
+        const result = rememberRecruitFormLinks(await recruitApi.getAll(fresh ? { cache: "no-store" } : undefined));
         if (!active || !recruitRequests.current.isLatest(requestVersion)) return;
         setOverview((current) => ({
           ...current,
@@ -99,11 +102,23 @@ export const useHomeOverview = () => {
     };
 
     void load();
-    const handleReservationChange = () => void refreshConsultations(true);
+    // 수정 저장 직후의 새로고침과 서버 실시간 알림이 거의 동시에 오므로 짧게 모아서 한 번만 다시 받는다.
+    let scheduledRefresh: ReturnType<typeof setTimeout> | undefined;
+    const scheduleConsultationRefresh = () => {
+      if (scheduledRefresh !== undefined) clearTimeout(scheduledRefresh);
+      scheduledRefresh = setTimeout(() => {
+        scheduledRefresh = undefined;
+        if (active) void refreshConsultations(true);
+      }, RESERVATION_REFRESH_COALESCE_MS);
+    };
+    scheduleConsultationRefreshRef.current = scheduleConsultationRefresh;
+    const handleReservationChange = () => scheduleConsultationRefresh();
     window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
     return () => {
       active = false;
+      if (scheduledRefresh !== undefined) clearTimeout(scheduledRefresh);
+      scheduleConsultationRefreshRef.current = null;
       window.removeEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
     };
   }, []);
@@ -144,6 +159,7 @@ export const useHomeOverview = () => {
     consultationError,
     recruitError,
     retryConsultations: () => refreshConsultationsRef.current?.(true),
+    refreshConsultationsSoon: () => scheduleConsultationRefreshRef.current?.(),
     retryRecruits: () => refreshRecruitsRef.current?.(true),
     error: consultationError || recruitError,
     handleCancel,

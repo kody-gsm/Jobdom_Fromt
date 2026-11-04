@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import type { Recruit } from "@fsd/entities/recruit";
 import { formatRecruitFields, RECRUIT_FIELD_OPTIONS } from "@fsd/entities/recruit";
@@ -19,6 +20,7 @@ const FIELD_FILTER_OPTIONS = RECRUIT_FIELD_OPTIONS;
 export const RecruitPage = () => {
   const {
     items,
+    now,
     loading,
     error,
     retry,
@@ -73,13 +75,13 @@ export const RecruitPage = () => {
           </div>
         ) : null}
 
-        <section data-tutorial-target="recruit-list" className="mt-6 grid gap-5 md:grid-cols-2" aria-live="polite">
+        <section className="mt-6 grid gap-5 md:grid-cols-2" aria-live="polite">
           {loading ? (
             <EmptyState text="취업 공고를 불러오는 중…" />
           ) : !error && visibleItems.length === 0 ? (
             <EmptyState text={items.length === 0 ? "현재 공개된 취업 공고가 없습니다." : "조건에 맞는 공고가 없습니다."} />
           ) : (
-            visibleItems.map((item) => <RecruitCard key={item.id} item={item} />)
+            visibleItems.map((item) => <RecruitCard key={item.id} item={item} isExpired={isRecruitClosed(item, now)} />)
           )}
         </section>
       </main>
@@ -87,12 +89,13 @@ export const RecruitPage = () => {
   );
 };
 
-const RecruitCard = ({ item }: { item: Recruit }) => {
-  const isExpired = isRecruitClosed(item);
+// 검색어 입력처럼 카드와 무관한 상태가 바뀔 때 카드(요약 마크다운 해석 포함)를 다시 그리지 않는다.
+const RecruitCard = memo(function RecruitCard({ item, isExpired }: { item: Recruit; isExpired: boolean }) {
   const deadlineLabel = item.deadline ? formatDeadlineDate(item.deadline) : "별도 확인";
 
+  // 튜토리얼은 목록 전체(빈 칸 포함)가 아니라 공고 카드만 강조한다.
   return (
-    <ContentCard className="flex min-h-[320px] min-w-0 flex-col p-7 sm:p-8">
+    <ContentCard data-tutorial-target="recruit-list" className="flex min-h-[320px] min-w-0 flex-col p-7 sm:p-8">
       <div className="flex items-center gap-4">
         <span className={`text-xs font-bold ${isExpired ? "text-[#9A4F45]" : "text-brand-accent"}`}>
           {isExpired ? "마감된 공고" : "채용 공고"}
@@ -113,7 +116,7 @@ const RecruitCard = ({ item }: { item: Recruit }) => {
       </Link>
     </ContentCard>
   );
-};
+});
 
 const EmptyState = ({ text }: { text: string }) => (
   <ContentCard className="col-span-full px-6 py-20 text-center text-muted">{text}</ContentCard>

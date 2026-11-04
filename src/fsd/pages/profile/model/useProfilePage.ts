@@ -84,11 +84,20 @@ export const useProfilePage = () => {
 
     void loadProfile();
     void refreshReservations();
-    const handleReservationChange = () => void refreshReservations(true);
+    // 실시간 알림이 연달아 와도 짧게 모아서 한 번만 다시 받는다.
+    let scheduledRefresh: ReturnType<typeof setTimeout> | undefined;
+    const handleReservationChange = () => {
+      if (scheduledRefresh !== undefined) clearTimeout(scheduledRefresh);
+      scheduledRefresh = setTimeout(() => {
+        scheduledRefresh = undefined;
+        if (active) void refreshReservations(true);
+      }, 150);
+    };
     window.addEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
 
     return () => {
       active = false;
+      if (scheduledRefresh !== undefined) clearTimeout(scheduledRefresh);
       window.removeEventListener(RESERVATION_CHANGED_EVENT, handleReservationChange);
     };
   }, []);

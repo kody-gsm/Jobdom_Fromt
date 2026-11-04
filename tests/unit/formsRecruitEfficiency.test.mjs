@@ -75,6 +75,8 @@ const createHost = (overrides = {}) => {
       return slots[i].value;
     },
     useCallback(callback, deps) { return react.useMemo(() => callback, deps); },
+    useDeferredValue(value) { return value; },
+    memo(component) { return component; },
     useEffect(callback, deps) {
       const i = cursor++;
       if (!slots[i] || changed(slots[i].deps, deps)) {
@@ -188,7 +190,7 @@ test("questions stay locked until a late no-submission response, then accept edi
   lookup.reject(new ApiError("Not submitted", 404));
   await host.flush();
   assert.equal(question(host.value).props.disabled, false);
-  question(host.value).props.onChange("Keep this answer");
+  question(host.value).props.onChange(1, "Keep this answer");
   await host.flush();
   assert.equal(question(host.value).props.value, "Keep this answer");
   host.unmount();
@@ -205,7 +207,7 @@ test("failed submission lookup keeps questions locked through retry and blocks d
   });
   await host.mount(() => SubmitForm({ formId: 1 }));
   assert.equal(question(host.value).props.disabled, true);
-  question(host.value).props.onChange("Blocked edit");
+  question(host.value).props.onChange(1, "Blocked edit");
   await host.flush();
   await host.value.props.onSubmit({ preventDefault() {} });
   assert.equal(writes, 0);
@@ -237,7 +239,7 @@ test("upload successes survive a later upload failure and are reused on retry in
   });
   await host.mount(() => SubmitForm({ formId: 1 }));
   for (const [id, name] of [[1, "first.txt"], [2, "second.txt"]]) {
-    question(host.value, id).props.onChange({ file: new File(["content"], name), fileName: name });
+    question(host.value, id).props.onChange(id, { file: new File(["content"], name), fileName: name });
   }
   await host.flush();
   await host.value.props.onSubmit({ preventDefault() {} });
@@ -346,7 +348,7 @@ test("form change ignores old submission hydration and preserves the new form's 
   edit.props.onClick({ preventDefault() {} });
   await host.flush();
   assert.equal(question(host.value).props.value, "Second form answer");
-  question(host.value).props.onChange("New edit");
+  question(host.value).props.onChange(1, "New edit");
   await host.flush();
   oldLookup.resolve(submission(1, "Obsolete answer"));
   await host.flush();
@@ -418,6 +420,23 @@ test("deadline clock schedules successive boundaries and caps distant timers wit
   assert.equal(host.listenerCount, 0);
 });
 
+test("deadline clock ignores focus and tab return unless a deadline passed meanwhile", async () => {
+  const host = createHost();
+  const { useDeadlineClock } = host.load("src/fsd/shared/lib/useDeadlineClock.ts");
+  const deadlines = ["2026-10-30T03:00:05Z"];
+  await host.mount(() => useDeadlineClock(deadlines));
+  const before = host.value.getTime();
+  const renderCount = host.renders;
+  await host.advance(500, false);
+  await host.emit("focus");
+  await host.emit("visibilitychange");
+  assert.equal(host.renders, renderCount, "focus without a passed deadline must not rerender the page");
+  await host.advance(10_000, false);
+  await host.emit("focus");
+  assert.ok(host.value.getTime() > before, "a deadline passed while away must move the clock");
+  host.unmount();
+});
+
 test("submit form questions and button close at deadline and reject late submission", async () => {
   let writes = 0;
   const { host, SubmitForm } = submitHost({
@@ -426,7 +445,7 @@ test("submit form questions and button close at deadline and reject late submiss
     submit: async () => { writes += 1; return submission(); },
   });
   await host.mount(() => SubmitForm({ formId: 1 }));
-  question(host.value).props.onChange("Answer");
+  question(host.value).props.onChange(1, "Answer");
   await host.flush();
   await host.advance(1001);
   assert.equal(question(host.value).props.disabled, true);
@@ -452,6 +471,24 @@ test("unlinked recruit waits for detail then skips form list and retry", async (
   host.value.retryForm();
   await host.flush();
   assert.equal(listReads, 0);
+  host.unmount();
+});
+
+test("recruit already seen as linked in a list loads its form list alongside the detail", async () => {
+  const detail = deferred();
+  let listReads = 0;
+  const host = createHost({
+    "../api/recruit.ts": { getRecruit: () => detail.promise },
+    "@fsd/entities/user": { requestWithSession: async () => { listReads += 1; return [makeForm(7)]; } },
+  });
+  const { rememberRecruitFormLinks } = host.load("src/fsd/entities/recruit/model/formLinkHints.ts");
+  rememberRecruitFormLinks([makeRecruit(1, { formId: 7 }), makeRecruit(2)]);
+  const { useRecruitDetail } = host.load("src/fsd/pages/recruit-detail/model/useRecruitDetail.ts");
+  await host.mount(() => useRecruitDetail(1));
+  assert.equal(listReads, 1, "linked hint must not wait for the detail response");
+  detail.resolve(makeRecruit(1, { formId: 7 }));
+  await host.flush();
+  assert.equal(host.value.form.id, 7);
   host.unmount();
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import type {
   DynamicForm,
@@ -139,6 +139,21 @@ export function TeacherFormsPage() {
     }
   }, [isCurrent]);
 
+  // 저장·마감 응답이 이미 전체 폼을 돌려주므로 목록은 그 한 건만 고친다. 서버 목록은 생성일 내림차순이다.
+  const upsertForm = (form: DynamicForm) => {
+    const { questions: formQuestions, updatedAt: _updatedAt, ...rest } = form;
+    void _updatedAt;
+    const summary: FormSummary = { ...rest, questionCount: formQuestions.length };
+    setForms((current) => current.some(({ id }) => id === form.id)
+      ? current.map((item) => item.id === form.id ? { ...item, ...summary } : item)
+      : [summary, ...current]);
+  };
+  // 한 번 응답이 있었던 폼은 다시 비지 않는다. 같은 폼을 쓰는 동안에는 응답 목록을 다시 받지 않는다.
+  const refreshResponses = (formId: number, requestVersion: number) => {
+    if (hasResponses === true && selectedId === formId) setHasResponses(true);
+    else void loadResponses(formId, requestVersion);
+  };
+
   const select = useCallback(async (id: number) => {
     if (inFlight.current) return;
     const requestVersion = requests.current.next();
@@ -181,18 +196,22 @@ export function TeacherFormsPage() {
     setMessage(null);
   };
 
-  const updateQuestion = (index: number, changes: Partial<DraftQuestion>) =>
-    setQuestions((current) => current.map((question, questionIndex) => questionIndex === index ? { ...question, ...changes } : question));
+  // 질문 편집기는 메모되어 있으므로 콜백을 고정해 다른 질문을 입력할 때 다시 그리지 않게 한다.
+  const updateQuestion = useCallback((index: number, changes: Partial<DraftQuestion>) =>
+    setQuestions((current) => current.map((question, questionIndex) => questionIndex === index ? { ...question, ...changes } : question)), []);
 
-  const moveQuestion = (index: number, offset: number) => {
-    const target = index + offset;
-    if (target < 0 || target >= questions.length) return;
+  const moveQuestion = useCallback((index: number, offset: number) => {
     setQuestions((current) => {
+      const target = index + offset;
+      if (target < 0 || target >= current.length) return current;
       const next = [...current];
       [next[index], next[target]] = [next[target], next[index]];
       return next;
     });
-  };
+  }, []);
+
+  const removeQuestion = useCallback((index: number) =>
+    setQuestions((current) => current.filter((_, questionIndex) => questionIndex !== index)), []);
 
   const payload = (): FormInput | null => {
     if (!title.trim()) return setMessage({ text: "폼 제목을 입력해주세요.", error: true }), null;
@@ -246,8 +265,9 @@ export function TeacherFormsPage() {
       const saved = selectedId ? await updateForm(selectedId, updateInput) : await createForm(input);
       if (!isCurrent(requestVersion)) return;
       edit(saved);
-      void loadResponses(saved.id, requestVersion);
-      if (await load() && isCurrent(requestVersion)) setMessage({ text: "저장했습니다." });
+      refreshResponses(saved.id, requestVersion);
+      upsertForm(saved);
+      setMessage({ text: "저장했습니다." });
     } catch (caught) {
       if (!isCurrent(requestVersion)) return;
       handleSaveError(caught, "저장하지 못했습니다.", isQuestionUpdate);
@@ -274,8 +294,11 @@ export function TeacherFormsPage() {
       const published = await publishForm(selectedId, channelId || null);
       if (!isCurrent(requestVersion)) return;
       edit(published.form);
-      void loadResponses(published.form.id, requestVersion);
-      if (await load() && isCurrent(requestVersion)) setMessage(getPublishedMessage(withRecruit, published.channelNotice));
+      refreshResponses(published.form.id, requestVersion);
+      upsertForm(published.form);
+      setMessage(getPublishedMessage(withRecruit, published.channelNotice));
+      // 연결된 공고 상태도 바뀌므로 목록은 뒤에서 맞춘다. 공개 결과 안내는 기다리지 않는다.
+      void load();
     } catch (caught) {
       if (!isCurrent(requestVersion)) return;
       handleSaveError(caught, "공개하지 못했습니다.", questionPatchPending);
@@ -295,8 +318,9 @@ export function TeacherFormsPage() {
       const closed = await closeForm(selectedId);
       if (!isCurrent(requestVersion)) return;
       edit(closed);
-      void loadResponses(closed.id, requestVersion);
-      if (await load() && isCurrent(requestVersion)) setMessage({ text: "마감했습니다." });
+      refreshResponses(closed.id, requestVersion);
+      upsertForm(closed);
+      setMessage({ text: "마감했습니다." });
     } catch (caught) {
       if (!isCurrent(requestVersion)) return;
       setMessage({ text: caught instanceof Error ? caught.message : "마감하지 못했습니다.", error: true });
@@ -371,7 +395,7 @@ export function TeacherFormsPage() {
                 <fieldset disabled={!questionsEditable} data-tutorial-target="form-editor" className="space-y-4 disabled:opacity-70">
                   <legend className="mb-3 font-semibold text-gray-700">질문</legend>
                   {questions.map((question, index) => (
-                    <QuestionEditor key={question.key} question={question} index={index} count={questions.length} update={(changes) => updateQuestion(index, changes)} move={(offset) => moveQuestion(index, offset)} remove={() => setQuestions((current) => current.filter((_, questionIndex) => questionIndex !== index))} />
+                    <QuestionEditor key={question.key} question={question} index={index} count={questions.length} onUpdate={updateQuestion} onMove={moveQuestion} onRemove={removeQuestion} />
                   ))}
                   <button type="button" onClick={() => setQuestions((current) => [...current, newQuestion()])} className="h-11 w-full rounded-xl border border-dashed border-[#02C551] font-semibold text-[#02a946]">질문 추가</button>
                 </fieldset>
@@ -398,7 +422,10 @@ function Status({ status }: { status: FormStatus }) {
   return <span className={`text-xs font-bold ${status === "PUBLISHED" ? "text-[#02a946]" : status === "CLOSED" ? "text-gray-500" : "text-amber-600"}`}>{label}</span>;
 }
 
-function QuestionEditor({ question, index, count, update, move, remove }: { question: DraftQuestion; index: number; count: number; update: (changes: Partial<DraftQuestion>) => void; move: (offset: number) => void; remove: () => void }) {
+const QuestionEditor = memo(function QuestionEditor({ question, index, count, onUpdate, onMove, onRemove }: { question: DraftQuestion; index: number; count: number; onUpdate: (index: number, changes: Partial<DraftQuestion>) => void; onMove: (index: number, offset: number) => void; onRemove: (index: number) => void }) {
+  const update = (changes: Partial<DraftQuestion>) => onUpdate(index, changes);
+  const move = (offset: number) => onMove(index, offset);
+  const remove = () => onRemove(index);
   const textLimit = question.type === "SHORT_TEXT" || question.type === "LONG_TEXT" ? FORM_TEXT_LIMITS[question.type] : null;
 
   return (
@@ -436,4 +463,4 @@ function QuestionEditor({ question, index, count, update, move, remove }: { ques
       </div>
     </article>
   );
-}
+});

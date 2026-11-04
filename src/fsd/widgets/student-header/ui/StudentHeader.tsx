@@ -19,7 +19,8 @@ export const StudentHeader = () => {
     try {
       await logout();
     } finally {
-      router.push("/login");
+      // 세션을 지우면 AuthGate도 로그인으로 보낸다. 기록이 두 번 쌓이지 않게 replace를 쓴다.
+      router.replace("/login");
     }
   };
 

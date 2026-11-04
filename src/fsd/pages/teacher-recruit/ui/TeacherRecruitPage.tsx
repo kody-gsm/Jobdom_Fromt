@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatRecruitFields, RECRUIT_FIELD_OPTIONS } from "@fsd/entities/recruit";
 import { SummaryMarkdown } from "@fsd/shared/ui";
 import { indentSummaryList } from "@fsd/shared/lib";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TeacherHeader } from "@fsd/widgets/teacher-header";
 import { ApiError } from "@fsd/shared/api";
@@ -13,6 +13,7 @@ import {
   createRecruit,
   deleteRecruit,
   getRecruitDashboard,
+  getRecruitDashboardRow,
   updateRecruit,
   type Recruit,
   type RecruitDashboardRow,
@@ -77,11 +78,15 @@ export function TeacherRecruitPage() {
 
   const selected = rows.find(({ recruit }) => recruit.id === selectedId) || null;
 
-  const select = (row: RecruitDashboardRow) => {
+  const select = useCallback((row: RecruitDashboardRow) => {
     setSelectedId(row.recruit.id);
     setCreating(false);
     setEditing(false);
-  };
+  }, []);
+  // 저장·삭제 뒤에는 바뀐 행만 고친다. 전체 새로고침은 폼마다 지원자 목록을 다시 받기 때문이다.
+  const upsertRow = (row: RecruitDashboardRow) => setRows((current) => current.some(({ recruit }) => recruit.id === row.recruit.id)
+    ? current.map((item) => item.recruit.id === row.recruit.id ? row : item)
+    : [row, ...current]);
 
   const startCreating = () => {
     setSelectedId(null);
@@ -108,7 +113,8 @@ export function TeacherRecruitPage() {
       setWorking(true);
       setMessage({ text: "AI가 공고 이미지를 읽고 있습니다." });
       const recruit = await analyzeRecruit(file);
-      await load(recruit.id);
+      upsertRow(await getRecruitDashboardRow(recruit));
+      setSelectedId(recruit.id);
       setForm({ companyName: recruit.companyName || "", interviewDate: recruit.interviewDate || "", deadline: recruit.deadline || "", summary: recruit.summary || "", fields: recruit.fields ?? [] });
       setCreating(false);
       setEditing(true);
@@ -136,7 +142,8 @@ export function TeacherRecruitPage() {
         router.push(`/teacher/forms?formId=${recruit.formId}`);
         return;
       }
-      await load(recruit.id);
+      if (isNew) upsertRow(await getRecruitDashboardRow(recruit));
+      else setRows((current) => current.map((row) => row.recruit.id === recruit.id ? { ...row, recruit } : row));
       setEditing(false);
       setCreating(false);
       if (openForm) return setMessage({ text: "공고는 저장했지만 연결된 지원 폼을 찾지 못해 공개를 진행할 수 없습니다.", error: true });
@@ -153,8 +160,11 @@ export function TeacherRecruitPage() {
     if (!window.confirm("이 공고를 삭제할까요? 삭제 후 복구할 수 없습니다.")) return;
     try {
       setWorking(true);
-      await deleteRecruit(selected.recruit.id);
-      await load();
+      const removedId = selected.recruit.id;
+      await deleteRecruit(removedId);
+      const remaining = rows.filter(({ recruit }) => recruit.id !== removedId);
+      setRows(remaining);
+      setSelectedId(remaining[0]?.recruit.id ?? null);
       setMessage({ text: "공고를 삭제했습니다." });
     } catch (caught) {
       setMessage({ text: caught instanceof Error ? caught.message : "공고를 삭제하지 못했습니다.", error: true });
@@ -215,34 +225,7 @@ export function TeacherRecruitPage() {
                     <tr><Th className="w-12">#</Th><Th>회사 / 공고</Th><Th>상태</Th><Th>분야</Th><Th>지원 마감</Th><Th>면접 일정</Th><Th>신청 폼</Th><Th className="text-center">지원자</Th><Th>최근 지원</Th></tr>
                   </thead>
                   <tbody>
-                    {loading ? <EmptyRow text="지원 현황을 불러오는 중…" /> : filteredRows.length === 0 ? <EmptyRow text="조건에 맞는 공고가 없습니다." /> : filteredRows.map((row, index) => {
-                      const active = row.recruit.id === selectedId;
-                      const latest = [...row.applicants].sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt))[0];
-                      return (
-                        <tr
-                          key={row.recruit.id}
-                          onClick={() => select(row)}
-                          onKeyDown={(event) => {
-                            if (event.key !== "Enter" && event.key !== " ") return;
-                            event.preventDefault();
-                            select(row);
-                          }}
-                          tabIndex={0}
-                          aria-label={`${row.recruit.companyName || "회사명 미입력"} 공고 선택`}
-                          className={`cursor-pointer border-b border-gray-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#02C551] ${active ? "bg-[#effbf3]" : "hover:bg-gray-50"}`}
-                        >
-                          <Td className="font-mono text-xs text-gray-400">{String(index + 1).padStart(2, "0")}</Td>
-                          <Td><strong title={row.recruit.companyName || "회사명 미입력"} className="block truncate font-semibold text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><SummaryMarkdown text={row.recruit.summary || "공고 요약 없음"} className="mt-1 line-clamp-2 text-xs leading-5 text-gray-500" /></Td>
-                          <Td><Status status={row.recruit.status} /></Td>
-                          <Td><span title={formatRecruitFields(row.recruit.fields)} className="block truncate text-gray-700">{formatRecruitFields(row.recruit.fields)}</span></Td>
-                          <Td className="tabular-nums text-gray-600"><span title={row.recruit.deadline || undefined} className="block truncate">{row.recruit.deadline || "—"}</span></Td>
-                          <Td className="tabular-nums text-gray-600"><span title={row.recruit.interviewDate || undefined} className="block truncate">{row.recruit.interviewDate || "—"}</span></Td>
-                          <Td>{row.form ? <span className="block truncate font-medium text-gray-700" title={row.form.title}>{row.form.title}</span> : <span className="whitespace-nowrap font-semibold text-amber-600">미연결</span>}</Td>
-                          <Td className="text-center"><span className="inline-flex whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 font-semibold tabular-nums text-gray-700">{row.applicants.length}명</span></Td>
-                          <Td className="whitespace-nowrap text-xs tabular-nums text-gray-500">{latest ? formatDate(latest.submittedAt, true) : "—"}</Td>
-                        </tr>
-                      );
-                    })}
+                    {loading ? <EmptyRow text="지원 현황을 불러오는 중…" /> : filteredRows.length === 0 ? <EmptyRow text="조건에 맞는 공고가 없습니다." /> : filteredRows.map((row, index) => <RecruitRow key={row.recruit.id} row={row} index={index} active={row.recruit.id === selectedId} select={select} />)}
                   </tbody>
                 </table>
               </div>
@@ -353,3 +336,35 @@ function SummaryEditor({ value, onChange }: { value: string; onChange: (value: s
     </div>}
   </div>;
 }
+
+// 편집기 입력마다 표 전체(요약 마크다운 파싱 포함)를 다시 그리지 않도록 행 단위로 메모한다.
+const RecruitRow = memo(function RecruitRow({ row, index, active, select }: { row: RecruitDashboardRow; index: number; active: boolean; select: (row: RecruitDashboardRow) => void }) {
+  // 지원자 목록은 서버가 최근 제출 순으로 준다. 정렬 없이 가장 최근 값만 찾는다.
+  const latest = row.applicants.reduce<RecruitDashboardRow["applicants"][number] | undefined>(
+    (found, applicant) => !found || Date.parse(applicant.submittedAt) > Date.parse(found.submittedAt) ? applicant : found,
+    undefined,
+  );
+  return (
+    <tr
+      onClick={() => select(row)}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        select(row);
+      }}
+      tabIndex={0}
+      aria-label={`${row.recruit.companyName || "회사명 미입력"} 공고 선택`}
+      className={`cursor-pointer border-b border-gray-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#02C551] ${active ? "bg-[#effbf3]" : "hover:bg-gray-50"}`}
+    >
+      <Td className="font-mono text-xs text-gray-400">{String(index + 1).padStart(2, "0")}</Td>
+      <Td><strong title={row.recruit.companyName || "회사명 미입력"} className="block truncate font-semibold text-gray-900">{row.recruit.companyName || "회사명 미입력"}</strong><SummaryMarkdown text={row.recruit.summary || "공고 요약 없음"} className="mt-1 line-clamp-2 text-xs leading-5 text-gray-500" /></Td>
+      <Td><Status status={row.recruit.status} /></Td>
+      <Td><span title={formatRecruitFields(row.recruit.fields)} className="block truncate text-gray-700">{formatRecruitFields(row.recruit.fields)}</span></Td>
+      <Td className="tabular-nums text-gray-600"><span title={row.recruit.deadline || undefined} className="block truncate">{row.recruit.deadline || "—"}</span></Td>
+      <Td className="tabular-nums text-gray-600"><span title={row.recruit.interviewDate || undefined} className="block truncate">{row.recruit.interviewDate || "—"}</span></Td>
+      <Td>{row.form ? <span className="block truncate font-medium text-gray-700" title={row.form.title}>{row.form.title}</span> : <span className="whitespace-nowrap font-semibold text-amber-600">미연결</span>}</Td>
+      <Td className="text-center"><span className="inline-flex whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 font-semibold tabular-nums text-gray-700">{row.applicants.length}명</span></Td>
+      <Td className="whitespace-nowrap text-xs tabular-nums text-gray-500">{latest ? formatDate(latest.submittedAt, true) : "—"}</Td>
+    </tr>
+  );
+});
