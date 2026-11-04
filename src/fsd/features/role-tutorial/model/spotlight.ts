@@ -28,8 +28,9 @@ export const padRect = (rect: Rect, padding = SPOTLIGHT_PADDING): Rect => ({
 });
 
 // 화면 밖으로 나간 부분은 잘라서, 큰 영역도 보이는 만큼만 강조하고 카드 위치를 계산한다.
-export const clipRect = (rect: Rect, viewport: Size): Rect | null => {
-  const top = Math.max(rect.top, 0);
+// minTop: 고정된 상단 메뉴 아래로 지나가는 부분은 강조하지 않는다. (메뉴가 강조 구멍으로 눌리지 않게)
+export const clipRect = (rect: Rect, viewport: Size, minTop = 0): Rect | null => {
+  const top = Math.max(rect.top, minTop, 0);
   const left = Math.max(rect.left, 0);
   const bottom = Math.min(rect.top + rect.height, viewport.height);
   const right = Math.min(rect.left + rect.width, viewport.width);
@@ -79,8 +80,13 @@ export const getHolesPath = (rects: readonly Rect[]) => rects.map((rect) => roun
 export const getDimPath = (rects: readonly Rect[], viewport: Size) =>
   `M0 0H${viewport.width}V${viewport.height}H0Z${getHolesPath(rects)}`;
 
-// 설명 카드가 강조 영역을 가리지 않도록 아래 → 위 → 오른쪽 → 왼쪽 순서로 빈 공간을 찾는다.
-export const getCardPosition = (target: Rect | null, card: Size, viewport: Size): CardPosition => {
+const overlapArea = (a: Rect, b: Rect) =>
+  Math.max(0, Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left))
+  * Math.max(0, Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top));
+
+// 설명 카드가 강조 영역을 가리지 않도록 아래 → 위 → 오른쪽 → 왼쪽 → 네 모서리 순서로 빈 공간을 찾는다.
+// 함께 열어 둔 영역(avoid)도 가리지 않게 피하고, 빈 곳이 없으면 가장 덜 가리는 모서리에 둔다.
+export const getCardPosition = (target: Rect | null, card: Size, viewport: Size, avoid: readonly Rect[] = []): CardPosition => {
   const maxLeft = viewport.width - MARGIN - card.width;
   const maxTop = viewport.height - MARGIN - card.height;
   if (!target) {
@@ -89,13 +95,24 @@ export const getCardPosition = (target: Rect | null, card: Size, viewport: Size)
 
   const alignedLeft = clamp(target.left, MARGIN, maxLeft);
   const alignedTop = clamp(target.top, MARGIN, maxTop);
-  const below = target.top + target.height + GAP;
-  if (below + card.height <= viewport.height - MARGIN) return { top: below, left: alignedLeft, placement: "below" };
-  const above = target.top - GAP - card.height;
-  if (above >= MARGIN) return { top: above, left: alignedLeft, placement: "above" };
-  const right = target.left + target.width + GAP;
-  if (right + card.width <= viewport.width - MARGIN) return { top: alignedTop, left: right, placement: "right" };
-  const left = target.left - GAP - card.width;
-  if (left >= MARGIN) return { top: alignedTop, left, placement: "left" };
-  return { top: maxTop, left: maxLeft, placement: "corner" };
+  const fits = ({ top, left }: { top: number; left: number }) =>
+    top >= MARGIN && left >= MARGIN && top + card.height <= viewport.height - MARGIN && left + card.width <= viewport.width - MARGIN;
+  const blocking = [target, ...avoid];
+  const covered = ({ top, left }: { top: number; left: number }) =>
+    blocking.reduce((sum, rect) => sum + overlapArea({ top, left, ...card }, rect), 0);
+  const candidates: CardPosition[] = [
+    { top: target.top + target.height + GAP, left: alignedLeft, placement: "below" },
+    { top: target.top - GAP - card.height, left: alignedLeft, placement: "above" },
+    { top: alignedTop, left: target.left + target.width + GAP, placement: "right" },
+    { top: alignedTop, left: target.left - GAP - card.width, placement: "left" },
+  ];
+  const free = candidates.find((candidate) => fits(candidate) && covered(candidate) === 0);
+  if (free) return free;
+  const corners: CardPosition[] = [
+    { top: maxTop, left: maxLeft, placement: "corner" },
+    { top: maxTop, left: MARGIN, placement: "corner" },
+    { top: MARGIN, left: maxLeft, placement: "corner" },
+    { top: MARGIN, left: MARGIN, placement: "corner" },
+  ];
+  return corners.reduce((best, corner) => covered(corner) < covered(best) ? corner : best);
 };

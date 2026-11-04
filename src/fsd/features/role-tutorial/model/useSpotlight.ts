@@ -23,6 +23,12 @@ const findTargetElements = (targets: readonly TutorialTarget[]) =>
   Array.from(document.querySelectorAll<HTMLElement>(targets.map((target) => `[data-tutorial-target~="${target}"]`).join(",")))
     .filter((element) => element.getClientRects().length > 0);
 
+// 강조 영역 안에서 열린 드롭다운 메뉴는 영역 밖으로 튀어나와도 함께 열어 눌러 볼 수 있게 한다.
+const POPOVER_SELECTOR = '[role="menu"], [role="listbox"]';
+const findPopovers = (elements: readonly HTMLElement[]) =>
+  elements.flatMap((element) => Array.from(element.querySelectorAll<HTMLElement>(POPOVER_SELECTOR)))
+    .filter((element) => element.getClientRects().length > 0);
+
 const toRect = (rect: DOMRect): Rect => ({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
 
 const scrollTargetIntoView = (elements: HTMLElement[], isCompact: boolean) => {
@@ -50,6 +56,7 @@ export const useSpotlight = (targets: readonly TutorialTarget[], enabled: boolea
     let count = 0;
     let elements: HTMLElement[] = [];
     let primary: HTMLElement[] = [];
+    let header: HTMLElement | null = null;
     const primaryTarget = target.split(" ")[0];
     let hasScrolled = false;
     let lastKey = "";
@@ -67,6 +74,7 @@ export const useSpotlight = (targets: readonly TutorialTarget[], enabled: boolea
       if (enabled && (count % REQUERY_EVERY_FRAMES === 0 || elements.some((element) => !element.isConnected))) {
         elements = findTargetElements(target.split(" ") as TutorialTarget[]);
         primary = elements.filter((element) => element.dataset.tutorialTarget?.split(" ").includes(primaryTarget));
+        header = document.querySelector<HTMLElement>("header");
       }
       count += 1;
       // 함께 열어 둔 영역이 있어도 스크롤과 설명 카드 위치는 이 단계의 주 대상 기준으로 잡는다.
@@ -78,9 +86,12 @@ export const useSpotlight = (targets: readonly TutorialTarget[], enabled: boolea
 
       // 읽기를 모두 끝낸 뒤에 쓰기를 해서 레이아웃을 한 번만 계산하게 한다.
       const viewport = { width: window.innerWidth, height: window.innerHeight };
-      const rects = enabled
-        ? mergeNearbyRects(elements.map((element) => clipRect(padRect(toRect(element.getBoundingClientRect())), viewport)).filter((rect): rect is Rect => rect !== null))
-        : [];
+      const headerBottom = header?.isConnected ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+      // 상단 메뉴 안의 대상(메뉴·알림 등)이 아니면 메뉴 아래부터만 강조한다.
+      const visibleRect = (element: HTMLElement) =>
+        clipRect(padRect(toRect(element.getBoundingClientRect())), viewport, header?.contains(element) ? 0 : headerBottom);
+      const isRect = (rect: Rect | null): rect is Rect => rect !== null;
+      const rects = enabled ? mergeNearbyRects([...elements, ...findPopovers(elements)].map(visibleRect).filter(isRect)) : [];
       const cardElement = card.current;
       const cardSize = cardElement ? { width: cardElement.offsetWidth, height: cardElement.offsetHeight } : { width: 0, height: 0 };
       // 페이지의 모달 창(<dialog>)은 항상 가장 위에 뜬다. 창이 열려 있는 동안은 설명 카드를 숨긴다.
@@ -95,8 +106,8 @@ export const useSpotlight = (targets: readonly TutorialTarget[], enabled: boolea
         if (isCompact) {
           cardElement.style.transform = "";
         } else {
-          const primaryRect = unionRects(primary.map((element) => clipRect(padRect(toRect(element.getBoundingClientRect())), viewport)).filter((rect): rect is Rect => rect !== null));
-          const position = getCardPosition(primaryRect, cardSize, viewport);
+          const primaryRect = unionRects(primary.map(visibleRect).filter(isRect));
+          const position = getCardPosition(primaryRect, cardSize, viewport, rects);
           cardElement.style.transform = `translate3d(${Math.round(position.left)}px, ${Math.round(position.top)}px, 0)`;
         }
         cardElement.style.visibility = dialogOpen ? "hidden" : "visible";
