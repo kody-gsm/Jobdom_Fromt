@@ -13,6 +13,7 @@ const navigation = [
   { href: "/teacher", label: "상담 일정" },
   { href: "/teacher/recruit", label: "취업 공고" },
   { href: "/teacher/forms", label: "신청 폼 관리" },
+  { href: "/teacher/pass-report", label: "합격 보고" },
 ];
 
 const subscribeRole = (listener: () => void) => {

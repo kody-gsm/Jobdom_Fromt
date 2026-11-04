@@ -17,7 +17,7 @@ export const PassReportForm = () => {
     event.preventDefault();
     const name = companyName.trim();
     if (!name) {
-      setError("회사명을 입력해 주세요.");
+      setError("기업 이름을 입력해 주세요.");
       return;
     }
     setError("");
@@ -27,7 +27,7 @@ export const PassReportForm = () => {
       setSentCompany(name);
       setCompanyName("");
     } catch (caught) {
-      setError(caught instanceof ApiError && caught.message ? caught.message : "합격 보고를 보내지 못했습니다.");
+      setError(caught instanceof ApiError && caught.message ? caught.message : "면접 합격 보고를 보내지 못했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -36,7 +36,7 @@ export const PassReportForm = () => {
   return (
     <form onSubmit={(event) => void handleSubmit(event)} noValidate className="flex flex-col gap-5">
       <TextField
-        label="회사명"
+        label="기업 이름"
         value={companyName}
         maxLength={MAX_COMPANY_NAME}
         onChange={(event) => {
@@ -44,7 +44,7 @@ export const PassReportForm = () => {
           setSentCompany("");
           if (error) setError("");
         }}
-        placeholder="합격한 회사 이름"
+        placeholder="면접에 합격한 기업 이름"
         error={error}
         disabled={submitting}
       />
@@ -53,7 +53,7 @@ export const PassReportForm = () => {
       </ActionButton>
       {sentCompany ? (
         <p role="status" className="text-sm font-semibold text-brand-accent">
-          {sentCompany} 합격 소식을 선생님께 보냈어요.
+          {sentCompany} 면접 합격 소식을 진로 선생님께 보냈어요.
         </p>
       ) : null}
     </form>
