@@ -21,6 +21,7 @@ assert.deepEqual(STUDENT_NAV_ITEMS, [
   { href: "/", label: "상담 대시보드" },
   { href: "/counsel", label: "상담 신청" },
   { href: "/recruit", label: "취업 공고" },
+  { href: "/pass-report", label: "합격 보고" },
 ]);
 assert.equal(isStudentNavActive("/recruit", "/recruit"), true);
 assert.equal(isStudentNavActive("/recruit/3", "/recruit"), true);
