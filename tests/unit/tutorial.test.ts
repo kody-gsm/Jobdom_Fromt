@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createTutorialApi } from "../../src/fsd/features/role-tutorial/api/createTutorialApi.ts";
 import { getTutorialRole } from "../../src/fsd/features/role-tutorial/model/progress.ts";
-import { getTutorialSteps } from "../../src/fsd/features/role-tutorial/model/steps.ts";
+import { findNavigationResume, getTutorialSteps } from "../../src/fsd/features/role-tutorial/model/steps.ts";
 import { clipRect, getCardPosition, getDimPath, getHolesPath, mergeNearbyRects, padRect, unionRects } from "../../src/fsd/features/role-tutorial/model/spotlight.ts";
 
 assert.equal(getTutorialRole("ADMIN"), null);
@@ -126,3 +126,14 @@ assert.deepEqual(clipRect({ top: -100, left: 10, width: 200, height: 1200 }, vie
 assert.equal(clipRect({ top: 900, left: 10, width: 200, height: 100 }, viewport), null);
 
 console.log("tutorial tests passed");
+
+// 설명 단계에서 강조된 메뉴를 먼저 눌러도 이어서 진행하고, 다른 화면으로 가면 단계 화면으로 돌아간다.
+{
+  const steps = getTutorialSteps("STUDENT");
+  const at = (id: string) => steps.findIndex((step) => step.id === id);
+  assert.equal(findNavigationResume(steps, at("student-navigation"), "/", "/counsel"), at("consultation-type"));
+  assert.equal(findNavigationResume(steps, at("upcoming"), "/", "/counsel"), at("consultation-type"));
+  assert.equal(findNavigationResume(steps, at("go-counsel"), "/", "/counsel"), at("consultation-type"));
+  assert.equal(findNavigationResume(steps, at("student-navigation"), "/", "/recruit"), null);
+  assert.equal(findNavigationResume(steps, at("upcoming"), "/counsel", "/"), null);
+}
