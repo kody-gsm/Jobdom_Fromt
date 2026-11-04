@@ -34,7 +34,9 @@ assert.doesNotMatch(tutorial, /9999px|boxShadow/);
 
 // 완료 저장이 끝나기 전에는 튜토리얼을 닫지 않고, 실패하면 다시 시도할 수 있다.
 assert.match(tutorial, /await onComplete\(\)/);
-assert.match(tutorial, /disabled=\{isCompleting\}/);
+assert.match(tutorial, /disabled=\{isCompleting \|\| mustNavigate\}/);
+// 메뉴·링크를 눌러 이동하는 단계는 '다음'으로 건너뛰어 안내가 화면을 대신 바꾸지 않는다. (항목을 못 찾으면 넘어갈 수 있음)
+assert.match(tutorial, /const mustNavigate = actionPath !== null && status !== "missing"/);
 assert.match(tutorial, /role="alert"/);
 assert.match(tutorial, /다시 시도/);
 assert.doesNotMatch(tutorial, /건너뛰기|skip/i);

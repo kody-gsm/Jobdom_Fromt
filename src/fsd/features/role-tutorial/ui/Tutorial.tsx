@@ -148,6 +148,10 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
     buttons[nextIndex]?.focus();
   };
 
+  // 강조된 메뉴·링크를 눌러 이동하는 단계는 '다음'으로 건너뛰면 안내가 대신 화면을 바꿔 버려 혼란스럽다.
+  // 직접 눌러서 이동하게 하고, 강조할 항목을 못 찾았을 때만 '다음'으로 넘어갈 수 있게 한다.
+  const mustNavigate = actionPath !== null && status !== "missing";
+
   const statusMessage = status === "searching"
     ? "화면을 불러오는 중이에요…"
     : status === "missing"
@@ -193,7 +197,7 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
         {completionError ? <p role="alert" className="mt-3 text-xs font-semibold leading-5 text-red-700">{completionError}</p> : null}
         <div className="mt-4 flex items-center justify-between gap-3">
           <ActionButton variant="ghost" disabled={stepIndex === 0 || isCompleting} onClick={() => setStepIndex((index) => index - 1)} className="gap-1 !px-3 !text-sm"><FiArrowLeft aria-hidden />이전</ActionButton>
-          <ActionButton disabled={isCompleting} onClick={handleNext} className="gap-2 !px-4 !text-sm">{getNextLabel(isLastStep, isCompleting, Boolean(completionError), mode)}{isLastStep ? <FiCheckCircle aria-hidden /> : <FiArrowRight aria-hidden />}</ActionButton>
+          <ActionButton disabled={isCompleting || mustNavigate} title={mustNavigate ? "강조된 곳을 눌러 이동해 주세요" : undefined} onClick={handleNext} className="gap-2 !px-4 !text-sm">{getNextLabel(isLastStep, isCompleting, Boolean(completionError), mode)}{isLastStep ? <FiCheckCircle aria-hidden /> : <FiArrowRight aria-hidden />}</ActionButton>
         </div>
       </section>
     </>
