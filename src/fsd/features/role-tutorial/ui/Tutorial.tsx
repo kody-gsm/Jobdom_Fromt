@@ -6,7 +6,7 @@ import { FiArrowLeft, FiArrowRight, FiCheckCircle, FiShield } from "react-icons/
 import { ActionButton } from "@fsd/shared/ui";
 import type { TutorialMode } from "../model/presentation.ts";
 import type { TutorialRole } from "../model/progress.ts";
-import { getStepTargets, getTutorialSteps } from "../model/steps.ts";
+import { getStepTargets, getTutorialSteps, matchesRoute } from "../model/steps.ts";
 import { useSpotlight } from "../model/useSpotlight.ts";
 
 const COMPACT_QUERY = "(max-width: 767px)";
@@ -48,7 +48,7 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
   const steps = getTutorialSteps(role);
   const step = steps[stepIndex];
   const isLastStep = stepIndex === steps.length - 1;
-  const isOnStepRoute = pathname === step.route;
+  const isOnStepRoute = matchesRoute(step.route, pathname);
   const actionPath = step.action.type === "route" ? step.action.path : null;
   const isCompact = useIsCompact();
   const card = useRef<HTMLElement>(null);
@@ -64,7 +64,7 @@ export const Tutorial = ({ role, mode, onComplete }: TutorialProps) => {
     const previous = previousPath.current;
     previousPath.current = pathname;
     if (isCompleting || isOnStepRoute) return;
-    if (actionPath === pathname && previous === step.route) setStepIndex((index) => index + 1);
+    if (actionPath !== null && matchesRoute(actionPath, pathname) && matchesRoute(step.route, previous)) setStepIndex((index) => index + 1);
     else router.push(step.route);
   }, [actionPath, isCompleting, isOnStepRoute, pathname, router, step.route]);
 
