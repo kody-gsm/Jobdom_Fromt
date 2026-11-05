@@ -85,6 +85,12 @@
 - 2026-10-30 확인한 backend `develop`의 `GET /form`은 초안을 제외한 공개·마감 폼을 반환하며, 각 항목의 `submitted: boolean`으로 현재 학생의 제출 여부를 제공한다. `GET /form/{id}`도 마감 폼을 조회할 수 있고, 마감 후 제출 제한은 유지된다.
 - 프론트는 `submitted`가 있으면 항목별 제출 조회를 생략한다. 배포 시점 차이로 필드가 없으면 기존 `GET /student/form/{id}/submission`을 제한된 동시 수로 조회하되 목록 첫 표시를 막지 않는다. 실패를 미제출로 단정하지 않는다.
 
+## Interview pass report
+
+- 2026-11-05 기준 backend PR #153(`feat/pass-report-interview-only`, 미머지)에 맞춘다. 학생은 상단 `합격 보고`(`/pass-report`)에서 기업 이름만 입력해 `POST /student/pass-report`에 `{ companyName }`을 보낸다. 학번·이름은 서버가 로그인 정보로 채운다.
+- 보고는 모든 진로 선생님(TEACHER)에게 `PASS_REPORTED` 알림으로 간다. 알림의 `targetUrl` `/teacher/pass-report/{id}`는 프론트 `/teacher/pass-report` 목록으로 연다.
+- 진로 선생님은 `/teacher/pass-report`에서 `GET /teacher/pass-report`(학번순 전체)의 `{ id, studentNumber, studentName, companyName, submittedAt }`을 본다. `submittedAt`은 시간대 없는 한국 시각이다. Wee 교사는 이 화면에 들어갈 수 없다.
+
 ## Frontend request lifetime and cache
 
 - 인증 GET은 계정의 access token과 URL을 키로 30초 재사용하고 진행 중 요청을 공유한다. caller signal, Blob, `cache: "no-store"` 요청은 공유하지 않는다.

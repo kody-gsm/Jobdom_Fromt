@@ -21,7 +21,7 @@ assert.equal(getAuthRedirect("/teacher", "ADMIN"), "/admin");
 assert.equal(getAuthRedirect("/counsel", "STUDENT"), null);
 assert.equal(getAuthRedirect("/teacher/recruit", "TEACHER"), null);
 assert.equal(getAuthRedirect("/teacher", "WEE_TEACHER"), null);
-for (const path of ["/teacher/recruit", "/teacher/recruit/1", "/teacher/forms", "/teacher/forms/7/submissions"]) {
+for (const path of ["/teacher/recruit", "/teacher/recruit/1", "/teacher/forms", "/teacher/forms/7/submissions", "/teacher/pass-report"]) {
   assert.equal(getAuthRedirect(path, "WEE_TEACHER"), "/teacher");
   assert.equal(getAuthRedirect(path, "TEACHER"), null);
 }
