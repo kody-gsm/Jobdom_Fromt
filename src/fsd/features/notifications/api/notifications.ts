@@ -11,7 +11,8 @@ export type NotificationType =
   | "COUNSELING_REJECTED"
   | "COUNSELING_AUTO_CANCELED"
   | "COUNSELING_CANCELED_BY_STUDENT"
-  | "COUNSELING_EXPIRED";
+  | "COUNSELING_EXPIRED"
+  | "PASS_REPORTED";
 
 export interface NotificationItem {
   id: number;
@@ -50,6 +51,7 @@ export const getNotificationTargetUrl = (url: string | null) => {
   if (!safePath) return null;
   if (/^\/teacher\/(course|common)\/\d+$/.test(safePath)) return "/teacher";
   if (/^\/student\/(course|common)\/\d+$/.test(safePath)) return "/";
+  if (/^\/teacher\/pass-report\/\d+$/.test(safePath)) return "/teacher/pass-report";
   return safePath.replace(/^\/form\/(\d+)$/, "/forms/$1");
 };
 

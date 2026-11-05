@@ -20,6 +20,7 @@ assert.equal(getSafeLinkUrl("javascript:alert(1)"), null);
 assert.equal(api.getNotificationTargetUrl("/teacher/course/7"), "/teacher");
 assert.equal(api.getNotificationTargetUrl("/student/common/7"), "/");
 assert.equal(api.getNotificationTargetUrl("/form/7"), "/forms/7");
+assert.equal(api.getNotificationTargetUrl("/teacher/pass-report/5"), "/teacher/pass-report");
 assert.equal(api.getNotificationTargetUrl("/recruit/7"), "/recruit/7");
 assert.equal(api.getNotificationTargetUrl("https://example.com"), null);
 assert.equal(api.getNotificationTargetUrl("javascript:alert(1)"), null);

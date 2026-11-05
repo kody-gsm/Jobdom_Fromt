@@ -23,6 +23,7 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   COUNSELING_AUTO_CANCELED: "상담 자동 취소",
   COUNSELING_CANCELED_BY_STUDENT: "상담 취소",
   COUNSELING_EXPIRED: "신청 만료",
+  PASS_REPORTED: "면접 합격",
 };
 
 const TYPE_COLORS: Record<NotificationType, string> = {
@@ -35,6 +36,7 @@ const TYPE_COLORS: Record<NotificationType, string> = {
   COUNSELING_AUTO_CANCELED: "bg-red-100 text-red-700",
   COUNSELING_CANCELED_BY_STUDENT: "bg-red-100 text-red-700",
   COUNSELING_EXPIRED: "bg-gray-100 text-gray-700",
+  PASS_REPORTED: "bg-green-100 text-green-700",
 };
 
 // ─── NotificationItem row ─────────────────────────────────────────────────────
